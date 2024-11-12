@@ -15,7 +15,7 @@ private:
 	int _disY2 = 0;
 
 public:
-	Line() {}
+	Line() { _type = EStripObjectType::Line; }
 
 	void SetObject(Material newMaterial, double x1, double y1, double x2, double y2)
 	{
@@ -26,6 +26,11 @@ public:
 		double fixX2 = x2;
 		double fixY2 = y2;
 
+		if (x1 < 0.0 || y1 < 0.0 || x2 < 0 || y2 < 0)
+		{
+			throw "StripObject::Line::BadSize";
+			return;
+		}
 		if (x2 == x1 && y2 == y1)
 		{
 			throw "StripObject::Line::BadSize";
@@ -48,9 +53,9 @@ public:
 		_y2 = fixY2;
 	}
 
-	void virtual GetFieldMatrixFragment(double dx, double dy) override
+	void virtual Rasterize(double dx, double dy) override
 	{
-		Disretization(dx, dy);
+		Disretize(dx, dy);
 
 		UpdateFieldMatrixFragment(_disY2 - _disY1, _disX2 - _disX1);
 
@@ -80,8 +85,13 @@ public:
 		}
 	}
 
+	int GetDisX1() { return _disX1; }
+	int GetDisY1() { return _disY1; }
+	int GetDisX2() { return _disX2; }
+	int GetDisY2() { return _disY2; }
+
 protected:
-	void virtual Disretization(double dx, double dy) override
+	void virtual Disretize(double dx, double dy) override
 	{
 		if (_x1 == _x2 && _y1 == _y2)
 		{

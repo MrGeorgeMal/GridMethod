@@ -3,7 +3,7 @@
 
 class Rectangle : public StripObject
 {
-private:
+protected:
 	double _x = 0.0;
 	double _y = 0.0;
 	double _width = 0.0;
@@ -15,42 +15,27 @@ private:
 	int _disHeight = 0;
 
 public:
-	Rectangle() {}
+	Rectangle() { _type = EStripObjectType::Rectangle; }
 
 	void SetObject(Material newMaterial, double x, double y, double width, double height)
 	{
 		_material = newMaterial;
 
-		double fixX = x;
-		double fixY = y;
-		double fixWidth = width;
-		double fixHeight = height;
-
-		if (width == 0.0 || height == 0.0)
+		if (x < 0.0 || y < 0.0 || width <= 0.0 || height <= 0.0)
 		{
 			throw "StripObject::Rectangle::BadSize";
 			return;
 		}
-		if (width < 0)
-		{
-			fixX = width + x;
-			fixWidth = -1.0 * width;
-		}
-		if (height < 0)
-		{
-			fixY = height + y;
-			fixHeight = -1.0 * height;
-		}
 
-		_x = fixX;
-		_y = fixY;
-		_width = fixWidth;
-		_height = fixHeight;
+		_x = x;
+		_y = y;
+		_width = width;
+		_height = height;
 	}
 
-	void virtual GetFieldMatrixFragment(double dx, double dy) override
+	void virtual Rasterize(double dx, double dy) override
 	{
-		Disretization(dx, dy);
+		Disretize(dx, dy);
 
 		UpdateFieldMatrixFragment(_disHeight, _disWidth);
 
@@ -63,8 +48,13 @@ public:
 		}
 	}
 
+	int GetDisX() { return _disX; }
+	int GetDisY() { return _disY; }
+	int GetDisWidth() { return _disWidth; }
+	int GetDisHeight() { return _disHeight; }
+
 protected:
-	void virtual Disretization(double dx, double dy) override
+	void virtual Disretize(double dx, double dy) override
 	{
 		if (_width == 0.0 || _height == 0.0)
 		{

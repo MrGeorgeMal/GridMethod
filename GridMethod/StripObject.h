@@ -5,42 +5,46 @@
 
 class StripObject
 {
+public:
+	enum EStripObjectType
+	{
+		None,
+		Screen,
+		Rectangle,
+		Line
+	};
+
 protected:
+	EStripObjectType _type = EStripObjectType::None;
 	Material _material;
 	int _fieldMatrixFragmentRows = 0;
 	int _fieldMatrixFragmentCols = 0;
 	Material **_fieldMatrixFragment = new Material*[_fieldMatrixFragmentRows];
 
 public:
-	void virtual GetFieldMatrixFragment(double dx, double dy) = 0;
+	void virtual Rasterize(double dx, double dy) = 0;
 
-	void virtual PrintFieldMatrixFragment() final
+	EStripObjectType GetType()
 	{
-		for (int i = 0; i < _fieldMatrixFragmentRows; i++)
-		{
-			for (int j = 0; j < _fieldMatrixFragmentCols; j++)
-			{
-				switch (_fieldMatrixFragment[i][j].materialType)
-				{
-				case Material::EMaterialType::None:
-					std::cout << char(255);
-					break;
-				case Material::EMaterialType::Dielectric:
-					std::cout << char(177);
-					break;
-				case Material::EMaterialType::Conductor:
-					std::cout << char(219);
-					break;
-				default:
-					break;
-				}
-			}
-			std::cout << "\n";
-		}
+		return _type;
 	}
 
+	int GetFieldMatrixFragmentRows()
+	{
+		return _fieldMatrixFragmentRows;
+	}
+
+	int GetFieldMatrixFragmentCols()
+	{
+		return _fieldMatrixFragmentCols;
+	}
+
+	Material** GetFieldMatrixFragment() { return _fieldMatrixFragment; }
+
+	Material GetMaterial() { return _material; }
+
 protected:
-	void virtual Disretization(double dx, double dy) = 0;
+	void virtual Disretize(double dx, double dy) = 0;
 
 	void UpdateFieldMatrixFragment(int rows, int cols)
 	{
