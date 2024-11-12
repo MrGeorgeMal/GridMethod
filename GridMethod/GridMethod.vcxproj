@@ -133,6 +133,7 @@
     <ClInclude Include="Rectangle.h" />
     <ClInclude Include="Screen.h" />
     <ClInclude Include="StripObject.h" />
+    <ClInclude Include="StripStructure.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp" />

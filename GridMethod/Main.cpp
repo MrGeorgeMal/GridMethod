@@ -17,7 +17,7 @@ int main()
 
 		std::cout << "\n\n";
 
-		line.SetObject(conductor, 0.0, 0.0, 5.0, 10.0);
+		line.SetObject(conductor, 0.0, 0.0, 2.0, 10.0);
 		line.GetFieldMatrixFragment(1.0, 1.0);
 		line.PrintFieldMatrixFragment();
 	}

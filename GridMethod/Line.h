@@ -54,29 +54,28 @@ public:
 
 		UpdateFieldMatrixFragment(_disY2 - _disY1, _disX2 - _disX1);
 
+		bool steep = abs(_fieldMatrixFragmentRows) > abs(_fieldMatrixFragmentCols);
+		int fixRows = _fieldMatrixFragmentRows;
+		int fixCols = _fieldMatrixFragmentCols;
+		if (steep)
+		{
+			fixRows = _fieldMatrixFragmentCols;
+			fixCols = _fieldMatrixFragmentRows;
+		}
+
 		// Rasterization by Bresenham Algorithm
-		int deltax = abs(_fieldMatrixFragmentCols);
-		int deltay = abs(_fieldMatrixFragmentRows);
-		int error = 0;
-		int deltaerr = deltay + 1;
+		int deltax = fixCols;
+		int deltay = fixRows;
+		int error = deltax / 2;
 		int y = 0;
-		int diry = _fieldMatrixFragmentRows;
-		if (diry > 0)
+		for (int x = 0; x < fixCols; x++)
 		{
-			diry = 1;
-		}
-		if (diry < 0)
-		{
-			diry = -1;
-		}
-		for (int x = 0; x < _fieldMatrixFragmentCols; x++)
-		{
-			_fieldMatrixFragment[y][x] = _material;
-			error = error + deltaerr;
-			if (error >= deltax + 1)
+			_fieldMatrixFragment[steep ? x : y][steep ? y : x] = _material;
+			error -= deltay;
+			if (error < 0)
 			{
-				y = y + diry;
-				error = error - (deltax + 1);
+				if (y < fixRows - 1) y ++;
+				error += deltax;
 			}
 		}
 	}

@@ -23,7 +23,7 @@ public:
 				switch (_fieldMatrixFragment[i][j].materialType)
 				{
 				case Material::EMaterialType::None:
-					std::cout << char(176);
+					std::cout << char(255);
 					break;
 				case Material::EMaterialType::Dielectric:
 					std::cout << char(178);
