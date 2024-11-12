@@ -9,7 +9,7 @@ struct Material
 		Conductor
 	};
 
-	EMaterialType materialType = EMaterialType::Dielectric;
+	EMaterialType materialType = EMaterialType::None;
 	double dielectricValue = 1.0;
 	double potential = 0.0;
 };

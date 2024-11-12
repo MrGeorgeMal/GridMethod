@@ -9,6 +9,11 @@ private:
 	double _x2 = 0.0;
 	double _y2 = 0.0;
 
+	int _disX1 = 0;
+	int _disY1 = 0;
+	int _disX2 = 0;
+	int _disY2 = 0;
+
 public:
 	Line() {}
 
@@ -21,7 +26,7 @@ public:
 		double fixX2 = x2;
 		double fixY2 = y2;
 
-		if (x2 == x1 || y2 == y1)
+		if (x2 == x1 && y2 == y1)
 		{
 			throw "StripObject::Line::BadSize";
 			return;
@@ -41,5 +46,62 @@ public:
 		_y1 = fixY1;
 		_x2 = fixX2;
 		_y2 = fixY2;
+	}
+
+	void virtual GetFieldMatrixFragment(double dx, double dy) override
+	{
+		Disretization(dx, dy);
+
+		UpdateFieldMatrixFragment(_disY2 - _disY1, _disX2 - _disX1);
+
+		// Rasterization by Bresenham Algorithm
+		int deltax = abs(_fieldMatrixFragmentCols);
+		int deltay = abs(_fieldMatrixFragmentRows);
+		int error = 0;
+		int deltaerr = deltay + 1;
+		int y = 0;
+		int diry = _fieldMatrixFragmentRows;
+		if (diry > 0)
+		{
+			diry = 1;
+		}
+		if (diry < 0)
+		{
+			diry = -1;
+		}
+		for (int x = 0; x < _fieldMatrixFragmentCols; x++)
+		{
+			_fieldMatrixFragment[y][x] = _material;
+			error = error + deltaerr;
+			if (error >= deltax + 1)
+			{
+				y = y + diry;
+				error = error - (deltax + 1);
+			}
+		}
+	}
+
+protected:
+	void virtual Disretization(double dx, double dy) override
+	{
+		if (_x1 == _x2 && _y1 == _y2)
+		{
+			throw "StripObject::Line::BadSize";
+			return;
+		}
+
+		_disX1 = floor(_x1 / dx);
+		_disY1 = floor(_y1 / dy);
+		_disX2 = floor(_x2 / dx);
+		_disY2 = floor(_y2 / dy);
+
+		if (_disX1 == _disX2)
+		{
+			_disX2++;
+		}
+		if (_disY1 == _disY2)
+		{
+			_disY2++;
+		}
 	}
 };

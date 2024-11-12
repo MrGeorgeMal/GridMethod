@@ -52,19 +52,10 @@ public:
 	{
 		Disretization(dx, dy);
 
+		UpdateFieldMatrixFragment(_disHeight, _disWidth);
+
 		for (int i = 0; i < _fieldMatrixFragmentRows; i++)
 		{
-			delete[] _fieldMatrixFragment[i];
-		}
-		delete[] _fieldMatrixFragment;
-
-		_fieldMatrixFragmentRows = _disHeight;
-		_fieldMatrixFragmentCols = _disWidth;
-
-		_fieldMatrixFragment = new Material*[_fieldMatrixFragmentRows];
-		for (int i = 0; i < _fieldMatrixFragmentRows; i++)
-		{
-			_fieldMatrixFragment[i] = new Material[_fieldMatrixFragmentCols];
 			for (int j = 0; j < _fieldMatrixFragmentCols; j++)
 			{
 				_fieldMatrixFragment[i][j] = _material;
