@@ -21,7 +21,7 @@ public:
 		_objects.push_back(newObject);
 	}
 
-	void UpdateFieldMatrix()
+	void UpdateFieldMatrix(double dx, double dy)
 	{
 		Screen *screen = nullptr;
 
@@ -45,7 +45,7 @@ public:
 
 		for (int i = 0; i < _objects.size(); i++)
 		{
-			_objects[i]->Rasterize(1.0, 1.0);
+			_objects[i]->Rasterize(dx, dy);
 		}
 
 		UpdateFieldMatrix(screen->GetFieldMatrixFragmentRows(), screen->GetFieldMatrixFragmentCols());
