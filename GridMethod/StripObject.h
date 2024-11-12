@@ -26,7 +26,7 @@ public:
 					std::cout << char(255);
 					break;
 				case Material::EMaterialType::Dielectric:
-					std::cout << char(178);
+					std::cout << char(177);
 					break;
 				case Material::EMaterialType::Conductor:
 					std::cout << char(219);
@@ -42,7 +42,7 @@ public:
 protected:
 	void virtual Disretization(double dx, double dy) = 0;
 
-	void virtual UpdateFieldMatrixFragment(int rows, int cols) final
+	void UpdateFieldMatrixFragment(int rows, int cols)
 	{
 		for (int i = 0; i < _fieldMatrixFragmentRows; i++)
 		{

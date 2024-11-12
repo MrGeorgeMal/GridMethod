@@ -2,8 +2,10 @@
 
 int main()
 {
-	Rectangle rect = Rectangle();
-	Line line = Line();
+	Screen* screen = new Screen();
+	Rectangle *rect = new Rectangle();
+	Line *line = new Line();
+	StripStructure stripStruct = StripStructure();
 
 	try
 	{
@@ -11,15 +13,15 @@ int main()
 		dielectric.materialType = Material::EMaterialType::Dielectric;
 		conductor.materialType = Material::EMaterialType::Conductor;
 
-		rect.SetObject(dielectric, 0.0, 0.0, 10.0, 5.0);
-		rect.GetFieldMatrixFragment(1.0, 1.0);
-		rect.PrintFieldMatrixFragment();
+		screen->SetObject(dielectric, 0.0, 0.0, 20.0, 20.0);
+		rect->SetObject(dielectric, 0.0, 5.0, 20.0, 10.0);
+		line->SetObject(conductor, 7.0, 15.0, 6.0, 15.0);
 
-		std::cout << "\n\n";
+		stripStruct.AddObject(*screen);
+		stripStruct.AddObject(*rect);
+		stripStruct.AddObject(*line);
 
-		line.SetObject(conductor, 0.0, 0.0, 2.0, 10.0);
-		line.GetFieldMatrixFragment(1.0, 1.0);
-		line.PrintFieldMatrixFragment();
+		stripStruct.UpdateFieldMatrix();
 	}
 	catch (const char* errorMsg)
 	{
