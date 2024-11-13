@@ -9,9 +9,19 @@ class StripStructure
 {
 private:
 	std::vector<StripObject*> _objects = std::vector<StripObject*>(0);
+
 	int _fieldMatrixRows = 0;
 	int _fieldMatrixCols = 0;
 	Material** _fieldMatrix = new Material * [_fieldMatrixRows];
+
+	int _transferMatrixSize = 0;
+	double* _capacityPartialDielectric = new double[_transferMatrixSize];
+	double* _capacityPartialAir = new double[_transferMatrixSize];
+	double** _capacityTransfer = new double*[_transferMatrixSize];
+	double** _inductanceTransfer = new double*[_transferMatrixSize];
+	double* _effectivePermettivity = new double[_transferMatrixSize];
+	double* _waveImpedance = new double[_transferMatrixSize];
+	double _characteristicImpedance = 0.0;
 
 public:
 	StripStructure() {}
