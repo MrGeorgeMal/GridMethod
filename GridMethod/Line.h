@@ -90,6 +90,11 @@ public:
 	int GetDisX2() { return _disX2; }
 	int GetDisY2() { return _disY2; }
 
+	double GetX1() { return _x1; }
+	double GetY1() { return _y1; }
+	double GetX2() { return _x2; }
+	double GetY2() { return _y2; }
+
 protected:
 	void virtual Disretize(double dx, double dy) override
 	{

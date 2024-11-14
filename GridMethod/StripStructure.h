@@ -7,8 +7,20 @@
 
 class StripStructure
 {
+	struct Area
+	{
+		Material material;
+		double x1;
+		double y1;
+		double x2;
+		double y2;
+		double starty;
+		double startx;
+	};
+
 private:
 	std::vector<StripObject*> _objects = std::vector<StripObject*>(0);
+	std::vector<Area> _areas = std::vector<Area>(0);
 
 	int _fieldMatrixRows = 0;
 	int _fieldMatrixCols = 0;
@@ -31,28 +43,12 @@ public:
 		_objects.push_back(newObject);
 	}
 
-	void UpdateFieldMatrix(double dx, double dy)
+	void BuildFieldMatrix(double dx, double dy)
 	{
-		Screen *screen = nullptr;
+		Screen* screen = GetScreen();
 
-		for (int i = 0; i < _objects.size(); i++)
-		{
-			if (_objects[i]->GetType() == StripObject::EStripObjectType::Screen)
-			{
-				if (screen != nullptr)
-				{
-					throw "StripStructure::MultipleScreenError";
-					return;
-				}
-				screen = dynamic_cast<Screen*>(_objects[i]);
-			}
-		}
-
-		if (screen == nullptr)
-		{
-			throw "StripStructure::LackOfScreenError";
-		}
-
+		DivideIntoAreas();
+		
 		for (int i = 0; i < _objects.size(); i++)
 		{
 			_objects[i]->Rasterize(dx, dy);
@@ -181,5 +177,214 @@ private:
 			if (objy >= object->GetFieldMatrixFragmentRows()) break;
 			objx = 0;
 		}
+	}
+
+	Screen* GetScreen()
+	{
+		Screen* screen = nullptr;
+
+		for (int i = 0; i < _objects.size(); i++)
+		{
+			if (_objects[i]->GetType() == StripObject::EStripObjectType::Screen)
+			{
+				if (screen != nullptr)
+				{
+					throw "StripStructure::MultipleScreenError";
+					return nullptr;
+				}
+				screen = dynamic_cast<Screen*>(_objects[i]);
+			}
+		}
+
+		if (screen == nullptr)
+		{
+			throw "StripStructure::LackOfScreenError";
+			return nullptr;
+		}
+
+		return screen;
+	}
+
+	void DivideIntoAreas()
+	{
+		Screen* screen = GetScreen();
+
+		/*
+		for (int i = 0; i < _objects.size(); i++)
+		{
+			if (_objects[i]->GetType() == StripObject::EStripObjectType::Rectangle)
+			{
+				Rectangle* rect = dynamic_cast<Rectangle*>(_objects[i]);
+
+				Area newArea;
+				newArea.x1 = rect->GetX();
+				newArea.y1 = rect->GetY();
+				newArea.x2 = rect->GetX() + rect->GetWidth();
+				newArea.y2 = rect->GetY() + rect->GetHeight();
+				_areas.push_back(newArea);
+			}
+		}
+		*/
+
+		std::vector<double> x = std::vector<double>(0);
+		x.push_back(0.0);
+		bool findNewX = true;
+		while (findNewX == true)
+		{
+			double minX = screen->GetWidth();
+			findNewX = false;
+
+			for (int i = 0; i < _objects.size(); i++)
+			{
+				if (_objects[i]->GetType() == StripObject::EStripObjectType::Rectangle)
+				{
+					Rectangle* rect = dynamic_cast<Rectangle*>(_objects[i]);
+					if (rect->GetX() < minX && rect->GetX() > x[x.size() - 1])
+					{
+						minX = rect->GetX();
+						findNewX = true;
+					}
+
+					if (rect->GetX() + rect->GetWidth() < minX && rect->GetX() + rect->GetWidth() > x[x.size() - 1])
+					{
+						minX = rect->GetX() + rect->GetWidth();
+						findNewX = true;
+					}
+				}
+
+				if (_objects[i]->GetType() == StripObject::EStripObjectType::Line)
+				{
+					Line* line = dynamic_cast<Line*>(_objects[i]);
+					if (line->GetX1() < minX && line->GetX1() > x[x.size() - 1])
+					{
+						minX = line->GetX1();
+						findNewX = true;
+					}
+
+					if (line->GetX2() < minX && line->GetX2() > x[x.size() - 1])
+					{
+						minX = line->GetX2();
+						findNewX = true;
+					}
+				}
+			}
+			x.push_back(minX);
+		}
+
+		std::vector<double> y = std::vector<double>(0);
+		y.push_back(0.0);
+		bool findNewY = true;
+		while (findNewY == true)
+		{
+			double minY = screen->GetHeight();
+			findNewY = false;
+
+			for (int i = 0; i < _objects.size(); i++)
+			{
+				if (_objects[i]->GetType() == StripObject::EStripObjectType::Rectangle)
+				{
+					Rectangle* rect = dynamic_cast<Rectangle*>(_objects[i]);
+					if (rect->GetY() < minY && rect->GetY() > y[y.size() - 1])
+					{
+						minY = rect->GetY();
+						findNewY = true;
+					}
+
+					if (rect->GetY() + rect->GetHeight() < minY && rect->GetY() + rect->GetHeight() > y[y.size() - 1])
+					{
+						minY = rect->GetY() + rect->GetHeight();
+						findNewY = true;
+					}
+				}
+
+				if (_objects[i]->GetType() == StripObject::EStripObjectType::Line)
+				{
+					Line* line = dynamic_cast<Line*>(_objects[i]);
+					if (line->GetY1() < minY && line->GetY1() > y[y.size() - 1])
+					{
+						minY = line->GetY1();
+						findNewY = true;
+					}
+
+					if (line->GetY2() < minY && line->GetY2() > y[y.size() - 1])
+					{
+						minY = line->GetY2();
+						findNewY = true;
+					}
+				}
+			}
+			y.push_back(minY);
+		}
+
+
+		for (int i = 0; i < y.size() - 1; i++)
+		{
+			for (int j = 0; j < x.size() - 1; j++)
+			{
+				Area newArea;
+				newArea.x1 = x[j];
+				newArea.y1 = y[i];
+				newArea.x2 = x[j + 1];
+				newArea.y2 = y[i + 1];
+				newArea.material = GetAreaMaterial(newArea);
+				_areas.push_back(newArea);
+			}
+		}
+
+		for (int i = 0; i < _areas.size() - 1; i++)
+		{
+			int j = i + 1;
+			while (_areas[i].material.materialType == _areas[j].material.materialType &&
+				_areas[i].material.dielectricValue == _areas[j].material.dielectricValue)
+			{
+				_areas[i].x2 = _areas[j].x2;
+				_areas[i].y2 = _areas[j].y2;
+				_areas.erase(_areas.begin() + j);
+				if (i >= _areas.size() - 1) break;
+			}
+			if (i >= _areas.size() - 1) break;
+		}
+
+
+		for (int i = 0; i < x.size(); i++)
+		{
+			std::cout << "x" << i + 1 << " = " << x[i] << " ; ";
+		}
+		std::cout << "\n";
+
+		for (int i = 0; i < y.size(); i++)
+		{
+			std::cout << "y" << i + 1 << " = " << y[i] << " ; ";
+		}
+		std::cout << "\n";
+
+		for (int i = 0; i < _areas.size(); i++)
+		{
+			std::cout << "area" << i + 1 << ": [" << _areas[i].x1 << " ; " << _areas[i].y1 << "] ";
+			std::cout << "[" << _areas[i].x2 << "; " << _areas[i].y2 << "]";
+			std::cout << "\n";
+		}
+	}
+
+	Material GetAreaMaterial(Area area)
+	{
+		for (int i = 0; i < _objects.size(); i++)
+		{
+			if (_objects[i]->GetType() == StripObject::EStripObjectType::Rectangle)
+			{
+				Rectangle* rect = dynamic_cast<Rectangle*>(_objects[i]);
+				double x1 = rect->GetX();
+				double y1 = rect->GetY();
+				double x2 = rect->GetX() + rect->GetWidth();
+				double y2 = rect->GetY() + rect->GetHeight();
+
+				if (area.x1 >= x1 && area.x2 <= x2 &&
+					area.y1 >= y1 && area.y2 <= y2)
+				{
+					return rect->GetMaterial();
+				}
+			}
+		}
+		return GetScreen()->GetMaterial();
 	}
 };

@@ -48,6 +48,11 @@ public:
 		}
 	}
 
+	double GetX() { return _x; }
+	double GetY() { return _y; }
+	double GetWidth() { return _width; }
+	double GetHeight() { return _height; }
+
 	int GetDisX() { return _disX; }
 	int GetDisY() { return _disY; }
 	int GetDisWidth() { return _disWidth; }

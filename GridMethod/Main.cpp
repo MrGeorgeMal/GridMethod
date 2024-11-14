@@ -24,7 +24,7 @@ int main()
 		stripStruct->AddObject(rect);
 		stripStruct->AddObject(line);
 
-		stripStruct->UpdateFieldMatrix(0.5, 0.5);
+		stripStruct->BuildFieldMatrix(1.0, 1.0);
 		stripStruct->PrintStripStructure();
 	}
 	catch (const char* errorMsg)
