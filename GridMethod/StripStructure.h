@@ -85,6 +85,9 @@ public:
 				y1 = rect->GetDisY();
 				x2 = rect->GetDisX() + rect->GetDisWidth();
 				y2 = rect->GetDisY() + rect->GetDisHeight();
+				
+				std::cout << "Dielectric discret size: [" << x1 << " ; " << y1 << "] [" << x2 << " ; " << y2 << "]\n";
+
 				PasteFragmentToFieldMatrix(rect, x1, y1, x2, y2);
 			}
 				break;
@@ -96,6 +99,9 @@ public:
 				y1 = line->GetDisY1();
 				x2 = line->GetDisX2();
 				y2 = line->GetDisY2();
+
+				std::cout << "Conductor discret size: [" << x1 << " ; " << y1 << "] [" << x2 << " ; " << y2 << "]\n";
+
 				PasteFragmentToFieldMatrix(line, x1, y1, x2, y2);
 			}
 			break;
@@ -105,7 +111,7 @@ public:
 
 	void PrintStripStructure()
 	{
-		for (int i = 0; i < _fieldMatrixRows; i++)
+		for (int i = _fieldMatrixRows - 1; i >= 0; i--)
 		{
 			for (int j = 0; j < _fieldMatrixCols; j++)
 			{
@@ -208,23 +214,6 @@ private:
 	void DivideIntoAreas()
 	{
 		Screen* screen = GetScreen();
-
-		/*
-		for (int i = 0; i < _objects.size(); i++)
-		{
-			if (_objects[i]->GetType() == StripObject::EStripObjectType::Rectangle)
-			{
-				Rectangle* rect = dynamic_cast<Rectangle*>(_objects[i]);
-
-				Area newArea;
-				newArea.x1 = rect->GetX();
-				newArea.y1 = rect->GetY();
-				newArea.x2 = rect->GetX() + rect->GetWidth();
-				newArea.y2 = rect->GetY() + rect->GetHeight();
-				_areas.push_back(newArea);
-			}
-		}
-		*/
 
 		std::vector<double> x = std::vector<double>(0);
 		x.push_back(0.0);
@@ -345,25 +334,28 @@ private:
 			if (i >= _areas.size() - 1) break;
 		}
 
-
+		std::cout << "Points scan X:\n";
 		for (int i = 0; i < x.size(); i++)
 		{
 			std::cout << "x" << i + 1 << " = " << x[i] << " ; ";
 		}
 		std::cout << "\n";
 
+		std::cout << "Points scan Y:\n";
 		for (int i = 0; i < y.size(); i++)
 		{
 			std::cout << "y" << i + 1 << " = " << y[i] << " ; ";
 		}
-		std::cout << "\n";
+		std::cout << "\n\n";
 
+		std::cout << "Areas:\n";
 		for (int i = 0; i < _areas.size(); i++)
 		{
 			std::cout << "area" << i + 1 << ": [" << _areas[i].x1 << " ; " << _areas[i].y1 << "] ";
 			std::cout << "[" << _areas[i].x2 << "; " << _areas[i].y2 << "]";
 			std::cout << "\n";
 		}
+		std::cout << "\n";
 	}
 
 	Material GetAreaMaterial(Area area)
