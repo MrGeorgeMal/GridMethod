@@ -13,8 +13,7 @@ int main()
 		air.materialType = Material::EMaterialType::Dielectric;
 		dielectric.materialType = Material::EMaterialType::Dielectric;
 		dielectric.dielectricValue = 4.5;
-		conductor.materialType = Material::EMaterialType::Conductor;
-		conductor.potentialValue = 1.0;
+		conductor.materialType = Material::EMaterialType::SignalConductor;
 
 		screen->SetObject(air, 20.0, 10.0);
 		rect->SetObject(dielectric, 0.0, 4.0, 20.0, 1.5);

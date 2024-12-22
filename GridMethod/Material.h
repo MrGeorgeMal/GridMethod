@@ -6,7 +6,8 @@ struct Material
 	{
 		None,
 		Dielectric,
-		Conductor
+		ScreenConductor,
+		SignalConductor,
 	};
 
 	EMaterialType materialType = EMaterialType::None;
