@@ -373,11 +373,202 @@ private:
 			}
 		}
 
-		for (int i = 0; i < conductorX.size(); i++)
+
+		// Finding the minimum length to the conductor
+		double deltax = _areas[0].disX1 - conductorX[0];
+		double deltay = _areas[0].disY1 - conductorY[0];
+		double minLength = sqrt((deltax * deltax) + (deltay * deltay));
+		minLength = floor(minLength * 1000) / 1000;
+
+		for (int i = 0; i < _areas.size(); i++)
 		{
-			for (int j = 0; j < _areas.size(); j++)
+			bool stopFindMinLength = false;
+
+			for (int j = 0; j < conductorY.size(); j++)
 			{
-				
+				for (int y = _areas[i].disY1; y < _areas[i].disY2; y++)
+				{
+					for (int x = _areas[i].disX1; x < _areas[i].disX2; x++)
+					{
+						if (y == conductorY[j] && x == conductorX[j])
+						{
+							minLength = 0.0;
+							stopFindMinLength = true;
+							break;
+						}
+						else
+						{
+							deltax = x - conductorX[j];
+							deltay = y - conductorY[j];
+							double newMinLength = sqrt((deltax * deltax) + (deltay * deltay));
+							newMinLength = floor(newMinLength * 1000) / 1000;
+
+							if (newMinLength < minLength)
+							{
+								minLength = newMinLength;
+							}
+						}
+					}
+					if (stopFindMinLength) break;
+				}
+				if (stopFindMinLength) break;
+			}
+		}
+
+		// Finding startX and startY for Area
+		for (int i = 0; i < _areas.size(); i++)
+		{
+			std::vector<int> nearestPointsY = std::vector<int>(0);
+			std::vector<int> nearestPointsX = std::vector<int>(0);
+
+			for (int j = 0; j < conductorY.size(); j++)
+			{
+				for (int y = _areas[i].disY1; y < _areas[i].disY2; y++)
+				{
+					for (int x = _areas[i].disX1; x < _areas[i].disX2; x++)
+					{
+						if (y == conductorY[j] && x == conductorX[j])
+						{
+							nearestPointsY.push_back(y);
+							nearestPointsX.push_back(x);
+						}
+						else
+						{
+							deltax = x - conductorX[j];
+							deltay = y - conductorY[j];
+							double newMinLength = sqrt((deltax * deltax) + (deltay * deltay));
+							newMinLength = floor(newMinLength * 1000) / 1000;
+
+							if (newMinLength <= minLength)
+							{
+								nearestPointsY.push_back(y);
+								nearestPointsX.push_back(x);
+							}
+						}
+					}
+				}
+			}
+
+			// If the conductor is not inside the area,
+			// determine the best starting point by the square area formed by the nearest points to the conductor
+			if (minLength > 0.0)
+			{
+				// Find left bottom and right top points, which form the square region of the nearest points
+				int leftBoottomY = nearestPointsY[0];
+				int leftBoottomX = nearestPointsX[0];
+				int rightTopY = nearestPointsY[0];
+				int rightTopX = nearestPointsX[0];
+
+				for (int j = 0; j < nearestPointsY.size(); j++)
+				{
+					if (nearestPointsY[j] < leftBoottomY && nearestPointsX[j] < leftBoottomX)
+					{
+						leftBoottomY = nearestPointsY[j];
+						leftBoottomX = nearestPointsX[j];
+					}
+					if (nearestPointsY[j] > rightTopY && nearestPointsX[j] > rightTopX)
+					{
+						rightTopY = nearestPointsY[j];
+						rightTopX = nearestPointsX[j];
+					}
+				}
+
+				int centerY = leftBoottomY + floor(abs(float(rightTopY) - float(leftBoottomY)) / 2);
+				int centerX = leftBoottomX + floor(abs(float(rightTopX) - float(leftBoottomX)) / 2);
+				_areas[i].startDisY = centerY;
+				_areas[i].startDisX = centerX;
+			}
+			// Else, search for the point where the largest number of conductors is adjacent
+			else
+			{
+				for (int j = 0; j < nearestPointsY.size(); j++)
+				{
+					int maxConductorNumber = 1;
+					int conductorNumber = 1;
+					int y = nearestPointsY[j];
+					int x = nearestPointsY[j];
+					_areas[i].startDisY = y;
+					_areas[i].startDisX = x;
+
+					if (y > 0)
+					{
+						if (_fieldMatrix[y - 1][x].materialType == Material::EMaterialType::SignalConductor)
+						{
+							conductorNumber++;
+						}
+					}
+					if (y < _fieldMatrixRows - 1)
+					{
+						if (_fieldMatrix[y + 1][x].materialType == Material::EMaterialType::SignalConductor)
+						{
+							conductorNumber++;
+						}
+					}
+					if (x > 0)
+					{
+						if (_fieldMatrix[y][x - 1].materialType == Material::EMaterialType::SignalConductor)
+						{
+							conductorNumber++;
+						}
+					}
+					if (x < _fieldMatrixCols - 1)
+					{
+						if (_fieldMatrix[y][x + 1].materialType == Material::EMaterialType::SignalConductor)
+						{
+							conductorNumber++;
+						}
+					}
+					if (y > 0 && x > 0)
+					{
+						if (_fieldMatrix[y - 1][x - 1].materialType == Material::EMaterialType::SignalConductor)
+						{
+							conductorNumber++;
+						}
+					}
+					if (y < _fieldMatrixRows - 1 && x > 0)
+					{
+						if (_fieldMatrix[y + 1][x - 1].materialType == Material::EMaterialType::SignalConductor)
+						{
+							conductorNumber++;
+						}
+					}
+					if (y > 0 && x < _fieldMatrixCols - 1)
+					{
+						if (_fieldMatrix[y - 1][x + 1].materialType == Material::EMaterialType::SignalConductor)
+						{
+							conductorNumber++;
+						}
+					}
+					if (y < _fieldMatrixRows - 1 && x < _fieldMatrixCols - 1)
+					{
+						if (_fieldMatrix[y + 1][x + 1].materialType == Material::EMaterialType::SignalConductor)
+						{
+							conductorNumber++;
+						}
+					}
+
+					if (conductorNumber > maxConductorNumber)
+					{
+						maxConductorNumber = conductorNumber;
+						_areas[i].startDisY = y;
+						_areas[i].startDisX = x;
+					}
+				}
+			}
+		}
+
+		// Sort Areas in order of increasing length to conductors
+		std::vector<Area> sortedAreas = std::vector<Area>(0);
+		for (int i = 0; i < _areas.size(); i++)
+		{
+			deltax = _areas[0].startDisX - conductorX[0];
+			deltay = _areas[0].startDisY - conductorY[0];
+			minLength = sqrt((deltax * deltax) + (deltay * deltay));
+			minLength = floor(minLength * 1000) / 1000;
+
+			for (int j = 0; j < conductorY.size(); j++)
+			{
+
 			}
 		}
 	}
