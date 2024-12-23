@@ -4,7 +4,8 @@ int main()
 {
 	Screen* screen = new Screen();
 	Rectangle *rect = new Rectangle();
-	Line *line = new Line();
+	Line *line1 = new Line();
+	Line* line2 = new Line();
 	StripStructure *stripStruct = new StripStructure();
 
 	try
@@ -17,11 +18,13 @@ int main()
 
 		screen->SetObject(air, 20.0, 10.0);
 		rect->SetObject(dielectric, 0.0, 4.0, 20.0, 1.5);
-		line->SetObject(conductor, 8.0, 4.0 + 1.5, 12.0, 4.0 + 1.5);
+		line1->SetObject(conductor, 4.0, 4.0 + 1.5, 8.0, 4.0 + 1.5);
+		line2->SetObject(conductor, 12.0, 4.0 + 1.5, 16.0, 4.0 + 1.5);
 
 		stripStruct->AddObject(screen);
 		stripStruct->AddObject(rect);
-		stripStruct->AddObject(line);
+		stripStruct->AddObject(line1);
+		stripStruct->AddObject(line2);
 
 		stripStruct->BuildFieldMatrix(1.0, 1.0);
 		stripStruct->PrintStripStructure();

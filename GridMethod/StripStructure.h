@@ -356,8 +356,95 @@ private:
 		std::cout << "\n";
 	}
 
+	void SetStartPointForAreas()
+	{
+		for (int i = 0; i < _areas.size(); i++)
+		{
+			// Determining if there are signal conductors in the area
+			bool isAreaContainSignalConductor = false;
+			for (int y = _areas[i].disY1; y < _areas[i].disY2; y++)
+			{
+				for (int x = _areas[i].disX1; x < _areas[i].disX2; x++)
+				{
+					if (_fieldMatrix[y][x].materialType == Material::EMaterialType::SignalConductor)
+					{
+						isAreaContainSignalConductor = true;
+						break;
+					}
+				}
+				if (isAreaContainSignalConductor) break;
+			}
+
+			// If this area contains signal conductors, then find a special point
+			if (isAreaContainSignalConductor)
+			{
+				// Finding the sum for each row and column.
+				// The intersection of the row with the highest sum and the column with the highest sum gives a special point
+				std::vector<int> rowsSumm = std::vector<int>(0);
+				std::vector<int> colsSumm = std::vector<int>(0);
+				int maxRowSumm = 0;
+				int maxColSumm = 0;
+
+				for (int y = _areas[i].disY1; y < _areas[i].disY2; y++)
+				{
+					rowsSumm.push_back(0);
+					for (int x = _areas[i].disX1; x < _areas[i].disX2; x++)
+					{
+						if (_fieldMatrix[y][x].materialType == Material::EMaterialType::SignalConductor)
+						{
+							rowsSumm[rowsSumm.size() - 1]++;
+							
+							if (maxRowSumm < rowsSumm[rowsSumm.size() - 1])
+							{
+								maxRowSumm = rowsSumm[rowsSumm.size() - 1];
+							}
+						}
+					}
+				}
+				for (int x = _areas[i].disX1; x < _areas[i].disX2; x++)
+				{
+					colsSumm.push_back(0);
+					for (int y = _areas[i].disY1; y < _areas[i].disY2; y++)
+					{
+						if (_fieldMatrix[y][x].materialType == Material::EMaterialType::SignalConductor)
+						{
+							colsSumm[colsSumm.size() - 1]++;
+
+							if (maxColSumm < colsSumm[rowsSumm.size() - 1])
+							{
+								maxColSumm = colsSumm[colsSumm.size() - 1];
+							}
+						}
+					}
+				}
+
+				// Finding special points. There can be more than one
+				std::vector<int> specialPointY = std::vector<int>();
+				std::vector<int> specialPointX = std::vector<int>();
+				for (int ri = 0; ri < rowsSumm.size(); ri++)
+				{
+					if (rowsSumm[ri] == maxRowSumm)
+					{
+						for (int ci = 0; ci < colsSumm.size(); ci++)
+						{
+							if (colsSumm[ci] == maxColSumm)
+							{
+								specialPointY.push_back(ri);
+								specialPointX.push_back(ci);
+							}
+						}
+					}
+				}
+
+				// If there are several special points, describe a square region through them and find its center.
+				// The center of the square region will be a special point.
+			}
+		}
+	}
+
 	void SortAreas()
 	{
+		// Finding the coordinates of the points that correspond to the material of the signal conductor
 		std::vector<int> conductorX = std::vector<int>(0);
 		std::vector<int> conductorY = std::vector<int>(0);
 
@@ -481,9 +568,9 @@ private:
 			// Else, search for the point where the largest number of conductors is adjacent
 			else
 			{
+				int maxConductorNumber = 1;
 				for (int j = 0; j < nearestPointsY.size(); j++)
 				{
-					int maxConductorNumber = 1;
 					int conductorNumber = 1;
 					int y = nearestPointsY[j];
 					int x = nearestPointsY[j];
@@ -558,7 +645,6 @@ private:
 		}
 
 		// Sort Areas in order of increasing length to conductors
-		std::vector<Area> sortedAreas = std::vector<Area>(0);
 		for (int i = 0; i < _areas.size(); i++)
 		{
 			deltax = _areas[0].startDisX - conductorX[0];
