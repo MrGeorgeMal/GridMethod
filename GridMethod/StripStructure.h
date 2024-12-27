@@ -50,9 +50,6 @@ public:
 	void BuildFieldMatrix(double dx, double dy)
 	{
 		Screen* screen = GetScreen();
-
-		DivideIntoAreas();
-		DisretizeAreas(dx, dy);
 		
 		for (int i = 0; i < _objects.size(); i++)
 		{
@@ -112,6 +109,10 @@ public:
 			break;
 			}
 		}
+
+		DivideIntoAreas();
+		DisretizeAreas(dx, dy);
+		SetStartPointForAreas();
 	}
 
 	void PrintStripStructure()
@@ -419,6 +420,7 @@ private:
 				}
 
 				// Finding special points. There can be more than one
+				std::cout << "\n\n\n";
 				std::vector<int> specialPointY = std::vector<int>();
 				std::vector<int> specialPointX = std::vector<int>();
 				for (int ri = 0; ri < rowsSumm.size(); ri++)
@@ -431,13 +433,25 @@ private:
 							{
 								specialPointY.push_back(ri);
 								specialPointX.push_back(ci);
+								std::cout << "Special point [" << ci << " ; " << ri << "]\n";
 							}
 						}
 					}
 				}
+				std::cout << "\n\n\n";
+
 
 				// If there are several special points, describe a square region through them and find its center.
 				// The center of the square region will be a special point.
+				if (specialPointX.size() > 1)
+				{
+					int deltax = floor( (specialPointX[specialPointX.size() - 1] - specialPointX[0]) / 2);
+					int deltay = floor ( (specialPointY[specialPointY.size() - 1] - specialPointY[0]) / 2);
+					_areas[i].startDisX = specialPointX[0] + deltax;
+					_areas[i].startDisY = specialPointY[0] + deltay;
+				}
+
+				std::cout << "Area " << i << "start point: [" << _areas[i].startDisX << " ; " << _areas[i].startDisY << "]\n";
 			}
 		}
 	}
