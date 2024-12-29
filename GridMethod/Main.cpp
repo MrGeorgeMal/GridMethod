@@ -23,20 +23,21 @@ int main()
 		line1->SetObject(conductor, 4.0, 4.0 + 1.5, 8.0, 4.0 + 1.5);
 		line2->SetObject(conductor, 8.0, 4.0 + 1.5, 16.0, 4.0 + 1.5 + 3);
 		line3->SetObject(conductor, 4.0, 4, 8.0, 4);
-		line3->align = Line::ELineAlign::RightBottom;
 		line4->SetObject(conductor, 12.0, 4, 18.0, 4);
+
+		line3->align = Line::ELineAlign::RightBottom;
 		line4->align = Line::ELineAlign::RightBottom;
 
 		stripStruct->AddObject(screen);
 		stripStruct->AddObject(rect);
 		stripStruct->AddObject(line1);
-		stripStruct->AddObject(line2);
-		stripStruct->AddObject(line3);
-		stripStruct->AddObject(line4);
+		//stripStruct->AddObject(line2);
+		//stripStruct->AddObject(line3);
+		//stripStruct->AddObject(line4);
 
-		stripStruct->BuildFieldMatrix(0.5, 0.5);
+		stripStruct->BuildFieldMatrix(1.0, 1.0);
 
-		stripStruct->PrintAreasInfo();
+		stripStruct->PrintStructureInfo();
 		stripStruct->PrintStripStructure();
 	}
 	catch (const char* errorMsg)

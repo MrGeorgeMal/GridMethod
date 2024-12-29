@@ -53,91 +53,8 @@ public:
 
 	void BuildFieldMatrix(double dx, double dy)
 	{
-		Screen* screen = GetScreen();
-
-		for (int i = 0; i < _objects.size(); i++)
-		{
-			_objects[i]->Rasterize(dx, dy);
-		}
-
-		UpdateFieldMatrix(screen->GetFieldMatrixFragmentRows(), screen->GetFieldMatrixFragmentCols());
-
-		for (int i = 0; i < _objects.size(); i++)
-		{
-			int x1 = 0;
-			int y1 = 0;
-			int x2 = 0;
-			int y2 = 0;
-			switch (_objects[i]->GetType())
-			{
-			case StripObject::EStripObjectType::Screen:
-			{
-				Rectangle* screen;
-				screen = dynamic_cast<Rectangle*>(_objects[i]);
-				x1 = screen->GetDisX();
-				y1 = screen->GetDisY();
-				x2 = screen->GetDisX() + screen->GetDisWidth();
-				y2 = screen->GetDisY() + screen->GetDisHeight();
-				PasteFragmentToFieldMatrix(screen, x1, y1, x2, y2);
-			}
-				break;
-
-			case StripObject::EStripObjectType::Rectangle:
-			{
-				Rectangle* rect;
-				rect = dynamic_cast<Rectangle*>(_objects[i]);
-				x1 = rect->GetDisX();
-				y1 = rect->GetDisY();
-				x2 = rect->GetDisX() + rect->GetDisWidth();
-				y2 = rect->GetDisY() + rect->GetDisHeight();
-				PasteFragmentToFieldMatrix(rect, x1, y1, x2, y2);
-			}
-				break;
-			case StripObject::EStripObjectType::Line:
-			{
-				Line* line;
-				line = dynamic_cast<Line*>(_objects[i]);
-				x1 = line->GetDisX1();
-				y1 = line->GetDisY1();
-				x2 = line->GetDisX2();
-				y2 = line->GetDisY2();
-
-				switch (line->align)
-				{
-				case Line::ELineAlign::LeftTop:
-					if (x1 > 0 && x2 > 0)
-					{
-						x1--;
-						x2--;
-					}
-					break;
-				case Line::ELineAlign::LeftBottom:
-					if (x1 > 0 && x2 > 0 && y1 > 0 && y2 > 0)
-					{
-						x1--;
-						x2--;
-						y1--;
-						y2--;
-					}
-					break;
-				case Line::ELineAlign::RightBottom:
-					if (y1 > 0 && y2 > 0)
-					{
-						y1--;
-						y2--;
-					}
-					break;
-				default:
-					break;
-				}
-
-				PasteFragmentToFieldMatrix(line, x1, y1, x2, y2);
-			}
-			break;
-			}
-		}
-
 		DivideIntoAreas();
+		RasterizeAndPastAllStripObjects(dx, dy);
 		DisretizeAreas(dx, dy);
 		SetStartPointForAreas();
 		SortAreas();
@@ -169,8 +86,13 @@ public:
 		}
 	}
 
-	void PrintAreasInfo()
+	void PrintStructureInfo()
 	{
+		std::cout << "Size info:\n";
+		std::cout << "Minimum size by X: " << _minSizeX << "\n";
+		std::cout << "Minimum size by Y: " << _minSizeY << "\n";
+
+		std::cout << "\nAreas info:\n";
 		for (int i = 0; i < _areas.size(); i++)
 		{
 			std::cout << "Area " << i << " info:\n";
@@ -227,6 +149,101 @@ private:
 			objy++;
 			if (objy >= object->GetFieldMatrixFragmentRows()) break;
 			objx = 0;
+		}
+	}
+
+	void RasterizeAndPastAllStripObjects(double dx, double dy)
+	{
+		bool haveSignalConductor = false;
+		for (int i = 0; i < _objects.size(); i++)
+		{
+			_objects[i]->Rasterize(dx, dy);
+			if (_objects[i]->GetMaterial().materialType == Material::EMaterialType::SignalConductor)
+			{
+				haveSignalConductor = true;
+			}
+		}
+
+		if (!haveSignalConductor)
+		{
+			throw "StripStructure::BadCountSignalConductor[No-Conductors]";
+		}
+
+		UpdateFieldMatrix(GetScreen()->GetFieldMatrixFragmentRows(), GetScreen()->GetFieldMatrixFragmentCols());
+
+		for (int i = 0; i < _objects.size(); i++)
+		{
+			int x1 = 0;
+			int y1 = 0;
+			int x2 = 0;
+			int y2 = 0;
+			switch (_objects[i]->GetType())
+			{
+			case StripObject::EStripObjectType::Screen:
+			{
+				Rectangle* screen;
+				screen = dynamic_cast<Rectangle*>(_objects[i]);
+				x1 = screen->GetDisX();
+				y1 = screen->GetDisY();
+				x2 = screen->GetDisX() + screen->GetDisWidth();
+				y2 = screen->GetDisY() + screen->GetDisHeight();
+				PasteFragmentToFieldMatrix(screen, x1, y1, x2, y2);
+			}
+			break;
+
+			case StripObject::EStripObjectType::Rectangle:
+			{
+				Rectangle* rect;
+				rect = dynamic_cast<Rectangle*>(_objects[i]);
+				x1 = rect->GetDisX();
+				y1 = rect->GetDisY();
+				x2 = rect->GetDisX() + rect->GetDisWidth();
+				y2 = rect->GetDisY() + rect->GetDisHeight();
+				PasteFragmentToFieldMatrix(rect, x1, y1, x2, y2);
+			}
+			break;
+			case StripObject::EStripObjectType::Line:
+			{
+				Line* line;
+				line = dynamic_cast<Line*>(_objects[i]);
+				x1 = line->GetDisX1();
+				y1 = line->GetDisY1();
+				x2 = line->GetDisX2();
+				y2 = line->GetDisY2();
+
+				switch (line->align)
+				{
+				case Line::ELineAlign::LeftTop:
+					if (x1 > 0 && x2 > 0)
+					{
+						x1--;
+						x2--;
+					}
+					break;
+				case Line::ELineAlign::LeftBottom:
+					if (x1 > 0 && x2 > 0 && y1 > 0 && y2 > 0)
+					{
+						x1--;
+						x2--;
+						y1--;
+						y2--;
+					}
+					break;
+				case Line::ELineAlign::RightBottom:
+					if (y1 > 0 && y2 > 0)
+					{
+						y1--;
+						y2--;
+					}
+					break;
+				default:
+					break;
+				}
+
+				PasteFragmentToFieldMatrix(line, x1, y1, x2, y2);
+			}
+			break;
+			}
 		}
 	}
 
@@ -327,9 +344,28 @@ private:
 		}
 
 		// Find the smallest dimension on the X axis
-
+		_minSizeX = x[1] - x[0];
+		if (x.size() > 2)
+		{
+			for (int i = 1; i < x.size() - 1; i++)
+			{
+				if (x[i + 1] - x[i] < _minSizeX) {
+					_minSizeX = x[i + 1] - x[i];
+				}
+			}
+		}
 
 		// Find the smallest dimension on the Y axis
+		_minSizeY = y[1] - y[0];
+		if (y.size() > 2)
+		{
+			for (int i = 1; i < y.size() - 1; i++)
+			{
+				if (y[i + 1] - y[i] < _minSizeY) {
+					_minSizeY = y[i + 1] - y[i];
+				}
+			}
+		}
 
 		// Build areas from scaned X and Y
 		for (int i = 0; i < y.size() - 1; i++)
@@ -608,5 +644,10 @@ private:
 			}
 		}
 		return GetScreen()->GetMaterial();
+	}
+
+	Material** GetFieldMatrix()
+	{
+		return _fieldMatrix;
 	}
 };
