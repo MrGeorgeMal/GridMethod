@@ -21,9 +21,11 @@ int main()
 		screen->SetObject(air, 20.0, 10.0);
 		rect->SetObject(dielectric, 0.0, 4.0, 20.0, 1.5);
 		line1->SetObject(conductor, 4.0, 4.0 + 1.5, 8.0, 4.0 + 1.5);
-		line2->SetObject(conductor, 12.0, 4.0 + 1.5, 16.0, 4.0 + 1.5);
-		line3->SetObject(conductor, 4.0, 4.0 + 1.5 + 1, 8.0, 4.0 + 1.5 + 1);
-		line4->SetObject(conductor, 12.0, 4.0 + 1.5 + 1, 16.0, 4.0 + 1.5 + 1);
+		line2->SetObject(conductor, 8.0, 4.0 + 1.5, 16.0, 4.0 + 1.5 + 3);
+		line3->SetObject(conductor, 4.0, 4, 8.0, 4);
+		line3->align = Line::ELineAlign::RightBottom;
+		line4->SetObject(conductor, 12.0, 4, 18.0, 4);
+		line4->align = Line::ELineAlign::RightBottom;
 
 		stripStruct->AddObject(screen);
 		stripStruct->AddObject(rect);
@@ -32,7 +34,9 @@ int main()
 		stripStruct->AddObject(line3);
 		stripStruct->AddObject(line4);
 
-		stripStruct->BuildFieldMatrix(1.0, 1.0);
+		stripStruct->BuildFieldMatrix(0.5, 0.5);
+
+		stripStruct->PrintAreasInfo();
 		stripStruct->PrintStripStructure();
 	}
 	catch (const char* errorMsg)

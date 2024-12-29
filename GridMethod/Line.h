@@ -3,6 +3,16 @@
 
 class Line : public StripObject
 {
+public:
+	enum ELineAlign
+	{
+		LeftTop,
+		RightTop,
+		LeftBottom,
+		RightBottom,
+	};
+	ELineAlign align = ELineAlign::RightTop;
+
 private:
 	double _x1 = 0.0;
 	double _y1 = 0.0;

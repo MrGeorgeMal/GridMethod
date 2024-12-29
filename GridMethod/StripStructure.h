@@ -20,6 +20,7 @@ class StripStructure
 		int disY2;
 		double startDisY;
 		double startDisX;
+		double lengthToNearSignalConductor;
 	};
 
 private:
@@ -29,6 +30,9 @@ private:
 	int _fieldMatrixRows = 0;
 	int _fieldMatrixCols = 0;
 	Material** _fieldMatrix = new Material * [_fieldMatrixRows];
+	
+	double _minSizeX = 1.0;
+	double _minSizeY = 1.0;
 
 	int _transferMatrixSize = 0;
 	double* _capacityPartialDielectric = new double[_transferMatrixSize];
@@ -50,7 +54,7 @@ public:
 	void BuildFieldMatrix(double dx, double dy)
 	{
 		Screen* screen = GetScreen();
-		
+
 		for (int i = 0; i < _objects.size(); i++)
 		{
 			_objects[i]->Rasterize(dx, dy);
@@ -74,7 +78,6 @@ public:
 				y1 = screen->GetDisY();
 				x2 = screen->GetDisX() + screen->GetDisWidth();
 				y2 = screen->GetDisY() + screen->GetDisHeight();
-				std::cout << "Screen discret size: [" << x1 << " ; " << y1 << "] [" << x2 << " ; " << y2 << "]\n";
 				PasteFragmentToFieldMatrix(screen, x1, y1, x2, y2);
 			}
 				break;
@@ -87,9 +90,6 @@ public:
 				y1 = rect->GetDisY();
 				x2 = rect->GetDisX() + rect->GetDisWidth();
 				y2 = rect->GetDisY() + rect->GetDisHeight();
-				
-				std::cout << "Dielectric discret size: [" << x1 << " ; " << y1 << "] [" << x2 << " ; " << y2 << "]\n";
-
 				PasteFragmentToFieldMatrix(rect, x1, y1, x2, y2);
 			}
 				break;
@@ -102,7 +102,34 @@ public:
 				x2 = line->GetDisX2();
 				y2 = line->GetDisY2();
 
-				std::cout << "Conductor discret size: [" << x1 << " ; " << y1 << "] [" << x2 << " ; " << y2 << "]\n";
+				switch (line->align)
+				{
+				case Line::ELineAlign::LeftTop:
+					if (x1 > 0 && x2 > 0)
+					{
+						x1--;
+						x2--;
+					}
+					break;
+				case Line::ELineAlign::LeftBottom:
+					if (x1 > 0 && x2 > 0 && y1 > 0 && y2 > 0)
+					{
+						x1--;
+						x2--;
+						y1--;
+						y2--;
+					}
+					break;
+				case Line::ELineAlign::RightBottom:
+					if (y1 > 0 && y2 > 0)
+					{
+						y1--;
+						y2--;
+					}
+					break;
+				default:
+					break;
+				}
 
 				PasteFragmentToFieldMatrix(line, x1, y1, x2, y2);
 			}
@@ -113,6 +140,7 @@ public:
 		DivideIntoAreas();
 		DisretizeAreas(dx, dy);
 		SetStartPointForAreas();
+		SortAreas();
 	}
 
 	void PrintStripStructure()
@@ -138,6 +166,17 @@ public:
 				}
 			}
 			std::cout << "\n";
+		}
+	}
+
+	void PrintAreasInfo()
+	{
+		for (int i = 0; i < _areas.size(); i++)
+		{
+			std::cout << "Area " << i << " info:\n";
+			std::cout << "\tDiscterized Coordinate: [" << _areas[i].disX1 << " ; " << _areas[i].disY1 << "] ";
+			std::cout << ", [" << _areas[i].disX2 << " ; " << _areas[i].disY2 << "]\n";
+			std::cout << "\tStart Point: [" << _areas[i].startDisX << " ; " << _areas[i].startDisY << "]\n";
 		}
 	}
 
@@ -195,6 +234,7 @@ private:
 	{
 		Screen* screen = GetScreen();
 
+		// Scan structure by X coordinate
 		std::vector<double> x = std::vector<double>(0);
 		x.push_back(0.0);
 		bool findNewX = true;
@@ -240,6 +280,7 @@ private:
 			x.push_back(minX);
 		}
 
+		// Scan structure by Y coordinate
 		std::vector<double> y = std::vector<double>(0);
 		y.push_back(0.0);
 		bool findNewY = true;
@@ -285,6 +326,12 @@ private:
 			y.push_back(minY);
 		}
 
+		// Find the smallest dimension on the X axis
+
+
+		// Find the smallest dimension on the Y axis
+
+		// Build areas from scaned X and Y
 		for (int i = 0; i < y.size() - 1; i++)
 		{
 			for (int j = 0; j < x.size() - 1; j++)
@@ -299,6 +346,7 @@ private:
 			}
 		}
 
+		// Removing superfluous areas (combining areas with the same material that are close together)
 		for (int i = 0; i < _areas.size() - 1; i++)
 		{
 			int j = i + 1;
@@ -312,29 +360,6 @@ private:
 			}
 			if (i >= _areas.size() - 1) break;
 		}
-
-		std::cout << "Points scan X:\n";
-		for (int i = 0; i < x.size(); i++)
-		{
-			std::cout << "x" << i + 1 << " = " << x[i] << " ; ";
-		}
-		std::cout << "\n";
-
-		std::cout << "Points scan Y:\n";
-		for (int i = 0; i < y.size(); i++)
-		{
-			std::cout << "y" << i + 1 << " = " << y[i] << " ; ";
-		}
-		std::cout << "\n\n";
-
-		std::cout << "Areas:\n";
-		for (int i = 0; i < _areas.size(); i++)
-		{
-			std::cout << "area" << i + 1 << ": [" << _areas[i].x1 << " ; " << _areas[i].y1 << "] ";
-			std::cout << "[" << _areas[i].x2 << "; " << _areas[i].y2 << "]";
-			std::cout << "\n";
-		}
-		std::cout << "\n";
 	}
 
 	void DisretizeAreas(double dx, double dy)
@@ -346,15 +371,6 @@ private:
 			_areas[i].disX2 = floor(_areas[i].x2 / dx);
 			_areas[i].disY2 = floor(_areas[i].y2 / dy);
 		}
-
-		std::cout << "Discretized Areas:\n";
-		for (int i = 0; i < _areas.size(); i++)
-		{
-			std::cout << "area" << i + 1 << ": [" << _areas[i].disX1 << " ; " << _areas[i].disY1 << "] ";
-			std::cout << "[" << _areas[i].disX2 << "; " << _areas[i].disY2 << "]";
-			std::cout << "\n";
-		}
-		std::cout << "\n";
 	}
 
 	void SetStartPointForAreas()
@@ -411,7 +427,7 @@ private:
 						{
 							colsSumm[colsSumm.size() - 1]++;
 
-							if (maxColSumm < colsSumm[rowsSumm.size() - 1])
+							if (maxColSumm < colsSumm[colsSumm.size() - 1])
 							{
 								maxColSumm = colsSumm[colsSumm.size() - 1];
 							}
@@ -420,7 +436,6 @@ private:
 				}
 
 				// Finding special points. There can be more than one
-				std::cout << "\n\n\n";
 				std::vector<int> specialPointY = std::vector<int>();
 				std::vector<int> specialPointX = std::vector<int>();
 				for (int ri = 0; ri < rowsSumm.size(); ri++)
@@ -433,13 +448,10 @@ private:
 							{
 								specialPointY.push_back(ri);
 								specialPointX.push_back(ci);
-								std::cout << "Special point [" << ci << " ; " << ri << "]\n";
 							}
 						}
 					}
 				}
-				std::cout << "\n\n\n";
-
 
 				// If there are several special points, describe a square region through them and find its center.
 				// The center of the square region will be a special point.
@@ -447,228 +459,105 @@ private:
 				{
 					int deltax = floor( (specialPointX[specialPointX.size() - 1] - specialPointX[0]) / 2);
 					int deltay = floor ( (specialPointY[specialPointY.size() - 1] - specialPointY[0]) / 2);
-					_areas[i].startDisX = specialPointX[0] + deltax;
-					_areas[i].startDisY = specialPointY[0] + deltay;
+					_areas[i].startDisX = _areas[i].disX1 + specialPointX[0] + deltax;
+					_areas[i].startDisY = _areas[i].disY1 + specialPointY[0] + deltay;
+				}
+				else
+				{
+					_areas[i].startDisX = _areas[i].disX1 + specialPointX[0];
+					_areas[i].startDisY = _areas[i].disY1 + specialPointY[0];
 				}
 
-				std::cout << "Area " << i << "start point: [" << _areas[i].startDisX << " ; " << _areas[i].startDisY << "]\n";
+				_areas[i].lengthToNearSignalConductor = 0.0;
+			}
+
+			// If the area does not contain signal conductors,
+			// the minimum length of each vertex of the area to the signal conductors is determined.
+			// The vertex that is closest to the signal conductors is set as the starting point
+			else
+			{
+				// Finding the coordinates of the points that correspond to the material of the signal conductor
+				std::vector<int> conductorX = std::vector<int>(0);
+				std::vector<int> conductorY = std::vector<int>(0);
+
+				for (int y = 0; y < _fieldMatrixRows; y++)
+				{
+					for (int x = 0; x < _fieldMatrixCols; x++)
+					{
+						if (_fieldMatrix[y][x].materialType == Material::EMaterialType::SignalConductor)
+						{
+							conductorY.push_back(y);
+							conductorX.push_back(x);
+						}
+					}
+				}
+
+				// Finding the minimum length to the conductor
+				double deltax = _areas[i].disX1 - conductorX[0];
+				double deltay = _areas[i].disY1 - conductorY[0];
+				double minLength = sqrt((deltax * deltax) + (deltay * deltay));
+				minLength = floor(minLength * 1000) / 1000;
+				_areas[i].startDisX = _areas[i].disX1;
+				_areas[i].startDisY = _areas[i].disY1;
+
+				for (int j = 0; j < conductorY.size(); j++)
+				{
+					deltax = _areas[i].disX1 - conductorX[j];
+					deltay = _areas[i].disY1 + (_areas[i].disY2 - _areas[i].disY1 - 1) - conductorY[j];
+					double newMinLength = sqrt((deltax * deltax) + (deltay * deltay));
+					newMinLength = floor(newMinLength * 1000) / 1000;
+					if (newMinLength < minLength)
+					{
+						_areas[i].startDisX = _areas[i].disX1;
+						_areas[i].startDisY = _areas[i].disY1 + (_areas[i].disY2 - _areas[i].disY1 - 1);
+						minLength = newMinLength;
+					}
+
+					deltax = _areas[i].disX1 + (_areas[i].disX2 - _areas[i].disX1 - 1) - conductorX[j];
+					deltay = _areas[i].disY1 + (_areas[i].disY2 - _areas[i].disY1 - 1) - conductorY[j];
+					newMinLength = sqrt((deltax * deltax) + (deltay * deltay));
+					newMinLength = floor(newMinLength * 1000) / 1000;
+					if (newMinLength < minLength)
+					{
+						_areas[i].startDisX = _areas[i].disX1 + (_areas[i].disX2 - _areas[i].disX1 - 1);
+						_areas[i].startDisY = _areas[i].disY1 + (_areas[i].disY2 - _areas[i].disY1 - 1);
+						minLength = newMinLength;
+					}
+
+					deltax = _areas[i].disX1 + (_areas[i].disX2 - _areas[i].disX1 - 1) - conductorX[j];
+					deltay = _areas[i].disY1 - conductorY[j];
+					newMinLength = sqrt((deltax * deltax) + (deltay * deltay));
+					newMinLength = floor(newMinLength * 1000) / 1000;
+					if (newMinLength < minLength)
+					{
+						_areas[i].startDisX = _areas[i].disX1 + (_areas[i].disX2 - _areas[i].disX1 - 1);
+						_areas[i].startDisY = _areas[i].disY1 - conductorY[j];
+						minLength = newMinLength;
+					}
+				}
+				_areas[i].lengthToNearSignalConductor = minLength;
 			}
 		}
 	}
 
 	void SortAreas()
 	{
-		// Finding the coordinates of the points that correspond to the material of the signal conductor
-		std::vector<int> conductorX = std::vector<int>(0);
-		std::vector<int> conductorY = std::vector<int>(0);
-
-		for (int y = 0; y < _fieldMatrixRows; y++)
+		if (_areas.size() > 1)
 		{
-			for (int x = 0; x < _fieldMatrixCols; x++)
+			for (int i = 1; i < _areas.size(); i++)
 			{
-				if (_fieldMatrix[y][x].materialType == Material::EMaterialType::SignalConductor)
+				bool isSorted = true;
+				for (int j = 0; j < _areas.size() - i; j++)
 				{
-					conductorY.push_back(y);
-					conductorX.push_back(x);
-				}
-			}
-		}
-
-
-		// Finding the minimum length to the conductor
-		double deltax = _areas[0].disX1 - conductorX[0];
-		double deltay = _areas[0].disY1 - conductorY[0];
-		double minLength = sqrt((deltax * deltax) + (deltay * deltay));
-		minLength = floor(minLength * 1000) / 1000;
-
-		for (int i = 0; i < _areas.size(); i++)
-		{
-			bool stopFindMinLength = false;
-
-			for (int j = 0; j < conductorY.size(); j++)
-			{
-				for (int y = _areas[i].disY1; y < _areas[i].disY2; y++)
-				{
-					for (int x = _areas[i].disX1; x < _areas[i].disX2; x++)
+					if (_areas[j].lengthToNearSignalConductor > _areas[j + 1].lengthToNearSignalConductor)
 					{
-						if (y == conductorY[j] && x == conductorX[j])
-						{
-							minLength = 0.0;
-							stopFindMinLength = true;
-							break;
-						}
-						else
-						{
-							deltax = x - conductorX[j];
-							deltay = y - conductorY[j];
-							double newMinLength = sqrt((deltax * deltax) + (deltay * deltay));
-							newMinLength = floor(newMinLength * 1000) / 1000;
-
-							if (newMinLength < minLength)
-							{
-								minLength = newMinLength;
-							}
-						}
-					}
-					if (stopFindMinLength) break;
-				}
-				if (stopFindMinLength) break;
-			}
-		}
-
-		// Finding startX and startY for Area
-		for (int i = 0; i < _areas.size(); i++)
-		{
-			std::vector<int> nearestPointsY = std::vector<int>(0);
-			std::vector<int> nearestPointsX = std::vector<int>(0);
-
-			for (int j = 0; j < conductorY.size(); j++)
-			{
-				for (int y = _areas[i].disY1; y < _areas[i].disY2; y++)
-				{
-					for (int x = _areas[i].disX1; x < _areas[i].disX2; x++)
-					{
-						if (y == conductorY[j] && x == conductorX[j])
-						{
-							nearestPointsY.push_back(y);
-							nearestPointsX.push_back(x);
-						}
-						else
-						{
-							deltax = x - conductorX[j];
-							deltay = y - conductorY[j];
-							double newMinLength = sqrt((deltax * deltax) + (deltay * deltay));
-							newMinLength = floor(newMinLength * 1000) / 1000;
-
-							if (newMinLength <= minLength)
-							{
-								nearestPointsY.push_back(y);
-								nearestPointsX.push_back(x);
-							}
-						}
+						Area tempArea = _areas[j];
+						_areas[j] = _areas[j + 1];
+						_areas[j + 1] = tempArea;
+						isSorted = false;
 					}
 				}
-			}
-
-			// If the conductor is not inside the area,
-			// determine the best starting point by the square area formed by the nearest points to the conductor
-			if (minLength > 0.0)
-			{
-				// Find left bottom and right top points, which form the square region of the nearest points
-				int leftBoottomY = nearestPointsY[0];
-				int leftBoottomX = nearestPointsX[0];
-				int rightTopY = nearestPointsY[0];
-				int rightTopX = nearestPointsX[0];
-
-				for (int j = 0; j < nearestPointsY.size(); j++)
-				{
-					if (nearestPointsY[j] < leftBoottomY && nearestPointsX[j] < leftBoottomX)
-					{
-						leftBoottomY = nearestPointsY[j];
-						leftBoottomX = nearestPointsX[j];
-					}
-					if (nearestPointsY[j] > rightTopY && nearestPointsX[j] > rightTopX)
-					{
-						rightTopY = nearestPointsY[j];
-						rightTopX = nearestPointsX[j];
-					}
-				}
-
-				int centerY = leftBoottomY + floor(abs(float(rightTopY) - float(leftBoottomY)) / 2);
-				int centerX = leftBoottomX + floor(abs(float(rightTopX) - float(leftBoottomX)) / 2);
-				_areas[i].startDisY = centerY;
-				_areas[i].startDisX = centerX;
-			}
-			// Else, search for the point where the largest number of conductors is adjacent
-			else
-			{
-				int maxConductorNumber = 1;
-				for (int j = 0; j < nearestPointsY.size(); j++)
-				{
-					int conductorNumber = 1;
-					int y = nearestPointsY[j];
-					int x = nearestPointsY[j];
-					_areas[i].startDisY = y;
-					_areas[i].startDisX = x;
-
-					if (y > 0)
-					{
-						if (_fieldMatrix[y - 1][x].materialType == Material::EMaterialType::SignalConductor)
-						{
-							conductorNumber++;
-						}
-					}
-					if (y < _fieldMatrixRows - 1)
-					{
-						if (_fieldMatrix[y + 1][x].materialType == Material::EMaterialType::SignalConductor)
-						{
-							conductorNumber++;
-						}
-					}
-					if (x > 0)
-					{
-						if (_fieldMatrix[y][x - 1].materialType == Material::EMaterialType::SignalConductor)
-						{
-							conductorNumber++;
-						}
-					}
-					if (x < _fieldMatrixCols - 1)
-					{
-						if (_fieldMatrix[y][x + 1].materialType == Material::EMaterialType::SignalConductor)
-						{
-							conductorNumber++;
-						}
-					}
-					if (y > 0 && x > 0)
-					{
-						if (_fieldMatrix[y - 1][x - 1].materialType == Material::EMaterialType::SignalConductor)
-						{
-							conductorNumber++;
-						}
-					}
-					if (y < _fieldMatrixRows - 1 && x > 0)
-					{
-						if (_fieldMatrix[y + 1][x - 1].materialType == Material::EMaterialType::SignalConductor)
-						{
-							conductorNumber++;
-						}
-					}
-					if (y > 0 && x < _fieldMatrixCols - 1)
-					{
-						if (_fieldMatrix[y - 1][x + 1].materialType == Material::EMaterialType::SignalConductor)
-						{
-							conductorNumber++;
-						}
-					}
-					if (y < _fieldMatrixRows - 1 && x < _fieldMatrixCols - 1)
-					{
-						if (_fieldMatrix[y + 1][x + 1].materialType == Material::EMaterialType::SignalConductor)
-						{
-							conductorNumber++;
-						}
-					}
-
-					if (conductorNumber > maxConductorNumber)
-					{
-						maxConductorNumber = conductorNumber;
-						_areas[i].startDisY = y;
-						_areas[i].startDisX = x;
-					}
-				}
-			}
-		}
-
-		// Sort Areas in order of increasing length to conductors
-		for (int i = 0; i < _areas.size(); i++)
-		{
-			deltax = _areas[0].startDisX - conductorX[0];
-			deltay = _areas[0].startDisY - conductorY[0];
-			minLength = sqrt((deltax * deltax) + (deltay * deltay));
-			minLength = floor(minLength * 1000) / 1000;
-
-			for (int j = 0; j < conductorY.size(); j++)
-			{
-
+				if (isSorted) break;
 			}
 		}
 	}
