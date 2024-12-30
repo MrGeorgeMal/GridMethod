@@ -159,9 +159,21 @@ public:
 					}
 				}
 			}
-			std::cout << "Max Delta Potential: " << maxDeltaPotential << "\n";
+			//std::cout << "Max Delta Potential: " << maxDeltaPotential << "\n";
 		}
 		std::cout << "Number of iterations: " << iterationsNumber << "\n";
+	}
+
+	static void CalculateEnergy(Material** field, int rows, int cols)
+	{
+		double energy = 0.0;
+		for (int y = 0; y < rows; y++)
+		{
+			for (int x = 0; x < cols; x++)
+			{
+
+			}
+		}
 	}
 
 private:
