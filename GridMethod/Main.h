@@ -5,3 +5,4 @@
 #include "Screen.h"
 #include "Line.h"
 #include "StripStructure.h"
+#include "GridMethod.h"

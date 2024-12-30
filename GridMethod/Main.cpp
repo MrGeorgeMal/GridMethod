@@ -35,10 +35,13 @@ int main()
 		stripStruct->AddObject(line3);
 		stripStruct->AddObject(line4);
 
-		stripStruct->BuildFieldMatrix(1.0, 1.0);
+		stripStruct->BuildFieldMatrix(0.05, 0.05);
 
 		stripStruct->PrintStructureInfo();
 		stripStruct->PrintStripStructure();
+
+		GridMethod::CaclulateFieldMatrix(stripStruct);
+		stripStruct->SaveFieldMatrixToFile();
 	}
 	catch (const char* errorMsg)
 	{

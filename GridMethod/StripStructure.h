@@ -4,6 +4,7 @@
 #include "Rectangle.h"
 #include "Line.h"
 #include <vector>
+#include <fstream>
 
 class StripStructure
 {
@@ -98,6 +99,7 @@ public:
 	void PrintStructureInfo()
 	{
 		std::cout << "Size info:\n";
+		std::cout << "Cols and Rows: [" << _fieldMatrixRows << " ; " << _fieldMatrixCols << "]\n";
 		std::cout << "Minimum size by X: " << _minSizeX << "\n";
 		std::cout << "Minimum size by Y: " << _minSizeY << "\n";
 
@@ -112,6 +114,7 @@ public:
 
 		std::cout << "\nSignal conductors info:\n";
 		std::cout << "Signal conductors count: " << _signalConductorsPoints.size() << "\n";
+		/*
 		for (int i = 0; i < _signalConductorsPoints.size(); i++)
 		{
 			std::cout << "Signal conductor " << i << " points: ";
@@ -120,6 +123,27 @@ public:
 				std::cout << "[" << _signalConductorsPoints[i][j].x << " ; " << _signalConductorsPoints[i][j].y << "] , ";
 			}
 			std::cout << "\n";
+		}
+		*/
+	}
+
+	void SaveFieldMatrixToFile()
+	{
+		std::ofstream file;
+		file.open("field matrix.csv");
+		if (!file.is_open())
+		{
+			throw "StripStructure::CannotOpenFile";
+			return;
+		}
+		
+		for (int y = 0; y < _fieldMatrixRows; y++)
+		{
+			for (int x = 0; x < _fieldMatrixCols; x++)
+			{
+				file << _fieldMatrix[y][x].potentialValue << ";";
+			}
+			file << "\n";
 		}
 	}
 
@@ -769,8 +793,14 @@ private:
 		return GetScreen()->GetMaterial();
 	}
 
-	Material** GetFieldMatrix()
-	{
-		return _fieldMatrix;
-	}
+public:
+	Material** GetFieldMatrix() { return _fieldMatrix; }
+
+	int GetFieldMatrixRows() { return _fieldMatrixRows; }
+
+	int GetFieldMatrixCols() { return _fieldMatrixCols; }
+
+	std::vector<Area> GetAreas() { return _areas; }
+
+	std::vector<std::vector<DiscretePoint>> GetSignalConductorsPoints() { return _signalConductorsPoints; }
 };
