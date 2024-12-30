@@ -31,9 +31,9 @@ int main()
 		stripStruct->AddObject(screen);
 		stripStruct->AddObject(rect);
 		stripStruct->AddObject(line1);
-		//stripStruct->AddObject(line2);
-		//stripStruct->AddObject(line3);
-		//stripStruct->AddObject(line4);
+		stripStruct->AddObject(line2);
+		stripStruct->AddObject(line3);
+		stripStruct->AddObject(line4);
 
 		stripStruct->BuildFieldMatrix(1.0, 1.0);
 

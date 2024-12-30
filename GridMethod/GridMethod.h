@@ -8,7 +8,7 @@ public:
 	{
 		double eps = 1e-6;
 
-
+		
 	}
 
 private:

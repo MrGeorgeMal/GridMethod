@@ -7,25 +7,33 @@
 
 class StripStructure
 {
+public:
 	struct Area
 	{
 		Material material;
-		double x1;
-		double y1;
-		double x2;
-		double y2;
-		int disX1;
-		int disY1;
-		int disX2;
-		int disY2;
-		double startDisY;
-		double startDisX;
-		double lengthToNearSignalConductor;
+		double x1 = 0.0;
+		double y1 = 0.0;
+		double x2 = 0.0;
+		double y2 = 0.0;
+		int disX1 = 0;
+		int disY1 = 0;
+		int disX2 = 0;
+		int disY2 = 0;
+		int startDisY = 0;
+		int startDisX = 0;
+		double lengthToNearSignalConductor = 0.0;
+	};
+
+	struct DiscretePoint
+	{
+		int x = 0;
+		int y = 0;
 	};
 
 private:
 	std::vector<StripObject*> _objects = std::vector<StripObject*>(0);
 	std::vector<Area> _areas = std::vector<Area>(0);
+	std::vector<std::vector<DiscretePoint>> _signalConductorsPoints = std::vector<std::vector<DiscretePoint>>(0);
 
 	int _fieldMatrixRows = 0;
 	int _fieldMatrixCols = 0;
@@ -58,6 +66,7 @@ public:
 		DisretizeAreas(dx, dy);
 		SetStartPointForAreas();
 		SortAreas();
+		FindSignalConductorsPoints();
 	}
 
 	void PrintStripStructure()
@@ -99,6 +108,18 @@ public:
 			std::cout << "\tDiscterized Coordinate: [" << _areas[i].disX1 << " ; " << _areas[i].disY1 << "] ";
 			std::cout << ", [" << _areas[i].disX2 << " ; " << _areas[i].disY2 << "]\n";
 			std::cout << "\tStart Point: [" << _areas[i].startDisX << " ; " << _areas[i].startDisY << "]\n";
+		}
+
+		std::cout << "\nSignal conductors info:\n";
+		std::cout << "Signal conductors count: " << _signalConductorsPoints.size() << "\n";
+		for (int i = 0; i < _signalConductorsPoints.size(); i++)
+		{
+			std::cout << "Signal conductor " << i << " points: ";
+			for (int j = 0; j < _signalConductorsPoints[i].size(); j++)
+			{
+				std::cout << "[" << _signalConductorsPoints[i][j].x << " ; " << _signalConductorsPoints[i][j].y << "] , ";
+			}
+			std::cout << "\n";
 		}
 	}
 
@@ -594,6 +615,108 @@ private:
 					}
 				}
 				if (isSorted) break;
+			}
+		}
+	}
+
+	void FindSignalConductorsPoints()
+	{
+		for (int y = 0; y < _fieldMatrixRows; y++)
+		{
+			for (int x = 0; x < _fieldMatrixCols; x++)
+			{
+				if (_fieldMatrix[y][x].materialType == Material::EMaterialType::SignalConductor)
+				{
+					bool skipPoint = false;
+					for (int i = 0; i < _signalConductorsPoints.size(); i++)
+					{
+						for (int j = 0; j < _signalConductorsPoints[i].size(); j++)
+						{
+							if (_signalConductorsPoints[i][j].x == x && _signalConductorsPoints[i][j].y == y)
+							{
+								skipPoint = true;
+								break;
+							}
+						}
+						if (skipPoint) break;
+					}
+
+					if (!skipPoint)
+					{
+						DiscretePoint newDiscretePoint;
+						newDiscretePoint.x = x;
+						newDiscretePoint.y = y;
+
+						_signalConductorsPoints.push_back(std::vector<DiscretePoint>(0));
+						_signalConductorsPoints[_signalConductorsPoints.size() - 1].push_back(newDiscretePoint);
+
+						DetectAllSignalConductorPoint(x, y);
+					}
+				}
+			}
+		}
+	}
+
+	void DetectAllSignalConductorPoint(int x, int y)
+	{
+		if (y > 0)
+		{
+			DetectNextSignalConductorPoint(x, y - 1);
+		}
+		if (x > 0)
+		{
+			DetectNextSignalConductorPoint(x - 1, y);
+		}
+		if (y < _fieldMatrixRows - 1)
+		{
+			DetectNextSignalConductorPoint(x, y + 1);
+		}
+		if (x < _fieldMatrixCols - 1)
+		{
+			DetectNextSignalConductorPoint(x + 1, y);
+		}
+		if (y > 0 && x > 0)
+		{
+			DetectNextSignalConductorPoint(x - 1, y - 1);
+		}
+		if (y < _fieldMatrixRows - 1 && x > 0)
+		{
+			DetectNextSignalConductorPoint(x - 1, y + 1);
+		}
+		if (y < _fieldMatrixRows - 1 && x < _fieldMatrixCols - 1)
+		{
+			DetectNextSignalConductorPoint(x + 1, y + 1);
+		}
+		if (y > 0 && x < _fieldMatrixCols - 1)
+		{
+			DetectNextSignalConductorPoint(x + 1, y - 1);
+		}
+	}
+
+	void DetectNextSignalConductorPoint(int x, int y)
+	{
+		if (_fieldMatrix[y][x].materialType == Material::EMaterialType::SignalConductor)
+		{
+			bool skipPoint = false;
+			for (int i = _signalConductorsPoints[_signalConductorsPoints.size() - 1].size() - 1; i >= 0; i--)
+			{
+				if (_signalConductorsPoints[_signalConductorsPoints.size() - 1][i].x == x &&
+					_signalConductorsPoints[_signalConductorsPoints.size() - 1][i].y == y)
+				{
+					skipPoint = true;
+					break;
+				}
+			}
+
+			if (!skipPoint)
+			{
+				DiscretePoint newDiscretePoint;
+				newDiscretePoint.x = x;
+				newDiscretePoint.y = y;
+
+				_signalConductorsPoints[_signalConductorsPoints.size() - 1].push_back(newDiscretePoint);
+
+				DetectAllSignalConductorPoint(x, y);
 			}
 		}
 	}
