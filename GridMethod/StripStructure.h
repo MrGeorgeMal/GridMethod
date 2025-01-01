@@ -43,13 +43,13 @@ private:
 	double _minSizeX = 1.0;
 	double _minSizeY = 1.0;
 
-	int _transferMatrixSize = 0;
-	double* _capacityPartialDielectric = new double[_transferMatrixSize];
-	double* _capacityPartialAir = new double[_transferMatrixSize];
-	double** _capacityTransfer = new double*[_transferMatrixSize];
-	double** _inductanceTransfer = new double*[_transferMatrixSize];
-	double* _effectivePermettivity = new double[_transferMatrixSize];
-	double* _waveImpedance = new double[_transferMatrixSize];
+	double _energy = 0.0;
+	std::vector<double> _capacityPartialDielectric = std::vector<double>(0);
+	std::vector<double> _capacityPartialAir = std::vector<double>(0);
+	std::vector<std::vector<double>> _capacityTransfer = std::vector<std::vector<double>>(0);
+	std::vector<std::vector<double>> _inductanceTransfer = std::vector<std::vector<double>>(0);
+	std::vector<double> _effectivePermettivity = std::vector<double>(0);
+	std::vector<double> _waveImpedance = std::vector<double>(0);
 	double _characteristicImpedance = 0.0;
 
 public:
@@ -98,7 +98,7 @@ public:
 
 	void PrintStructureInfo()
 	{
-		std::cout << "Size info:\n";
+		std::cout << "\nSize info:\n";
 		std::cout << "Cols and Rows: [" << _fieldMatrixRows << " ; " << _fieldMatrixCols << "]\n";
 		std::cout << "Minimum size by X: " << _minSizeX << "\n";
 		std::cout << "Minimum size by Y: " << _minSizeY << "\n";
@@ -114,17 +114,8 @@ public:
 
 		std::cout << "\nSignal conductors info:\n";
 		std::cout << "Signal conductors count: " << _signalConductorsPoints.size() << "\n";
-		/*
-		for (int i = 0; i < _signalConductorsPoints.size(); i++)
-		{
-			std::cout << "Signal conductor " << i << " points: ";
-			for (int j = 0; j < _signalConductorsPoints[i].size(); j++)
-			{
-				std::cout << "[" << _signalConductorsPoints[i][j].x << " ; " << _signalConductorsPoints[i][j].y << "] , ";
-			}
-			std::cout << "\n";
-		}
-		*/
+
+		std::cout << "\nEnergy: " << _energy << "\n";
 	}
 
 	void SaveFieldMatrixToFile()
@@ -803,4 +794,16 @@ public:
 	std::vector<Area> GetAreas() { return _areas; }
 
 	std::vector<std::vector<DiscretePoint>> GetSignalConductorsPoints() { return _signalConductorsPoints; }
+
+	void SetEnergy(double value) { _energy = value; }
+
+	double GetEnergy() { return _energy; }
+
+	void AddCapacityPartialDielectric(double newValue) { _capacityPartialDielectric.push_back(newValue); }
+
+	std::vector<double> GetCapacityPartialDielectric() { return _capacityPartialDielectric; }
+
+	void AddCapacityPartialAir(double newValue) { _capacityPartialAir.push_back(newValue); }
+
+	std::vector<double> GetCapacityPartialAir() { return _capacityPartialAir; }
 };

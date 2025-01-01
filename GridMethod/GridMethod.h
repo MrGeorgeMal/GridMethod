@@ -161,19 +161,38 @@ public:
 			}
 			//std::cout << "Max Delta Potential: " << maxDeltaPotential << "\n";
 		}
-		std::cout << "Number of iterations: " << iterationsNumber << "\n";
+		std::cout << "Number of iterations of grid method calculation: " << iterationsNumber << "\n";
 	}
 
-	static void CalculateEnergy(Material** field, int rows, int cols)
+	static void CalculateEnergy(StripStructure* stripStructure)
 	{
 		double energy = 0.0;
-		for (int y = 0; y < rows; y++)
+		for (int y = 0; y < stripStructure->GetFieldMatrixRows(); y++)
 		{
-			for (int x = 0; x < cols; x++)
+			for (int x = 0; x < stripStructure->GetFieldMatrixCols(); x++)
 			{
-
+				double leftBottomU = stripStructure->GetFieldMatrix()[y][x].potentialValue;
+				double rightTopU = 0.0;
+				double rightBottomU = 0.0;
+				double leftTopU = 0.0;
+				if (y + 1 <= stripStructure->GetFieldMatrixRows() - 1 && x + 1 <= stripStructure->GetFieldMatrixCols() - 1)
+				{
+					rightTopU = stripStructure->GetFieldMatrix()[y + 1][x + 1].potentialValue;
+				}
+				if (x + 1 <= stripStructure->GetFieldMatrixCols() - 1)
+				{
+					rightBottomU = stripStructure->GetFieldMatrix()[y][x + 1].potentialValue;
+				}
+				if (y + 1 <= stripStructure->GetFieldMatrixRows() - 1)
+				{
+					leftTopU = stripStructure->GetFieldMatrix()[y + 1][x].potentialValue;
+				}
+				double firstCross = (leftBottomU - rightTopU) * (leftBottomU - rightTopU);
+				double secondCross = (rightBottomU - leftTopU) * (rightBottomU - leftTopU);
+				energy += (stripStructure->GetFieldMatrix()[y][x].dielectricValue / 4) * (firstCross + secondCross);
 			}
 		}
+		stripStructure->SetEnergy(energy);
 	}
 
 private:
