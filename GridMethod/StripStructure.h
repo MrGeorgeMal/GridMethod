@@ -43,11 +43,11 @@ private:
 	double _minSizeX = 1.0;
 	double _minSizeY = 1.0;
 
-	double _energy = 0.0;
+	std::vector<double> _energy = std::vector<double>(0);
 	std::vector<double> _capacityPartialDielectric = std::vector<double>(0);
 	std::vector<double> _capacityPartialAir = std::vector<double>(0);
-	std::vector<std::vector<double>> _capacityTransfer = std::vector<std::vector<double>>(0);
-	std::vector<std::vector<double>> _inductanceTransfer = std::vector<std::vector<double>>(0);
+	std::vector<std::vector<double>> _linearCapacitties = std::vector<std::vector<double>>(0);
+	std::vector<std::vector<double>> _linearInductance = std::vector<std::vector<double>>(0);
 	std::vector<double> _effectivePermettivity = std::vector<double>(0);
 	std::vector<double> _waveImpedance = std::vector<double>(0);
 	double _characteristicImpedance = 0.0;
@@ -85,7 +85,10 @@ public:
 					if (_fieldMatrix[i][j].dielectricValue > 1.0) std::cout << char(177);
 					else std::cout << char(176);
 					break;
-				case Material::EMaterialType::SignalConductor | Material::EMaterialType::ScreenConductor:
+				case Material::EMaterialType::SignalConductor:
+					std::cout << char(219);
+					break;
+				case Material::EMaterialType::ScreenConductor:
 					std::cout << char(219);
 					break;
 				default:
@@ -115,13 +118,17 @@ public:
 		std::cout << "\nSignal conductors info:\n";
 		std::cout << "Signal conductors count: " << _signalConductorsPoints.size() << "\n";
 
-		std::cout << "\nEnergy: " << _energy << "\n";
+		std::cout << "\nEnergy:\n";
+		for (int i = 0; i < _energy.size(); i++)
+		{
+			std::cout << "Energy " << i << ": " << _energy[i] << "\n";
+		}
 	}
 
-	void SaveFieldMatrixToFile()
+	void SaveFieldMatrixToFile(const char* fileName)
 	{
 		std::ofstream file;
-		file.open("field matrix.csv");
+		file.open(fileName);
 		if (!file.is_open())
 		{
 			throw "StripStructure::CannotOpenFile";
@@ -795,15 +802,9 @@ public:
 
 	std::vector<std::vector<DiscretePoint>> GetSignalConductorsPoints() { return _signalConductorsPoints; }
 
-	void SetEnergy(double value) { _energy = value; }
-
-	double GetEnergy() { return _energy; }
+	void AddEnergy(double value) { _energy.push_back(value); }
 
 	void AddCapacityPartialDielectric(double newValue) { _capacityPartialDielectric.push_back(newValue); }
 
-	std::vector<double> GetCapacityPartialDielectric() { return _capacityPartialDielectric; }
-
 	void AddCapacityPartialAir(double newValue) { _capacityPartialAir.push_back(newValue); }
-
-	std::vector<double> GetCapacityPartialAir() { return _capacityPartialAir; }
 };

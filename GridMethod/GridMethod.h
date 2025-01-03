@@ -1,10 +1,89 @@
 #pragma once
 #include "StripStructure.h"
+#include "chrono"
 
 static class GridMethod
 {
 public:
-	static void SetStartPotential(StripStructure* stripStructure)
+	static void CalculatePartialMatrix(StripStructure* stripStructure)
+	{
+		int conductorsNumber = stripStructure->GetSignalConductorsPoints().size();
+		switch (conductorsNumber)
+		{
+		case 0:
+			throw "GridMethod::BadSignalConductorsNumber(Non-Conductors)";
+			break;
+		case 1:
+			CalculatePartialMatrix_OneConductor(stripStructure);
+			break;
+		case 2:
+			CalculatePartialMatrix_TwoConductor(stripStructure);
+			break;
+		default:
+			CalculatePartialMatrix_ThreeOrMoreConductor(stripStructure);
+			break;
+		}
+	}
+
+	static void CalculatePartialMatrix_OneConductor(StripStructure* stripStructure)
+	{
+		int iterations;
+		std::chrono::steady_clock::time_point start, end;
+		std::chrono::milliseconds msec;
+
+		start = std::chrono::high_resolution_clock::now();
+		SetStartPotential_OneConductor(stripStructure);
+		iterations = CalculateFieldMatrix(stripStructure, false);
+		CalculateEnergy(stripStructure, false);
+		end = std::chrono::high_resolution_clock::now();
+		msec = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+		std::cout << "GridMethod calculation info:\n";
+		std::cout << "One conductor\n";
+		std::cout << "Dielectric filling\n";
+		std::cout << "Iteration of grid method: " << iterations << "\n";
+		std::cout << "Time: " << msec.count() << " milliseconds\n\n";
+		stripStructure->SaveFieldMatrixToFile("OneConductor_Dielectric.csv");
+
+		start = std::chrono::high_resolution_clock::now();
+		SetStartPotential_OneConductor(stripStructure);
+		iterations = CalculateFieldMatrix(stripStructure, true);
+		CalculateEnergy(stripStructure, true);
+		end = std::chrono::high_resolution_clock::now();
+		msec = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+		std::cout << "GridMethod calculation info:\n";
+		std::cout << "One conductor\n";
+		std::cout << "Air filling\n";
+		std::cout << "Iteration of grid method: " << iterations << "\n";
+		std::cout << "Time: " << msec.count() << " milliseconds\n\n";
+		stripStructure->SaveFieldMatrixToFile("OneConductor_Air.csv");
+	}
+
+	static void CalculatePartialMatrix_TwoConductor(StripStructure* stripStructure)
+	{
+		SetStartPotential_TwoConductor(stripStructure, 1.0, 1.0);
+		CalculateFieldMatrix(stripStructure, false);
+		CalculateEnergy(stripStructure, false);
+
+		SetStartPotential_TwoConductor(stripStructure, 1.0, 1.0);
+		CalculateFieldMatrix(stripStructure, true);
+		CalculateEnergy(stripStructure, true);
+
+		SetStartPotential_TwoConductor(stripStructure, 1.0, -1.0);
+		CalculateFieldMatrix(stripStructure, false);
+		CalculateEnergy(stripStructure, false);
+
+		SetStartPotential_TwoConductor(stripStructure, 1.0, -1.0);
+		CalculateFieldMatrix(stripStructure, true);
+		CalculateEnergy(stripStructure, true);
+	}
+
+	static void CalculatePartialMatrix_ThreeOrMoreConductor(StripStructure* stripStructure)
+	{
+		throw "GridMethod::The calculation of strip structures with three or more signal conductors is under development.";
+		return;
+	}
+
+	static void SetStartPotential_OneConductor(StripStructure* stripStructure)
 	{
 		for (int y = 0; y < stripStructure->GetFieldMatrixRows(); y++)
 		{
@@ -25,11 +104,35 @@ public:
 		}
 	}
 
-	static void CaclulateFieldMatrix(StripStructure* stripStructure)
+	static void SetStartPotential_TwoConductor(StripStructure* stripStructure, double FirstPotential, double SecondPotential)
+	{
+		for (int y = 0; y < stripStructure->GetFieldMatrixRows(); y++)
+		{
+			for (int x = 0; x < stripStructure->GetFieldMatrixCols(); x++)
+			{
+				stripStructure->GetFieldMatrix()[y][x].potentialValue = 0.0;
+			}
+		}
+
+		int conductorNumber = 0;
+		for (int j = 0; j < stripStructure->GetSignalConductorsPoints()[conductorNumber].size(); j++)
+		{
+			int x = stripStructure->GetSignalConductorsPoints()[conductorNumber][j].x;
+			int y = stripStructure->GetSignalConductorsPoints()[conductorNumber][j].y;
+			stripStructure->GetFieldMatrix()[y][x].potentialValue = FirstPotential;
+		}
+		conductorNumber = 1;
+		for (int j = 0; j < stripStructure->GetSignalConductorsPoints()[conductorNumber].size(); j++)
+		{
+			int x = stripStructure->GetSignalConductorsPoints()[conductorNumber][j].x;
+			int y = stripStructure->GetSignalConductorsPoints()[conductorNumber][j].y;
+			stripStructure->GetFieldMatrix()[y][x].potentialValue = SecondPotential;
+		}
+	}
+
+	static int CalculateFieldMatrix(StripStructure* stripStructure, bool isAir)
 	{
 		double eps = 1e-6;
-
-		SetStartPotential(stripStructure);
 
 		int iterationsNumber = 0;
 		double maxDeltaPotential = 1.0;
@@ -48,7 +151,7 @@ public:
 
 				// Calculate Center
 				double tempPotential = stripStructure->GetFieldMatrix()[startY][startX].potentialValue;
-				double newPotential = CalcPoint(stripStructure, startX, startY);
+				double newPotential = CalcPoint(stripStructure, startX, startY, isAir);
 				stripStructure->GetFieldMatrix()[startY][startX].potentialValue = newPotential;
 				if (abs(newPotential - tempPotential) > maxDeltaPotential)
 				{
@@ -59,7 +162,7 @@ public:
 				for (int y = startY - 1; y >= y1; y--)
 				{
 					tempPotential = stripStructure->GetFieldMatrix()[y][startX].potentialValue;
-					newPotential = CalcPoint(stripStructure, startX, y);
+					newPotential = CalcPoint(stripStructure, startX, y, isAir);
 					stripStructure->GetFieldMatrix()[y][startX].potentialValue = newPotential;
 					if (abs(newPotential - tempPotential) > maxDeltaPotential)
 					{
@@ -69,7 +172,7 @@ public:
 				for (int y = startY + 1; y < y1 + (y2 - y1); y++)
 				{
 					tempPotential = stripStructure->GetFieldMatrix()[y][startX].potentialValue;
-					newPotential = CalcPoint(stripStructure, startX, y);
+					newPotential = CalcPoint(stripStructure, startX, y, isAir);
 					stripStructure->GetFieldMatrix()[y][startX].potentialValue = newPotential;
 					if (abs(newPotential - tempPotential) > maxDeltaPotential)
 					{
@@ -81,7 +184,7 @@ public:
 				for (int x = startX - 1; x >= x1; x--)
 				{
 					tempPotential = stripStructure->GetFieldMatrix()[startY][x].potentialValue;
-					newPotential = CalcPoint(stripStructure, x, startY);
+					newPotential = CalcPoint(stripStructure, x, startY, isAir);
 					stripStructure->GetFieldMatrix()[startY][x].potentialValue = newPotential;
 					if (abs(newPotential - tempPotential) > maxDeltaPotential)
 					{
@@ -91,7 +194,7 @@ public:
 				for (int x = startX + 1; x < x1 + (x2 - x1); x++)
 				{
 					tempPotential = stripStructure->GetFieldMatrix()[startY][x].potentialValue;
-					newPotential = CalcPoint(stripStructure, x, startY);
+					newPotential = CalcPoint(stripStructure, x, startY, isAir);
 					stripStructure->GetFieldMatrix()[startY][x].potentialValue = newPotential;
 					if (abs(newPotential - tempPotential) > maxDeltaPotential)
 					{
@@ -105,7 +208,7 @@ public:
 					for (int x = startX - 1; x >= x1; x--)
 					{
 						tempPotential = stripStructure->GetFieldMatrix()[y][x].potentialValue;
-						newPotential = CalcPoint(stripStructure, x, y);
+						newPotential = CalcPoint(stripStructure, x, y, isAir);
 						stripStructure->GetFieldMatrix()[y][x].potentialValue = newPotential;
 						if (abs(newPotential - tempPotential) > maxDeltaPotential)
 						{
@@ -120,7 +223,7 @@ public:
 					for (int x = startX - 1; x >= x1; x--)
 					{
 						tempPotential = stripStructure->GetFieldMatrix()[y][x].potentialValue;
-						newPotential = CalcPoint(stripStructure, x, y);
+						newPotential = CalcPoint(stripStructure, x, y, isAir);
 						stripStructure->GetFieldMatrix()[y][x].potentialValue = newPotential;
 						if (abs(newPotential - tempPotential) > maxDeltaPotential)
 						{
@@ -135,7 +238,7 @@ public:
 					for (int x = startX + 1; x < x1 + (x2 - x1); x++)
 					{
 						tempPotential = stripStructure->GetFieldMatrix()[y][x].potentialValue;
-						newPotential = CalcPoint(stripStructure, x, y);
+						newPotential = CalcPoint(stripStructure, x, y, isAir);
 						stripStructure->GetFieldMatrix()[y][x].potentialValue = newPotential;
 						if (abs(newPotential - tempPotential) > maxDeltaPotential)
 						{
@@ -150,7 +253,7 @@ public:
 					for (int x = startX + 1; x < x1 + (x2 - x1); x++)
 					{
 						tempPotential = stripStructure->GetFieldMatrix()[y][x].potentialValue;
-						newPotential = CalcPoint(stripStructure, x, y);
+						newPotential = CalcPoint(stripStructure, x, y, isAir);
 						stripStructure->GetFieldMatrix()[y][x].potentialValue = newPotential;
 						if (abs(newPotential - tempPotential) > maxDeltaPotential)
 						{
@@ -159,12 +262,11 @@ public:
 					}
 				}
 			}
-			//std::cout << "Max Delta Potential: " << maxDeltaPotential << "\n";
 		}
-		std::cout << "Number of iterations of grid method calculation: " << iterationsNumber << "\n";
+		return iterationsNumber;
 	}
 
-	static void CalculateEnergy(StripStructure* stripStructure)
+	static void CalculateEnergy(StripStructure* stripStructure, bool isAir)
 	{
 		double energy = 0.0;
 		for (int y = 0; y < stripStructure->GetFieldMatrixRows(); y++)
@@ -175,6 +277,10 @@ public:
 				double rightTopU = 0.0;
 				double rightBottomU = 0.0;
 				double leftTopU = 0.0;
+
+				double leftBottomE = 1.0;
+				if (!isAir) leftBottomE = stripStructure->GetFieldMatrix()[y][x].dielectricValue;
+
 				if (y + 1 <= stripStructure->GetFieldMatrixRows() - 1 && x + 1 <= stripStructure->GetFieldMatrixCols() - 1)
 				{
 					rightTopU = stripStructure->GetFieldMatrix()[y + 1][x + 1].potentialValue;
@@ -189,14 +295,14 @@ public:
 				}
 				double firstCross = (leftBottomU - rightTopU) * (leftBottomU - rightTopU);
 				double secondCross = (rightBottomU - leftTopU) * (rightBottomU - leftTopU);
-				energy += (stripStructure->GetFieldMatrix()[y][x].dielectricValue / 4) * (firstCross + secondCross);
+				energy += (leftBottomE / 4) * (firstCross + secondCross);
 			}
 		}
-		stripStructure->SetEnergy(energy);
+		stripStructure->AddEnergy(energy);
 	}
 
 private:
-	static double CalcPoint(StripStructure* stripStructure, int x, int y)
+	static double CalcPoint(StripStructure* stripStructure, int x, int y, bool isAir)
 	{
 		if (stripStructure->GetFieldMatrix()[y][x].materialType != Material::EMaterialType::ScreenConductor &&
 			stripStructure->GetFieldMatrix()[y][x].materialType != Material::EMaterialType::SignalConductor)
@@ -214,22 +320,22 @@ private:
 			if (x - 1 >= 0)
 			{
 				leftU = stripStructure->GetFieldMatrix()[y][x - 1].potentialValue;
-				leftE = stripStructure->GetFieldMatrix()[y][x - 1].dielectricValue;
+				if (!isAir) leftE = stripStructure->GetFieldMatrix()[y][x - 1].dielectricValue;
 			}
 			if (y + 1 < stripStructure->GetFieldMatrixRows())
 			{
 				topU = stripStructure->GetFieldMatrix()[y + 1][x].potentialValue;
-				topE = stripStructure->GetFieldMatrix()[y + 1][x].dielectricValue;
+				if (!isAir) topE = stripStructure->GetFieldMatrix()[y + 1][x].dielectricValue;
 			}
 			if (x + 1 < stripStructure->GetFieldMatrixCols())
 			{
 				rightU = stripStructure->GetFieldMatrix()[y][x + 1].potentialValue;
-				rightE = stripStructure->GetFieldMatrix()[y][x + 1].dielectricValue;
+				if (!isAir) rightE = stripStructure->GetFieldMatrix()[y][x + 1].dielectricValue;
 			}
 			if (y - 1 >= 0)
 			{
 				bottomU = stripStructure->GetFieldMatrix()[y - 1][x].potentialValue;
-				bottomE = stripStructure->GetFieldMatrix()[y - 1][x].dielectricValue;
+				if (!isAir) bottomE = stripStructure->GetFieldMatrix()[y - 1][x].dielectricValue;
 			}
 
 			double result = (2 * leftU * leftE) / (leftE + rightE);
