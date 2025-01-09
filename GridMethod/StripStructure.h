@@ -137,7 +137,9 @@ public:
 		{
 			checkExist.close();
 			sameNameNumber++;
-			fixedName = fileName + std::to_string(sameNameNumber);
+			fixedName = fileName;
+			int index = fileName.rfind('.');
+			fixedName.insert(index, "_" + std::to_string(sameNameNumber));
 			checkExist.open(fixedName);
 		}
 

@@ -29,7 +29,7 @@ int main()
 		stripStruct->AddObject(line1);
 		stripStruct->AddObject(line2);
 
-		stripStruct->BuildFieldMatrix(0.05, 0.05);
+		stripStruct->BuildFieldMatrix(0.1, 0.1);
 
 		stripStruct->PrintStripStructure();
 

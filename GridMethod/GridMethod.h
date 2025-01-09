@@ -42,7 +42,7 @@ public:
 		std::cout << "Dielectric filling\n";
 		std::cout << "Iteration of grid method: " << iterations << "\n";
 		std::cout << "Time: " << msec.count() << " milliseconds\n\n";
-		stripStructure->SaveFieldMatrixToFile("OneConductor_Dielectric.csv");
+		stripStructure->SaveFieldMatrixToFile("Outputs\\OneConductor_Dielectric.csv");
 
 		start = std::chrono::high_resolution_clock::now();
 		SetStartPotential_OneConductor(stripStructure);
@@ -55,7 +55,7 @@ public:
 		std::cout << "Air filling\n";
 		std::cout << "Iteration of grid method: " << iterations << "\n";
 		std::cout << "Time: " << msec.count() << " milliseconds\n\n";
-		stripStructure->SaveFieldMatrixToFile("OneConductor_Air.csv");
+		stripStructure->SaveFieldMatrixToFile("Outputs\\OneConductor_Air.csv");
 	}
 
 	static void CalculatePartialMatrix_TwoConductor(StripStructure* stripStructure)
