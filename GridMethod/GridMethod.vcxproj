@@ -127,6 +127,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="GeneratorStructure.h" />
     <ClInclude Include="GridMethod.h" />
     <ClInclude Include="Line.h" />
     <ClInclude Include="Main.h" />
