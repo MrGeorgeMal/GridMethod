@@ -5,6 +5,7 @@
 #include "Line.h"
 #include <vector>
 #include <fstream>
+#include "string"
 
 class StripStructure
 {
@@ -125,10 +126,23 @@ public:
 		}
 	}
 
-	void SaveFieldMatrixToFile(const char* fileName)
+	void SaveFieldMatrixToFile(std::string fileName)
 	{
+		std::string fixedName = fileName;
+
+		std::ifstream checkExist;
+		int sameNameNumber = 0;
+		checkExist.open(fileName);
+		while (checkExist.is_open())
+		{
+			checkExist.close();
+			sameNameNumber++;
+			fixedName = fileName + std::to_string(sameNameNumber);
+			checkExist.open(fixedName);
+		}
+
 		std::ofstream file;
-		file.open(fileName);
+		file.open(fixedName);
 		if (!file.is_open())
 		{
 			throw "StripStructure::CannotOpenFile";
