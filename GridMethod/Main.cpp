@@ -1,5 +1,26 @@
 #include "Main.h"
 
+void MakeDatasetAI(int dataSize)
+{
+	for (int i = 0; i < dataSize; i++)
+	{
+		StripStructure* s = new StripStructure();
+		GeneratorStructure::Generate(10.0, 10.0);
+		for (int j = 0; j < GeneratorStructure::stripObjects.size(); j++)
+		{
+			s->AddObject(GeneratorStructure::stripObjects[j]);
+		}
+		s->BuildFieldMatrix(0.1, 0.1);
+		s->PrintStripStructure();
+		std::cout << "\n";
+		s->SaveStructure("DataAI\\InputMatrix\\inputstruct.csv");
+
+		GridMethod::SetStartPotential_Basic(s);
+		GridMethod::CalculateFieldMatrix(s, false);
+		s->SaveFieldMatrixToFile("DataAI\\OutputMatrix\\outputmatrix.csv");
+	}
+}
+
 int main()
 {
 	Screen* screen = new Screen();
@@ -10,6 +31,8 @@ int main()
 
 	try
 	{
+		MakeDatasetAI(10);
+
 		/*
 		Material air, dielectric, signalConductor, screenConductor;
 		air.materialType = Material::EMaterialType::Dielectric;
@@ -29,7 +52,7 @@ int main()
 		stripStruct->AddObject(rect);
 		stripStruct->AddObject(line1);
 		stripStruct->AddObject(line2);
-		*/
+		
 
 		GeneratorStructure::Generate(10.0, 10.0);
 		for (int i = 0; i < GeneratorStructure::stripObjects.size(); i++)
@@ -46,6 +69,7 @@ int main()
 		stripStruct->PrintStructureInfo();
 
 		delete stripStruct;
+		*/
 	}
 	catch (const char* errorMsg)
 	{

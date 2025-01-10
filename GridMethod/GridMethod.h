@@ -83,6 +83,27 @@ public:
 		return;
 	}
 
+	static void SetStartPotential_Basic(StripStructure* stripStructure)
+	{
+		for (int y = 0; y < stripStructure->GetFieldMatrixRows(); y++)
+		{
+			for (int x = 0; x < stripStructure->GetFieldMatrixCols(); x++)
+			{
+				stripStructure->GetFieldMatrix()[y][x].potentialValue = 0.0;
+			}
+		}
+
+		for (int i = 0; i < stripStructure->GetSignalConductorsPoints().size(); i++)
+		{
+			for (int j = 0; j < stripStructure->GetSignalConductorsPoints()[i].size(); j++)
+			{
+				int x = stripStructure->GetSignalConductorsPoints()[i][j].x;
+				int y = stripStructure->GetSignalConductorsPoints()[i][j].y;
+				stripStructure->GetFieldMatrix()[y][x].potentialValue = 1.0;
+			}
+		}
+	}
+
 	static void SetStartPotential_OneConductor(StripStructure* stripStructure)
 	{
 		for (int y = 0; y < stripStructure->GetFieldMatrixRows(); y++)

@@ -169,7 +169,58 @@ public:
 		{
 			for (int x = 0; x < _fieldMatrixCols; x++)
 			{
-				file << _fieldMatrix[y][x].potentialValue << ";";
+				file << _fieldMatrix[y][x].potentialValue;
+				if (x < _fieldMatrixCols - 1) file << ",";
+			}
+			file << "\n";
+		}
+	}
+
+	void SaveStructure(std::string fileName)
+	{
+		std::string fixedName = fileName;
+
+		std::ifstream checkExist;
+		int sameNameNumber = 0;
+		checkExist.open(fileName);
+		while (checkExist.is_open())
+		{
+			checkExist.close();
+			sameNameNumber++;
+			fixedName = fileName;
+			int index = fileName.rfind('.');
+			fixedName.insert(index, "_" + std::to_string(sameNameNumber));
+			checkExist.open(fixedName);
+		}
+
+		std::ofstream file;
+		file.open(fixedName);
+		if (!file.is_open())
+		{
+			throw "StripStructure::CannotOpenFile";
+			return;
+		}
+
+		for (int y = 0; y < _fieldMatrixRows; y++)
+		{
+			for (int x = 0; x < _fieldMatrixCols; x++)
+			{
+				switch (_fieldMatrix[y][x].materialType)
+				{
+				case Material::EMaterialType::Dielectric:
+					file << 0 << ";";
+					break;
+				case Material::EMaterialType::SignalConductor:
+					file << 1 << ";";
+					break;
+				case Material::EMaterialType::ScreenConductor:
+					file << 2 << ";";
+					break;
+				default:
+					break;
+				}
+				file << _fieldMatrix[y][x].dielectricValue;
+				if (x < _fieldMatrixCols - 1) file << ",";
 			}
 			file << "\n";
 		}
@@ -640,7 +691,7 @@ private:
 					if (newMinLength < minLength)
 					{
 						_areas[i].startDisX = _areas[i].disX1 + (_areas[i].disX2 - _areas[i].disX1 - 1);
-						_areas[i].startDisY = _areas[i].disY1 - conductorY[j];
+						_areas[i].startDisY = _areas[i].disY1;
 						minLength = newMinLength;
 					}
 				}

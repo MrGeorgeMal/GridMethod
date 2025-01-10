@@ -20,6 +20,10 @@ public:
 
 	static void Generate(double screenWidth, double screenHeight)
 	{
+		for (int i = 0; i < stripObjects.size(); i++)
+		{
+			delete stripObjects[i];
+		}
 		stripObjects.clear();
 
 		width = screenWidth;
@@ -28,8 +32,8 @@ public:
 		std::random_device rd;
 		std::mt19937 gen(rd());
 		std::uniform_int_distribution<int> distSignalConductorCount(1, 2);
-		std::uniform_int_distribution<int> distScreenConductorCount(0, 1);
-		std::uniform_int_distribution<int> distDielectricCount(0, 2);
+		std::uniform_int_distribution<int> distScreenConductorCount(0, 2);
+		std::uniform_int_distribution<int> distDielectricCount(0, 3);
 
 		int signalConducorCount = distSignalConductorCount(gen);
 		int screenConductorCount = distScreenConductorCount(gen);
@@ -72,8 +76,8 @@ public:
 
 		std::random_device rd;
 		std::mt19937 gen(rd());
-		std::uniform_real_distribution<double> distX(0, width);
-		std::uniform_real_distribution<double> distY(0, height);
+		std::uniform_real_distribution<double> distX(0.0, width);
+		std::uniform_real_distribution<double> distY(0.0, height);
 
 		if (stayHorizontal)
 		{
@@ -137,13 +141,22 @@ public:
 	{
 		Point p = GeneratePoint();
 
+		double minWidth = 0.1;
+		double minHeight = 0.1;
 		double maxWidth = width - p.x;
 		double maxHeight = height - p.y;
+		
+		while (minWidth > maxWidth || minHeight > maxHeight)
+		{
+			p = GeneratePoint();
+			maxWidth = width - p.x;
+			maxHeight = height - p.y;
+		}
 
 		std::random_device rd;
 		std::mt19937 gen(rd());
-		std::uniform_real_distribution<double> distWidth(0, maxWidth);
-		std::uniform_real_distribution<double> distHeight(0, maxHeight);
+		std::uniform_real_distribution<double> distWidth(minWidth, maxWidth);
+		std::uniform_real_distribution<double> distHeight(minHeight, maxHeight);
 
 		Rectangle *newRect = new Rectangle();
 		newRect->SetObject(material, p.x, p.y, distWidth(gen), distHeight(gen));
@@ -158,7 +171,7 @@ public:
 
 		std::random_device rd;
 		std::mt19937 gen(rd());
-		std::uniform_real_distribution<double> distDielectricValue(1, 100);
+		std::uniform_real_distribution<double> distDielectricValue(1.0, 100.0);
 
 		matDielectric.dielectricValue = distDielectricValue(gen);
 
