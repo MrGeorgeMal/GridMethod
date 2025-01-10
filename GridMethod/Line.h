@@ -36,7 +36,7 @@ public:
 		double fixX2 = x2;
 		double fixY2 = y2;
 
-		if (x1 < 0.0 || y1 < 0.0 || x2 < 0 || y2 < 0)
+		if (x1 < 0.0 || y1 < 0.0 || x2 < 0.0 || y2 < 0.0)
 		{
 			throw "StripObject::Line::BadSize";
 			return;

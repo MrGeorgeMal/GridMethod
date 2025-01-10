@@ -6,3 +6,4 @@
 #include "Line.h"
 #include "StripStructure.h"
 #include "GridMethod.h"
+#include "GeneratorStructure.h"

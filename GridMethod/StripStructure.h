@@ -56,6 +56,20 @@ private:
 public:
 	StripStructure() {}
 
+	~StripStructure()
+	{
+		for (int i = 0; i < _fieldMatrixRows; i++)
+		{
+			delete[] _fieldMatrix[i];
+		}
+		delete[] _fieldMatrix;
+
+		for (int i = 0; i < _objects.size(); i++)
+		{
+			delete _objects[i];
+		}
+	}
+
 	void AddObject(StripObject* newObject)
 	{
 		_objects.push_back(newObject);

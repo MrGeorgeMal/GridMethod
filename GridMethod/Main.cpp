@@ -10,6 +10,7 @@ int main()
 
 	try
 	{
+		/*
 		Material air, dielectric, signalConductor, screenConductor;
 		air.materialType = Material::EMaterialType::Dielectric;
 		dielectric.materialType = Material::EMaterialType::Dielectric;
@@ -28,14 +29,23 @@ int main()
 		stripStruct->AddObject(rect);
 		stripStruct->AddObject(line1);
 		stripStruct->AddObject(line2);
+		*/
+
+		GeneratorStructure::Generate(10.0, 10.0);
+		for (int i = 0; i < GeneratorStructure::stripObjects.size(); i++)
+		{
+			stripStruct->AddObject(GeneratorStructure::stripObjects[i]);
+		}
 
 		stripStruct->BuildFieldMatrix(0.1, 0.1);
 
 		stripStruct->PrintStripStructure();
 
-		GridMethod::CalculatePartialMatrix(stripStruct);
+		//GridMethod::CalculatePartialMatrix(stripStruct);
 
 		stripStruct->PrintStructureInfo();
+
+		delete stripStruct;
 	}
 	catch (const char* errorMsg)
 	{
