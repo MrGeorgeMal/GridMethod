@@ -58,11 +58,16 @@ public:
 
 	~StripStructure()
 	{
-		for (int i = 0; i < _fieldMatrixRows; i++)
+		/*
+		if (_fieldMatrix != nullptr)
 		{
-			delete[] _fieldMatrix[i];
+			for (int i = 0; i < _fieldMatrixRows; i++)
+			{
+				if (_fieldMatrix[i] != nullptr) delete[] _fieldMatrix[i];
+			}
+			delete[] _fieldMatrix;
 		}
-		delete[] _fieldMatrix;
+		*/
 
 		for (int i = 0; i < _objects.size(); i++)
 		{

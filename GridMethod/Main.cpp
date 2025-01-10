@@ -18,6 +18,8 @@ void MakeDatasetAI(int dataSize)
 		GridMethod::SetStartPotential_Basic(s);
 		GridMethod::CalculateFieldMatrix(s, false);
 		s->SaveFieldMatrixToFile("DataAI\\OutputMatrix\\outputmatrix.csv");
+
+		delete s;
 	}
 }
 
@@ -31,7 +33,7 @@ int main()
 
 	try
 	{
-		MakeDatasetAI(10);
+		MakeDatasetAI(10000);
 
 		/*
 		Material air, dielectric, signalConductor, screenConductor;

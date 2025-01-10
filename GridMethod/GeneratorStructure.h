@@ -20,10 +20,15 @@ public:
 
 	static void Generate(double screenWidth, double screenHeight)
 	{
+		/*
 		for (int i = 0; i < stripObjects.size(); i++)
 		{
-			delete stripObjects[i];
+			if (stripObjects[i] != nullptr)
+			{
+				delete stripObjects[i];
+			}
 		}
+		*/
 		stripObjects.clear();
 
 		width = screenWidth;
