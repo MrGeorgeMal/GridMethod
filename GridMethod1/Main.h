@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "Point2D.h"
+#include "Matrix2D.h"
 
 #endif // !MAIN_H
 
