@@ -1,6 +1,6 @@
 #pragma once
 
-// Class 2D matrix
+// Class vector
 template <typename T>
 class Vector
 {
@@ -10,8 +10,7 @@ public:
 	Vector() { }
 
 	// Constructor
-	// rows - rows number
-	// cols - columns number
+	// length - vector length
 	Vector(int length)
 	{
 		resize(length);
@@ -23,9 +22,8 @@ public:
 		deleteVector();
 	}
 
-	// Method delete and create new matrix with the specifide number of rows and columns
-	// rows - rows number
-	// cols - columns number
+	// Method delete and create new vectoe with the specifide length
+	// length - vector length
 	void resize(int length)
 	{
 		deleteVector();
@@ -35,7 +33,7 @@ public:
 		_vector = new T[length];
 	}
 
-	// Get rows number
+	// Get vector length
 	T getLength() const { return _length; }
 
 	T& operator[](int index) const
@@ -49,7 +47,7 @@ public:
 
 private:
 
-	// Method delete 2D matrix
+	// Method delete vector
 	void deleteVector()
 	{
 		if (_length > 0)
@@ -59,9 +57,9 @@ private:
 		_length = 0;
 	}
 
-	// Rows number
+	// Vector length
 	int _length = 0;
-	// Matrix
+	// Vector
 	T* _vector = nullptr;
 };
 
