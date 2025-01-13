@@ -1,4 +1,8 @@
 #pragma once
+#ifndef POINT2D_H
+#define POINT2D_H
+
+#include <iostream>
 
 // Class 2D Point
 template<typename T>
@@ -43,8 +47,10 @@ public:
 };
 
 template<typename T>
-std::ostream& operator<<(std::ostream& os, const Point2D<T> point)
+std::ostream& operator<<(std::ostream& os, const Point2D<T>& point)
 {
 	os << "[" << point.x << " ; " << point.y << "]";
 	return os;
 }
+
+#endif // POINT2D_H

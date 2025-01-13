@@ -4,6 +4,12 @@ int main()
 {
 	try
 	{
+		Point2D<double> p(2.2, 2.8);
+		std::cout << p << "\n";
+
+		Shape2D shape(22.2, 1.2);
+		std::cout << shape.origin << "\n";
+
 		Matrix2D<int> m(2, 2);
 		Vector<int> v(5);
 
@@ -24,9 +30,13 @@ int main()
 		}
 		std::cout << m << "\n";
 
-		Dielectric d(2.1);
+		Material mat;
+		Dielectric diel;
+		Conductor cond(false);
 
-		std::cout << d << "\n";
+		std::cout << mat << "\n";
+		std::cout << diel << "\n";
+		std::cout << cond << "\n";
 	}
 	catch (const char* errorMsg)
 	{

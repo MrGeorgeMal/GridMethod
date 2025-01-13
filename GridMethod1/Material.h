@@ -1,4 +1,8 @@
 #pragma once
+#ifndef MATERIAL_H
+#define MATERIAL_H
+
+#include <iostream>
 
 // Class material
 class Material
@@ -67,44 +71,38 @@ private:
 
 
 
-std::ostream& operator<<(std::ostream& os, Material& material)
+// Convert material type to string
+const char* materialTypeToString(Material& material)
 {
 	switch (material.getMaterialType())
 	{
 	case Material::EType::NONE:
-		os << "None";
+		return "None";
 		break;
 	case Material::EType::DIELECTRIC:
-		os << "Dielectric";
+		return "Dielectric";
 		break;
 	case Material::EType::CONDUCTOR:
-		os << "Conductor";
+		return "Conductor";
 		break;
 	default:
-		os << "Wrong material";
+		return "Wrong material";
 		break;
 	}
+}
+
+std::ostream& operator<<(std::ostream& os, Material& material)
+{
+	os << "[";
+	os << materialTypeToString(material);
+	os << "]";
 	return os;
 }
 
 std::ostream& operator<<(std::ostream& os, Dielectric& material)
 {
 	os << "[";
-	switch (material.getMaterialType())
-	{
-	case Material::EType::NONE:
-		os << "None";
-		break;
-	case Material::EType::DIELECTRIC:
-		os << "Dielectric";
-		break;
-	case Material::EType::CONDUCTOR:
-		os << "Conductor";
-		break;
-	default:
-		os << "Wrong material";
-		break;
-	}
+	os << materialTypeToString(material);
 	os << " ; " << material.getDielectricValue() << "]";
 	return os;
 }
@@ -112,23 +110,11 @@ std::ostream& operator<<(std::ostream& os, Dielectric& material)
 std::ostream& operator<<(std::ostream& os, Conductor& material)
 {
 	os << "[";
-	switch (material.getMaterialType())
-	{
-	case Material::EType::NONE:
-		os << "None";
-		break;
-	case Material::EType::DIELECTRIC:
-		os << "Dielectric";
-		break;
-	case Material::EType::CONDUCTOR:
-		os << "Conductor";
-		break;
-	default:
-		os << "Wrong material";
-		break;
-	}
+	os << materialTypeToString(material);
 	const char* str = (material.isSignal() == true) ? "signal mode" : "free mode";
 	os << " ; " << str;
 	os << "]";
 	return os;
 }
+
+#endif // !MATERIAL_H

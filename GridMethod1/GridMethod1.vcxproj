@@ -131,10 +131,12 @@
     <ClInclude Include="Material.h" />
     <ClInclude Include="Matrix2D.h" />
     <ClInclude Include="Point2D.h" />
+    <ClInclude Include="Shape2D.h" />
     <ClInclude Include="Vector.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Shape2D.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

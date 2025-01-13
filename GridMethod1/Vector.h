@@ -1,4 +1,7 @@
 #pragma once
+#ifndef VECTOR_H
+#define VECTOR_H
+
 
 // Class vector
 template <typename T>
@@ -78,3 +81,5 @@ std::ostream& operator<<(std::ostream& os, const Vector<T>& vector)
 	os << "]";
 	return os;
 }
+
+#endif // !VECTOR_H

@@ -1,4 +1,8 @@
 #pragma once
+#ifndef MATRIX2D_H
+#define MATRIX2D_H
+
+#include <iostream>
 
 // Class 2D matrix
 template <typename T>
@@ -88,3 +92,5 @@ std::ostream& operator<<(std::ostream& os, const Matrix2D<T>& matrix)
 	}
 	return os;
 }
+
+#endif // !MATRIX2D_H
