@@ -7,7 +7,6 @@
 #include "Point2D.h"
 #include "Matrix2D.h"
 #include "Vector.h"
+#include "Material.h"
 
 #endif // !MAIN_H
-
-

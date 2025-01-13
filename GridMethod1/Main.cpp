@@ -11,7 +11,6 @@ int main()
 		{
 			v[i] = i;
 		}
-		
 		std::cout << v << "\n";
 
 		int k = 0;
@@ -23,8 +22,11 @@ int main()
 				k++;
 			}
 		}
+		std::cout << m << "\n";
 
-		std::cout << m;
+		Dielectric d(2.1);
+
+		std::cout << d << "\n";
 	}
 	catch (const char* errorMsg)
 	{
