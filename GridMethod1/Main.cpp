@@ -2,25 +2,33 @@
 
 int main()
 {
-	Matrix2D<int> m(2, 2);
-
-	int k = 0;
-	for (int i = 0; i < m.getRows(); i++)
+	try
 	{
-		for (int j = 0; j < m.getCols(); j++)
+		Matrix2D<int> m(2, 2);
+		Vector<int> v(5);
+
+		for (int i = 0; i < v.getLength(); i++)
 		{
-			m[i][j] = k;
-			k++;
+			v[i] = i;
 		}
+		
+		std::cout << v << "\n";
+
+		int k = 0;
+		for (int i = 0; i < m.getRows(); i++)
+		{
+			for (int j = 0; j < m.getCols(); j++)
+			{
+				m[i][j] = k;
+				k++;
+			}
+		}
+
+		std::cout << m;
 	}
-
-	for (int i = 0; i < m.getRows(); i++)
+	catch (const char* errorMsg)
 	{
-		for (int j = 0; j < m.getCols(); j++)
-		{
-			std::cout << m[i][j] << " ";
-		}
-		std::cout << "\n";
+		std::cout << errorMsg;
 	}
 
 	std::cout << "\n\n";

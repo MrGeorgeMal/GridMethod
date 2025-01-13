@@ -130,6 +130,7 @@
     <ClInclude Include="Main.h" />
     <ClInclude Include="Matrix2D.h" />
     <ClInclude Include="Point2D.h" />
+    <ClInclude Include="Vector.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp" />

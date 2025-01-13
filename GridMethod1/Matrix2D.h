@@ -33,7 +33,7 @@ public:
 		_rows = rows;
 		_cols = cols;
 
-		matrix = new T[rows * cols];
+		_matrix = new T[rows * cols];
 	}
 
 	// Get rows number
@@ -44,7 +44,11 @@ public:
 
 	T* operator[](int rowIndex) const
 	{
-		return matrix + rowIndex * _cols;
+		if (rowIndex > _rows - 1)
+		{
+			throw "Vector :: The out-of-bounds matrix";
+		}
+		return _matrix + rowIndex * _cols;
 	}
 
 private:
@@ -54,7 +58,7 @@ private:
 	{
 		if (_rows > 0)
 		{
-			delete[] matrix;
+			delete[] _matrix;
 		}
 		_rows = 0;
 		_cols = 0;
@@ -65,5 +69,22 @@ private:
 	// Columns number
 	int _cols = 0;
 	// Matrix
-	T* matrix = nullptr;
+	T* _matrix = nullptr;
 };
+
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const Matrix2D<T>& matrix)
+{
+	for (int i = 0; i < matrix.getRows(); i++)
+	{
+		for (int j = 0; j < matrix.getCols(); j++)
+		{
+			os << matrix[i][j] << " ";
+		}
+		if (i < matrix.getRows() - 1)
+		{
+			os << "\n";
+		}
+	}
+	return os;
+}
