@@ -5,6 +5,7 @@
 
 #include "Point2D.h"
 
+// Parent class for 2D shapes
 class Shape2D
 {
 public:
@@ -31,6 +32,9 @@ protected:
 	Point2D<double> _origin;
 };
 
+
+
+// Child 2D line class
 class Line2D : public Shape2D
 {
 public:
@@ -93,9 +97,17 @@ private:
 	Point2D<double> _p1, _p2;
 };
 
+
+
+// Child 2D rectangle class
 class Rectangle2D : public Shape2D
 {
-	
+public:
+	Rectangle2D() : Shape2D(), _p1(0.0, 0.0), _p2(0.0, 0.0), _p3(0.0, 0.0), _p4(0.0, 0.0) {}
+
+private:
+	// Rectangle2D points
+	Point2D<double> _p1, _p2, _p3, _p4;
 };
 
 #endif // !SHAPE2D_H
