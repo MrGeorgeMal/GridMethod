@@ -8,7 +8,7 @@ int main()
 		std::cout << p << "\n";
 
 		Shape2D shape(22.2, 1.2);
-		std::cout << shape.origin << "\n";
+		std::cout << shape.getOrigin() << "\n";
 
 		Matrix2D<int> m(2, 2);
 		Vector<int> v(5);
