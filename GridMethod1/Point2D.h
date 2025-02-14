@@ -53,4 +53,4 @@ std::ostream& operator<<(std::ostream& os, const Point2D<T>& point)
 	return os;
 }
 
-#endif // POINT2D_H
+#endif // !POINT2D_H
