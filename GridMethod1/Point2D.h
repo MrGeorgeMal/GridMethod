@@ -20,9 +20,12 @@ public:
 	// y - coordinate y
 	Point2D(T x, T y) : x(x), y(y) {}
 	
-	Point2D<T> operator = (Point2D<T> point)
-	{
-		return Point2D<T>(point.x, point.y);
+	Point2D<T>& operator = (const Point2D<T>& point) {
+		if (this != &point) {
+			x = point.x;
+			y = point.y;
+		}
+		return *this;
 	}
 
 	Point2D<T> operator + (Point2D<T> point)

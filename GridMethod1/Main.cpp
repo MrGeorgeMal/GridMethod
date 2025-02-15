@@ -10,14 +10,22 @@ int main()
 		Shape2D shape(22.2, 1.2);
 		std::cout << shape.getOrigin() << "\n";
 
-		Matrix2D<int> m(2, 2);
-		Vector<int> v(5);
+		Polygon polygon(
+			Point2D<double>(0.0, 0.0),
+			Point2D<double>(1.1, 1.1),
+			Point2D<double>(2.2, 2.2),
+			Point2D<double>(3.3, 3.3),
+			Point2D<double>(4.4, 4.4));
+		std::cout << polygon.getPoints() << "\n";
 
-		for (int i = 0; i < v.getLength(); i++)
-		{
-			v[i] = i;
-		}
-		std::cout << v << "\n";
+		Matrix2D<int> m(2, 2);
+		Vector<Point2D<double>> v(2);
+
+        for (int i = 0; i < v.getLength(); i++)
+        {
+			v[i] = Point2D<double>(double(i) / 10.0, double(i) / 10.0);
+        }
+        std::cout << v << "\n";
 
 		int k = 0;
 		for (int i = 0; i < m.getRows(); i++)

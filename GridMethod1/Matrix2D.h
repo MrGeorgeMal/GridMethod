@@ -60,12 +60,13 @@ private:
 	// Method delete 2D matrix
 	void deleteMatrix()
 	{
-		if (_rows > 0)
+		if (_matrix != nullptr)
 		{
 			delete[] _matrix;
+			_rows = 0;
+			_cols = 0;
+			_matrix = nullptr;
 		}
-		_rows = 0;
-		_cols = 0;
 	}
 
 	// Rows number

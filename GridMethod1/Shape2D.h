@@ -3,6 +3,8 @@
 #ifndef SHAPE2D_H
 #define SHAPE2D_H
 
+#include <iostream>
+#include "Vector.h"
 #include "Point2D.h"
 #include "Size2D.h"
 
@@ -25,16 +27,6 @@ public:
 	// originX - origin coordinate X
 	// originY - origin coordinate Y
 	Shape2D(double originX, double originY) : _origin(originX, originY) {}
-
-#pragma endregion
-
-
-#pragma region Protected Methods
-
-protected:
-
-	// Update shape includes checking for points correctness and sorting points clockwise, starting from the left bottom corner
-	virtual bool updateShape() = 0;
 
 #pragma endregion
 
@@ -181,6 +173,113 @@ private:
 
 	// Line2D points
 	Point2D<double> _p1, _p2;
+
+#pragma endregion
+
+};
+
+class Polygon : public Shape2D
+{
+
+#pragma region Contructors
+
+public:
+
+	// Base constructor. Set origin [0.0 ; 0.0]. Empty points list
+	Polygon() : Shape2D(), _points(0) {}
+
+	// Base constructor. Empty points list
+	// origin - origin point
+	Polygon(Point2D<double> origin) : Shape2D(origin), _points(0) {}
+
+	// Base constructor. Empty points list
+	// originX - origin coordinate X
+	// originY - origin coordinate Y
+	Polygon(
+		double originX, 
+		double originY) : Shape2D(originX, originY),
+		_points(0) {}
+
+	// Constructor. Set origin [0.0 ; 0.0]
+	// p1, p2, ... pn - next poligon points
+	template <typename... Points>
+	Polygon(
+		Point2D<double> p1,
+		Point2D<double> p2,
+		Point2D<double> p3,
+		Points... points) : Shape2D(), _points(3)
+	{
+		_points[0] = p1;
+		_points[1] = p2;
+		_points[2] = p3;
+		(_points.add(points), ...);
+	}
+
+	// Constructor.
+	// origin - origin point
+	// p1, p2, ... pn - next poligon points
+	template <typename... Points>
+	Polygon(
+		Point2D<double> origin,
+		Point2D<double> p1,
+		Point2D<double> p2,
+		Point2D<double> p3,
+		Points... points) : Shape2D(origin), _points(3)
+	{
+		_points[0] = p1;
+		_points[1] = p2;
+		_points[2] = p3;
+		(_points.add(points), ...);
+	}
+
+	// Constructor.
+	// originX - origin coordinate X
+	// originY - origin coordinate Y
+	// p1, p2, ... pn - next poligon points
+	template <typename... Points>
+	Polygon(
+		double originX,
+		double originY,
+		Point2D<double> p1,
+		Point2D<double> p2,
+		Point2D<double> p3,
+		Points... points) : Shape2D(originX, originY), _points(3)
+	{
+		_points[0] = p1;
+		_points[1] = p2;
+		_points[2] = p3;
+		(_points.add(points), ...);
+	}
+
+#pragma endregion
+
+
+#pragma region Public Methods
+
+	// Add new points to polygon
+	template <typename... Points>
+	void addPoints(Points... points)
+	{
+		(_points.add(points), ...);
+	}
+
+#pragma endregion
+
+
+#pragma region Getter Setter
+
+public:
+	Vector<Point2D<double>>& getPoints() { return _points; }
+
+#pragma endregion
+
+
+#pragma region Private Members
+
+private:
+
+	// Polygon points
+	Vector<Point2D<double>> _points;
 
 #pragma endregion
 
@@ -344,52 +443,6 @@ public:
 		double height) : Shape2D(originX, originY),
 		_p1(pointX, pointY),
 		_size(width, height) {}
-
-#pragma endregion
-
-
-#pragma region Private Methods
-
-private:
-
-	// Check points in coordinate correctness.
-	// The shape must be closed, without intersections of edges.
-	bool checkPointsOnCorrectness()
-	{
-
-	}
-
-	// Sort points clockwise, starting from the left bottom corner
-	void sortPoints()
-	{
-
-	}
-
-	// Update size after set rectangle points
-	void updateSize()
-	{
-
-	}
-
-	// Update points after set rectangle size
-	void updatePoints()
-	{
-
-	}
-
-	// Update shape includes checking for points correctness and sorting points clockwise, starting from the left bottom corner
-	bool updateShape() override
-	{
-		bool isCorrectness = checkPointsOnCorrectness();
-		if (isCorrectness)
-		{
-			sortPoints();
-		}
-		else
-		{
-			throw "Rectangle2D :: Shape is not closed or its edges intersect";
-		}
-	}
 
 #pragma endregion
 

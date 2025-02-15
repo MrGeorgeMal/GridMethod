@@ -2,6 +2,7 @@
 #ifndef VECTOR_H
 #define VECTOR_H
 
+#include <iostream>
 
 // Class vector
 template <typename T>
@@ -19,11 +20,11 @@ public:
 		resize(length);
 	}
 
-	// Destructor
-	~Vector()
-	{
-		deleteVector();
-	}
+    // Destructor
+    ~Vector()
+    {
+       deleteVector();
+    }
 
 	// Method delete and create new vectoe with the specifide length
 	// length - vector length
@@ -36,8 +37,30 @@ public:
 		_vector = new T[length];
 	}
 
+	// Add new element to vector
+	void add(T element)
+	{
+		_length++;
+		T* temp = new T[_length];
+
+		for (int i = 0; i < _length - 1; i++)
+		{
+			temp[i] = _vector[i];
+		}
+		temp[_length - 1] = element;
+
+		resize(_length);
+
+		for (int i = 0; i < _length; i++)
+		{
+			_vector[i] = temp[i];
+		}
+
+		delete[] temp;
+	}
+
 	// Get vector length
-	T getLength() const { return _length; }
+	int getLength() const { return _length; }
 
 	T& operator[](int index) const
 	{
@@ -53,11 +76,12 @@ private:
 	// Method delete vector
 	void deleteVector()
 	{
-		if (_length > 0)
+		if (_vector != nullptr)
 		{
 			delete[] _vector;
+			_length = 0;
+			_vector = nullptr;
 		}
-		_length = 0;
 	}
 
 	// Vector length
@@ -65,6 +89,7 @@ private:
 	// Vector
 	T* _vector = nullptr;
 };
+
 
 template<typename T>
 std::ostream& operator<<(std::ostream& os, const Vector<T>& vector)
