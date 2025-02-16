@@ -38,7 +38,8 @@ public:
 
 #pragma endregion
 
-#pragma region Private Method
+
+#pragma region Private Methods
 
 private:
 
