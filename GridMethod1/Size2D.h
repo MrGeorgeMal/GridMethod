@@ -20,9 +20,12 @@ public:
 	// height - height size
 	Size2D(T width, T height) : width(width), height(height) {}
 
-	Size2D<T> operator = (Size2D<T> size)
-	{
-		return Size2D<T>(size.width, size.height);
+	Size2D<T>& operator = (const Size2D<T>& size) {
+		if (this != &size) {
+			width = size.width;
+			height = size.height;
+		}
+		return *this;
 	}
 
 	Size2D<T> operator + (Size2D<T> size)

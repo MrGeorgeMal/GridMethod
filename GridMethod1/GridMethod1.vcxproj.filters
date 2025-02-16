@@ -36,12 +36,15 @@
     <ClInclude Include="Size2D.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Rasterizer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Shape2D.cpp">
+    <ClCompile Include="Rasterizer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

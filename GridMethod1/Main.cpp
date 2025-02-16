@@ -10,6 +10,8 @@ int main()
 		Shape2D shape(22.2, 1.2);
 		std::cout << shape.getOrigin() << "\n";
 
+		Rectangle2D rect;
+
 		Polygon polygon(
 			Point2D<double>(0.0, 0.0),
 			Point2D<double>(1.1, 1.1),
