@@ -7,7 +7,9 @@
 // Class material
 class Material
 {
+
 public:
+
 	// Enum of material types
 	enum EType
 	{
@@ -25,7 +27,11 @@ public:
 
 	EType getMaterialType() { return _materialType; }
 
+	// Get object type
+	virtual const char* getType() const = 0;
+
 protected:
+
 	// Type of material
 	EType _materialType;
 };
@@ -44,6 +50,16 @@ public:
 	Dielectric(double dielectricValue) : Material(EType::DIELECTRIC), _dielectricValue(dielectricValue) {}
 
 	double getDielectricValue() { return _dielectricValue; }
+
+	const char* getType() const override { return "Dielectric"; }
+
+	friend std::ostream& operator<<(std::ostream& os, Dielectric& material)
+	{
+		os << "[";
+		os << "Dielectric";
+		os << " ; " << material.getDielectricValue() << "]";
+		return os;
+	}
 
 private:
 	// Permittivity value
@@ -65,16 +81,28 @@ public:
 
 	bool isSignal() { return _isSignal; }
 
+	const char* getType() const override { return "Conductor"; }
+
+	friend std::ostream& operator<<(std::ostream& os, Conductor& material)
+	{
+		os << "[";
+		os << "Conductor";
+		const char* str = (material.isSignal() == true) ? "signal mode" : "free mode";
+		os << " ; " << str;
+		os << "]";
+		return os;
+	}
+
 private:
 	bool _isSignal;
 };
 
 
-
+/*
 // Convert material type to string
-const char* materialTypeToString(Material& material)
+const char* materialTypeToString(Material* material)
 {
-	switch (material.getMaterialType())
+	switch (material->getMaterialType())
 	{
 	case Material::EType::NONE:
 		return "None";
@@ -90,31 +118,16 @@ const char* materialTypeToString(Material& material)
 		break;
 	}
 }
+*/
 
-std::ostream& operator<<(std::ostream& os, Material& material)
-{
-	os << "[";
-	os << materialTypeToString(material);
-	os << "]";
-	return os;
-}
-
+/*
 std::ostream& operator<<(std::ostream& os, Dielectric& material)
 {
 	os << "[";
-	os << materialTypeToString(material);
+	//os << materialTypeToString(material);
 	os << " ; " << material.getDielectricValue() << "]";
 	return os;
 }
-
-std::ostream& operator<<(std::ostream& os, Conductor& material)
-{
-	os << "[";
-	os << materialTypeToString(material);
-	const char* str = (material.isSignal() == true) ? "signal mode" : "free mode";
-	os << " ; " << str;
-	os << "]";
-	return os;
-}
+*/
 
 #endif // !MATERIAL_H

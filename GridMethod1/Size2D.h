@@ -47,13 +47,12 @@ public:
 	{
 		return Size2D<T>(this->width / size.width, this->height / size.height);
 	}
-};
 
-template<typename T>
-std::ostream& operator<<(std::ostream& os, const Size2D<T>& size)
-{
-	os << "[" << size.width << " ; " << size.height << "]";
-	return os;
-}
+	friend std::ostream& operator<<(std::ostream& os, const Size2D<T>& size)
+	{
+		os << "[" << size.width << " ; " << size.height << "]";
+		return os;
+	}
+};
 
 #endif // !SIZE2D_H

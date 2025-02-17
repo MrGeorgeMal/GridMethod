@@ -55,6 +55,22 @@ public:
 		return _matrix + rowIndex * _cols;
 	}
 
+	friend std::ostream& operator<<(std::ostream& os, const Matrix2D<T>& matrix)
+	{
+		for (int i = 0; i < matrix.getRows(); i++)
+		{
+			for (int j = 0; j < matrix.getCols(); j++)
+			{
+				os << matrix[i][j] << " ";
+			}
+			if (i < matrix.getRows() - 1)
+			{
+				os << "\n";
+			}
+		}
+		return os;
+	}
+
 private:
 
 	// Method delete 2D matrix
@@ -76,22 +92,5 @@ private:
 	// Matrix
 	T* _matrix = nullptr;
 };
-
-template<typename T>
-std::ostream& operator<<(std::ostream& os, const Matrix2D<T>& matrix)
-{
-	for (int i = 0; i < matrix.getRows(); i++)
-	{
-		for (int j = 0; j < matrix.getCols(); j++)
-		{
-			os << matrix[i][j] << " ";
-		}
-		if (i < matrix.getRows() - 1)
-		{
-			os << "\n";
-		}
-	}
-	return os;
-}
 
 #endif // !MATRIX2D_H

@@ -71,6 +71,21 @@ public:
 		return _vector[index];
 	}
 
+	friend std::ostream& operator<<(std::ostream& os, const Vector<T>& vector)
+	{
+		os << "[";
+		for (int i = 0; i < vector.getLength(); i++)
+		{
+			os << vector[i];
+			if (i < vector.getLength() - 1)
+			{
+				os << " ; ";
+			}
+		}
+		os << "]";
+		return os;
+	}
+
 private:
 
 	// Method delete vector
@@ -89,22 +104,5 @@ private:
 	// Vector
 	T* _vector = nullptr;
 };
-
-
-template<typename T>
-std::ostream& operator<<(std::ostream& os, const Vector<T>& vector)
-{
-	os << "[";
-	for (int i = 0; i < vector.getLength(); i++)
-	{
-		os << vector[i];
-		if (i < vector.getLength() - 1)
-		{
-			os << " ; ";
-		}
-	}
-	os << "]";
-	return os;
-}
 
 #endif // !VECTOR_H

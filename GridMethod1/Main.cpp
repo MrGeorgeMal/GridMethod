@@ -4,49 +4,36 @@ int main()
 {
 	try
 	{
-		Point2D<double> p(2.2, 2.8);
-		std::cout << p << "\n";
-
-		Shape2D shape(22.2, 1.2);
-		std::cout << shape.getOrigin() << "\n";
-
-		Rectangle2D rect;
-
-		Polygon polygon(
-			Point2D<double>(0.0, 0.0),
-			Point2D<double>(1.1, 1.1),
-			Point2D<double>(2.2, 2.2),
-			Point2D<double>(3.3, 3.3),
-			Point2D<double>(4.4, 4.4));
-		std::cout << polygon.getPoints() << "\n";
-
-		Matrix2D<int> m(2, 2);
-		Vector<Point2D<double>> v(2);
-
-        for (int i = 0; i < v.getLength(); i++)
-        {
-			v[i] = Point2D<double>(double(i) / 10.0, double(i) / 10.0);
-        }
-        std::cout << v << "\n";
-
-		int k = 0;
-		for (int i = 0; i < m.getRows(); i++)
+		Vector<int> v(3);
+		for (int i = 0; i < v.getLength(); i++)
 		{
-			for (int j = 0; j < m.getCols(); j++)
-			{
-				m[i][j] = k;
-				k++;
-			}
+			v[i] = i;
 		}
-		std::cout << m << "\n";
 
-		Material mat;
-		Dielectric diel;
-		Conductor cond(false);
+		std::cout << v << "\n";
 
-		std::cout << mat << "\n";
-		std::cout << diel << "\n";
-		std::cout << cond << "\n";
+
+		Dielectric diel1(4.3);
+		Dielectric diel2(3.1);
+		Conductor cond1(false);
+
+		Line2D line1(Point2D<double>(0.0, 0.0), Point2D<double>(0.0, 0.0));
+		Polygon2D poly1;
+		Rectangle2D rect1;
+
+		line1.setMaterial(&cond1);
+		poly1.setMaterial(&diel1);
+		rect1.setMaterial(&diel2);
+
+		std::cout << cond1 << "\n";
+		std::cout << line1.getMaterial()->getType() << "\n";
+		std::cout << poly1.getMaterial()->getType() << "\n";
+		std::cout << rect1.getMaterial()->getType() << "\n";
+
+		Rasterizer rast(Size2D<double>(1.0, 1.0));
+		rast.Rasterize(line1);
+		rast.Rasterize(poly1);
+		rast.Rasterize(rect1);
 	}
 	catch (const char* errorMsg)
 	{

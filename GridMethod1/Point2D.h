@@ -47,13 +47,12 @@ public:
 	{
 		return Point2D<T>(this->x / point.x, this->y / point.y);
 	}
-};
 
-template<typename T>
-std::ostream& operator<<(std::ostream& os, const Point2D<T>& point)
-{
-	os << "[" << point.x << " ; " << point.y << "]";
-	return os;
-}
+	friend std::ostream& operator<<(std::ostream& os, const Point2D<T>& point)
+	{
+		os << "[" << point.x << " ; " << point.y << "]";
+		return os;
+	}
+};
 
 #endif // !POINT2D_H
