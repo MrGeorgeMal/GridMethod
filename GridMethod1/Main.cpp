@@ -31,9 +31,9 @@ int main()
 		std::cout << rect1.getMaterial()->getType() << "\n";
 
 		Rasterizer rast(Size2D<double>(1.0, 1.0));
-		rast.Rasterize(line1);
-		rast.Rasterize(poly1);
-		rast.Rasterize(rect1);
+		rast.rasterize(line1);
+		rast.rasterize(poly1);
+		rast.rasterize(rect1);
 	}
 	catch (const char* errorMsg)
 	{
