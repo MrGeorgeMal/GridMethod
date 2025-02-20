@@ -23,13 +23,13 @@ public:
 
 	// Constructor.
 	// cell - cell size, describe minimum step for x and y. Using for discretization
-	// smooth - smooth shape value (antialiasing). Takes a value from 1 to 4
+	// antialiasing - disable / enable antialiasing
 	Rasterizer(Size2D<double> cell, bool antialiasing) : _cell(cell), _antialiasing(antialiasing) {}
 
 	// Constructor.
 	// dx - minimum step for x
 	// dy - minimum step for y
-	// smooth - smooth shape value (antialiasing). Takes a value from 1 to 4
+	// antialiasing - disable / enable antialiasing
 	Rasterizer(double dx, double dy, bool antialiasing) : _cell(dx, dy), _antialiasing(antialiasing) {}
 
 #pragma endregion
