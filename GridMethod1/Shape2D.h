@@ -3,6 +3,7 @@
 #ifndef SHAPE2D_H
 #define SHAPE2D_H
 
+#include <iostream>
 #include "Vector.h"
 #include "Point2D.h"
 #include "Size2D.h"
@@ -54,7 +55,7 @@ public:
 	void setMaterial(Material* material) { _material = material; }
 
 	// Get material
-	Material* getMaterial() { return _material; }
+	Material* getMaterial() const { return _material; }
 
 
 #pragma endregion
@@ -158,6 +159,7 @@ public:
 
 #pragma endregion
 
+
 #pragma region Public Methods
 
 public:
@@ -172,10 +174,10 @@ public:
 public:
 
 	// Get line first point
-	Point2D<double> getP1() { return _p1; }
+	Point2D<double> getP1() const { return _p1; }
 
 	// Get line first point
-	Point2D<double> getP2() { return _p2; }
+	Point2D<double> getP2() const { return _p2; }
 
 #pragma endregion
 
@@ -191,6 +193,9 @@ private:
 
 };
 
+
+
+// Polygon2D class - child from Shape2D
 class Polygon2D : public Shape2D
 {
 
@@ -267,7 +272,7 @@ public:
 public:
 
 	// Get vector of shape points
-	Vector<Point2D<double>>& getPoints() { return _points; }
+	const Vector<Point2D<double>>& getPoints() const { return _points; }
 
 #pragma endregion
 
@@ -460,10 +465,16 @@ public:
 	void setWidth(double width) { _size.width = width; }
 
 	// Get rectangle height
-	double geHeight() { return _size.height; }
+	double getHeight() { return _size.height; }
 
 	// Set rectangle height
 	void setHeight(double height) { _size.height = height; }
+
+	// Check if the rectangle is a screen
+	bool isScreen() { return _isScreen; }
+
+	// Make or remove a mark to use a rectangle as a screen
+	void makeAsScreen(bool isScreen) { _isScreen = isScreen; }
 
 #pragma endregion
 
@@ -474,6 +485,9 @@ private:
 
 	// Rectangle2D size
 	Size2D<double> _size;
+
+	// This rectangle is screen?
+	bool _isScreen = false;
 
 #pragma endregion
 

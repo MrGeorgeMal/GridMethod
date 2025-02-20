@@ -20,10 +20,11 @@ public:
 		resize(length);
 	}
 
+
     // Destructor
     ~Vector()
     {
-       deleteVector();
+		deleteVector();
     }
 
 	// Method delete and create new vectoe with the specifide length

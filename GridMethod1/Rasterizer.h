@@ -10,6 +10,21 @@
 
 class Rasterizer
 {
+#pragma region Public Types
+
+public:
+
+	// Cell info structure
+	struct CellInfo
+	{
+		double potential = 0.0;
+		double dielectricValue = 1.0;
+		bool isConductor = false;
+	};
+
+#pragma endregion
+
+
 #pragma region Constructors
 
 public:
@@ -38,11 +53,8 @@ public:
 
 public:
 
-	// Rasterize shape 2D
-	Matrix2D<Material> rasterize(Shape2D& shape2d);
-
 	// Rasterize strip structure
-	Matrix2D<Material> rasterize(Vector<Shape2D> shapes);
+	Matrix2D<CellInfo> rasterize(Vector<Shape2D> shapes) const;
 
 #pragma endregion
 
@@ -51,35 +63,32 @@ public:
 
 private:
 
-	// Get discretize point coordinates
-	Point2D<int> discretizePoint(Point2D<double> point);
+	// Get discretized point
+	Point2D<int> discretizePoint(const Point2D<double> point) const;
+
+	// Get discretized size
+	Size2D<int> discretizeSize(const Size2D<double> size) const;
 
 	// Define matrix size
-	Size2D<int> defineMatrixSize(Line2D line2d);
-
-	// Define matrix size
-	Size2D<int> defineMatrixSize(Line2D polygon2d);
-
-	// Define matrix size
-	Size2D<int> defineMatrixSize(Vector<Shape2D> shapes);
+	Size2D<int> defineMatrixSize(const Vector<Shape2D> shapes) const;
 
 	// Rasterize line shape
-	Matrix2D<Material> rasterizeLine(Line2D* line2d);
+	void rasterizeLine(const Line2D* line2d, Matrix2D<CellInfo> matrix) const;
 
 	// Rasterize polygon shape
-	Matrix2D<Material> rasterizePolygon(Polygon2D* polygon2d);
+	void rasterizePolygon(const Polygon2D* polygon2d, Matrix2D<CellInfo> matrix) const;
 
 	// Rasterize line, Bresenham method
-	Matrix2D<Material> drawLineBresenham(Line2D* line2d);
+	void drawLineBresenham(const Line2D* line2d, Matrix2D<CellInfo> matrix) const;
 
 	// Rasterize line, Wu method
-	Matrix2D<Material> drawLineWu(Line2D* line2d);
+	void drawLineWu(const Line2D* line2d, Matrix2D<CellInfo> matrix) const;
 
 	// Rasterize polygon, no antialiasing method
-	Matrix2D<Material> drawPolygon(Polygon2D* polygon2d);
+	void drawPolygon(const Polygon2D* polygon2d, Matrix2D<CellInfo> matrix) const;
 
 	// Rasterize polygon, super sampled antialiasing method
-	Matrix2D<Material> drawPolygonSSAA(Polygon2D* polygon2d);
+	void drawPolygonSSAA(const Polygon2D* polygon2d, Matrix2D<CellInfo> matrix) const;
 
 #pragma endregion
 

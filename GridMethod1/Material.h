@@ -25,7 +25,7 @@ public:
 	// materialType - type of material (Material::EType)
 	Material(EType materialType) : _materialType(materialType) {}
 
-	EType getMaterialType() { return _materialType; }
+	EType getMaterialType() const { return _materialType; }
 
 	// Get object type
 	virtual const char* getType() const = 0;
@@ -97,37 +97,5 @@ private:
 	bool _isSignal;
 };
 
-
-/*
-// Convert material type to string
-const char* materialTypeToString(Material* material)
-{
-	switch (material->getMaterialType())
-	{
-	case Material::EType::NONE:
-		return "None";
-		break;
-	case Material::EType::DIELECTRIC:
-		return "Dielectric";
-		break;
-	case Material::EType::CONDUCTOR:
-		return "Conductor";
-		break;
-	default:
-		return "Wrong material";
-		break;
-	}
-}
-*/
-
-/*
-std::ostream& operator<<(std::ostream& os, Dielectric& material)
-{
-	os << "[";
-	//os << materialTypeToString(material);
-	os << " ; " << material.getDielectricValue() << "]";
-	return os;
-}
-*/
 
 #endif // !MATERIAL_H

@@ -41,10 +41,10 @@ public:
 	}
 
 	// Get rows number
-	T getRows() const { return _rows; }
+	int getRows() const { return _rows; }
 
 	// Get columns number
-	T getCols() const { return _cols; }
+	int getCols() const { return _cols; }
 
 	T* operator[](int rowIndex) const
 	{
