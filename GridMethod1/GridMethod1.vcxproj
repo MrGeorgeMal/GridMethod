@@ -133,6 +133,7 @@
     <ClInclude Include="Matrix2D.h" />
     <ClInclude Include="Point2D.h" />
     <ClInclude Include="Rasterizer.h" />
+    <ClInclude Include="Rect2D.h" />
     <ClInclude Include="Shape2D.h" />
     <ClInclude Include="Size2D.h" />
     <ClInclude Include="StripStructure.h" />
