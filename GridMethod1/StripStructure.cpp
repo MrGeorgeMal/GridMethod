@@ -62,6 +62,17 @@ Rectangle2D* StripStructure::createScreenRectangle() const
 
 
 
+// Get strip structure rect bound
+Rect2D<double> StripStructure::getRectBound() const
+{
+	// left, top, right, bootom coordinates
+	double l, t, r, b;
+
+	return Rect2D<double>();
+}
+
+
+
 // Get offset shapes to center [0 ; 0]
 const Vector<Shape2D>& StripStructure::getOffsetShapesToCenter() const
 {
