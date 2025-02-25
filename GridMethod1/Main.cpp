@@ -8,24 +8,31 @@ int main()
 		Dielectric* diel2 = new Dielectric(3.2);
 		Conductor* cond1 = new Conductor(false);
 
-		std::cout << &cond1 << "\n";
-
-		Line2D line1(Point2D<double>(0.0, 0.0), Point2D<double>(2.0, 2.0));
+		Line2D line1;
 		Polygon2D poly1;
 		Rectangle2D rect1;
+
+		line1.setP1(Point2D<double>(10.0, 10.0));
+		line1.setP2(Point2D<double>(15.0, 15.0));
+
+		poly1.addPoints(Point2D<double>(5.0, 10.0));
+		poly1.addPoints(Point2D<double>(10.0, 5.0));
+		poly1.addPoints(Point2D<double>(5.0, 5.0));
+
+		rect1.setPoint(Point2D<double>(20.0, 20.0));
+		rect1.setSize(Size2D<double>(-5.0, 10.0));
+		rect1.makeAsScreen(false);
 
 		line1.setMaterial(cond1);
 		poly1.setMaterial(diel1);
 		rect1.setMaterial(diel2);
 
-		std::cout << line1.getMaterial()->getType() << "\n";
-		std::cout << poly1.getMaterial()->getType() << "\n";
-		std::cout << rect1.getMaterial()->getType() << "\n";
+		StripStructure strip;
+		strip.addShape(&line1);
+		strip.addShape(&poly1);
+		strip.addShape(&rect1);
 
-		Rasterizer rast(Size2D<double>(1.0, 1.0));
-		rast.rasterize(&line1);
-		rast.rasterize(&poly1);
-		rast.rasterize(&rect1);
+		strip.computeElectroStaticAnalysis();
 	}
 	catch (const char* errorMsg)
 	{

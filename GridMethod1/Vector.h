@@ -60,6 +60,28 @@ public:
 		delete[] temp;
 	}
 
+	// Add new element to vector
+	void addToHead(T element)
+	{
+		_length++;
+		T* temp = new T[_length];
+
+		temp[0] = element;
+		for (int i = 1; i < _length; i++)
+		{
+			temp[i] = _vector[i - 1];
+		}
+
+		resize(_length);
+
+		for (int i = 0; i < _length; i++)
+		{
+			_vector[i] = temp[i];
+		}
+
+		delete[] temp;
+	}
+
 	// Get vector length
 	int getLength() const { return _length; }
 

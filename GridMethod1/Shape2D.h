@@ -24,11 +24,6 @@ public:
 	// origin - origin point
 	Shape2D(Point2D<double> origin) : _origin(origin), _material(new Dielectric()) {}
 
-	// Constructor
-	// originX - origin coordinate X
-	// originY - origin coordinate Y
-	Shape2D(double originX, double originY) : _origin(originX, originY), _material(new Dielectric()) {}
-
 #pragma endregion
 
 #pragma region Public Methods
@@ -37,6 +32,12 @@ public:
 
 	// Get object type
 	virtual const char* getType() const = 0;
+
+	// Move origin to point (move all shape point)
+	virtual void moveOrigin(Point2D<double> point)
+	{
+		_origin = point;
+	}
 
 #pragma endregion
 
@@ -89,24 +90,6 @@ public:
 		_p1(0.0, 0.0),
 		_p2(0.0, 0.0) {}
 	
-	// Constructor. Set line points p1[0.0 ; 0.0] and p2[0.0 ; 0.0]
-	// origin - origin point
-	Line2D(
-		Point2D<double> origin) : Shape2D(origin),
-		_p1(0.0, 0.0),
-		_p2(0.0, 0.0) {
-	}
-
-	// Constructor. Set line points p1[0.0 ; 0.0] and p2[0.0 ; 0.0]
-	// originX - origin coordinate X
-	// originY - origin coordinate Y
-	Line2D(
-		double originX,
-		double originY) : Shape2D(originX, originY),
-		_p1(0.0, 0.0),
-		_p2(0.0, 0.0) {
-	}
-
 	// Constructor. Set origin [0.0 ; 0.0]
 	// p1 - first line point
 	// p2 - second line point
@@ -116,47 +99,6 @@ public:
 		_p1(p1),
 		_p2(p2) {}
 
-	// Constructor. Set origin [0.0 ; 0.0]
-	// x1 - first X coordinate of point
-	// y1 - first Y coordinate of point
-	// x2 - second X coordinate of point
-	// y2 - second Y coordinate of point
-	Line2D(
-		double x1,
-		double y1,
-		double x2,
-		double y2) : Shape2D(),
-		_p1(x1, y1),
-		_p2(x2, y2) {}
-
-	// Constructor
-	// origin - origin point
-	// p1 - first line point
-	// p2 - second line point
-	Line2D(
-		Point2D<double> origin,
-		Point2D<double> p1,
-		Point2D<double> p2) : Shape2D(origin),
-		_p1(p1),
-		_p2(p2) {}
-
-	// Constructor
-	// originX - origin coordinate X
-	// originY - origin coordinate Y
-	// x1 - first X coordinate of point
-	// y1 - first Y coordinate of point
-	// x2 - second X coordinate of point
-	// y2 - second Y coordinate of point
-	Line2D(
-		double originX,
-		double originY,
-		double x1,
-		double y1,
-		double x2,
-		double y2) : Shape2D(originX, originY),
-		_p1(x1, y1),
-		_p2(x2, y2) {}
-
 #pragma endregion
 
 
@@ -164,7 +106,36 @@ public:
 
 public:
 
+	// Get object type
 	const char* getType() const override { return "Line2D"; }
+
+	// Move origin to point (move all shape point)
+	void moveOrigin(Point2D<double> point) override
+	{
+		Point2D<double> offset = point - _origin;
+		setP1(_p1 + offset);
+		setP2(_p2 + offset);
+		Shape2D::moveOrigin(point);
+	}
+
+	friend std::ostream& operator<<(std::ostream& os, const Line2D& shape)
+	{
+		os << "| Line2D (" << &shape << "):\n";
+		if (shape._material->getType() == "Dielectric")
+		{
+			Dielectric* material = dynamic_cast<Dielectric*>(shape._material);
+			os << "|-- material -> " << *material << "\n";
+		}
+		if (shape._material->getType() == "Conductor")
+		{
+			Conductor* material = dynamic_cast<Conductor*>(shape._material);
+			os << "|-- material -> " << *material << "\n";
+		}
+		os << "|-- point 1 -> " << shape._p1 << "\n";
+		os << "|-- point 2 -> " << shape._p2 << "\n";
+		os << "|-- origin -> " << shape._origin;
+		return os;
+	}
 
 #pragma endregion
 
@@ -178,6 +149,10 @@ public:
 
 	// Get line first point
 	Point2D<double> getP2() const { return _p2; }
+
+	void setP1(Point2D<double> point) { _p1 = point; }
+
+	void setP2(Point2D<double> point) { _p2 = point; }
 
 #pragma endregion
 
@@ -206,18 +181,6 @@ public:
 	// Base constructor. Set origin [0.0 ; 0.0]. Empty points list
 	Polygon2D() : Shape2D(), _points(0) {}
 
-	// Base constructor. Empty points list
-	// origin - origin point
-	Polygon2D(Point2D<double> origin) : Shape2D(origin), _points(0) {}
-
-	// Base constructor. Empty points list
-	// originX - origin coordinate X
-	// originY - origin coordinate Y
-	Polygon2D(
-		double originX, 
-		double originY) : Shape2D(originX, originY),
-		_points(0) {}
-
 	// Constructor. Set origin [0.0 ; 0.0]
 	// p1, p2, ... pn - next poligon points
 	template <typename... Points>
@@ -233,35 +196,51 @@ public:
 		(_points.add(points), ...);
 	}
 
-	// Constructor.
-	// origin - origin point
-	// p1, p2, ... pn - next poligon points
-	template <typename... Points>
-	Polygon2D(
-		Point2D<double> origin,
-		Point2D<double> p1,
-		Point2D<double> p2,
-		Point2D<double> p3,
-		Points... points) : Shape2D(origin), _points(3)
-	{
-		_points[0] = p1;
-		_points[1] = p2;
-		_points[2] = p3;
-		(_points.add(points), ...);
-	}
-
 #pragma endregion
 
 
 #pragma region Public Methods
 
+	// Get object type
 	const char* getType() const override { return "Polygon2D"; }
+
+	// Move origin to point (move all shape point)
+	void moveOrigin(Point2D<double> point) override
+	{
+		Point2D<double> offset = point - _origin;
+		for (int i = 0; i < _points.getLength(); i++)
+		{
+			_points[i] = _points[i] + offset;
+		}
+		Shape2D::moveOrigin(point);
+	}
 
 	// Add new points to polygon
 	template <typename... Points>
 	void addPoints(Points... points)
 	{
 		(_points.add(points), ...);
+	}
+
+	friend std::ostream& operator<<(std::ostream& os, const Polygon2D& shape)
+	{
+		os << "| Polygon2D (" << &shape << "):\n";
+		if (shape._material->getType() == "Dielectric")
+		{
+			Dielectric* material = dynamic_cast<Dielectric*>(shape._material);
+			os << "|-- material -> " << *material << "\n";
+		}
+		if (shape._material->getType() == "Conductor")
+		{
+			Conductor* material = dynamic_cast<Conductor*>(shape._material);
+			os << "|-- material -> " << *material << "\n";
+		}
+		for (int i = 0; i < shape._points.getLength(); i++)
+		{
+			os << "|-- point " << i + 1 << ": " << shape._points[i] << "\n";
+		}
+		os << "|-- origin -> " << shape._origin;
+		return os;
 	}
 
 #pragma endregion
@@ -307,108 +286,17 @@ public:
 		_points.add(Point2D<double>(1.0, 0.0));
 	}
 
-	// Constructor. Set four points of rectangle [0.0; 0.0], [0.0; 1.0], [1.0; 1.0], [1.0; 0.0].
-	// origin - origin point
-	Rectangle2D(Point2D<double> origin) : Polygon2D(origin)
-	{
-		_points.add(Point2D<double>(0.0, 0.0));
-		_points.add(Point2D<double>(0.0, 1.0));
-		_points.add(Point2D<double>(1.0, 1.0));
-		_points.add(Point2D<double>(1.0, 0.0));
-	}
-
-	// Constructor. Set four points of rectangle [0.0; 0.0], [0.0; 1.0], [1.0; 1.0], [1.0; 0.0].
-	// originX - origin coordinate X
-	// originY - origin coordinate Y
-	Rectangle2D(
-		double originX,
-		double originY) : Polygon2D(originX, originY)
-	{
-		_points.add(Point2D<double>(0.0, 0.0));
-		_points.add(Point2D<double>(0.0, 1.0));
-		_points.add(Point2D<double>(1.0, 1.0));
-		_points.add(Point2D<double>(1.0, 0.0));
-	}
-
 	// Constructor. Set origin [0.0 ; 0.0].
 	// point - start rectangle point
 	// size - rectangle size
 	Rectangle2D(
 		Point2D<double> point,
-		Size2D<double> size) : Polygon2D()
+		Size2D<double> size) : Polygon2D(), _size(size)
 	{
 		Point2D<double> p1 = point;
 		Point2D<double> p2 = Point2D<double>(p1.x, p1.y + size.height);
 		Point2D<double> p3 = Point2D<double>(p1.x + size.width, p1.y + size.height);
 		Point2D<double> p4 = Point2D<double>(p1.x + size.width, p1.y);
-
-		_points.add(p1);
-		_points.add(p2);
-		_points.add(p3);
-		_points.add(p4);
-	}
-
-	// Constructor. Set origin [0.0 ; 0.0].
-	// pointX, pointY - start rectangle point
-	// width - rectangle width
-	// height - rectangle height
-	Rectangle2D(
-		double pointX,
-		double pointY,
-		double width,
-		double height,
-		Size2D<double> size) : Polygon2D()
-	{
-		Point2D<double> p1 = Point2D<double>(pointX, pointY);
-		Point2D<double> p2 = Point2D<double>(pointX, pointY + height);
-		Point2D<double> p3 = Point2D<double>(pointX + width, pointY + height);
-		Point2D<double> p4 = Point2D<double>(pointX + width, pointY);
-
-		_points.add(p1);
-		_points.add(p2);
-		_points.add(p3);
-		_points.add(p4);
-	}
-
-	// Constructor.
-	// origin - origin point
-	// point - start rectangle point
-	// size - rectangle size
-	Rectangle2D(
-		Point2D<double> origin,
-		Point2D<double> point,
-		Size2D<double> size) : Polygon2D(origin)
-	{
-		Point2D<double> p1 = point;
-		Point2D<double> p2 = Point2D<double>(p1.x, p1.y + size.height);
-		Point2D<double> p3 = Point2D<double>(p1.x + size.width, p1.y + size.height);
-		Point2D<double> p4 = Point2D<double>(p1.x + size.width, p1.y);
-
-		_points.add(p1);
-		_points.add(p2);
-		_points.add(p3);
-		_points.add(p4);
-	}
-
-	// Constructor. Set origin [0.0 ; 0.0].
-	// originX - origin coordinate X
-	// originY - origin coordinate Y
-	// pointX, pointY - start rectangle point
-	// width - rectangle width
-	// height - rectangle height
-	Rectangle2D(
-		double originX,
-		double originY,
-		double pointX,
-		double pointY,
-		double width,
-		double height,
-		Size2D<double> size) : Polygon2D(originX, originY)
-	{
-		Point2D<double> p1 = Point2D<double>(pointX, pointY);
-		Point2D<double> p2 = Point2D<double>(pointX, pointY + height);
-		Point2D<double> p3 = Point2D<double>(pointX + width, pointY + height);
-		Point2D<double> p4 = Point2D<double>(pointX + width, pointY);
 
 		_points.add(p1);
 		_points.add(p2);
@@ -421,7 +309,31 @@ public:
 
 #pragma region Public Methods
 
+public:
+
+	// Get object type
 	const char* getType() const override { return "Rectangle2D"; }
+
+	friend std::ostream& operator<<(std::ostream& os, const Rectangle2D& shape)
+	{
+		os << "| Rectangle2D (" << &shape << "):\n";
+		if (shape._material->getType() == "Dielectric")
+		{
+			Dielectric* material = dynamic_cast<Dielectric*>(shape._material);
+			os << "|-- material -> " << *material << "\n";
+		}
+		if (shape._material->getType() == "Conductor")
+		{
+			Conductor* material = dynamic_cast<Conductor*>(shape._material);
+			os << "|-- material -> " << *material << "\n";
+		}
+		os << "|-- isScreen -> " << shape._isScreen << "\n";
+		os << "|-- point -> " << shape._points[0] << "\n";
+		os << "|-- size -> " << shape._size << "\n";
+		os << "|-- origin -> " << shape._origin;
+
+		return os;
+	}
 
 #pragma endregion
 
@@ -432,6 +344,20 @@ private:
 
 	// Make method private
 	using Polygon2D::addPoints;
+
+	// Update points
+	void updatePoints()
+	{
+		Point2D<double> p1 = _points[0];
+		Point2D<double> p2 = Point2D<double>(p1.x, p1.y + _size.height);
+		Point2D<double> p3 = Point2D<double>(p1.x + _size.width, p1.y + _size.height);
+		Point2D<double> p4 = Point2D<double>(p1.x + _size.width, p1.y);
+
+		_points[0] = p1;
+		_points[1] = p2;
+		_points[2] = p3;
+		_points[3] = p4;
+	}
 
 #pragma endregion
 
@@ -444,31 +370,41 @@ public:
 	Point2D<double> getPoint() { return _points[0]; }
 
 	// Set start point
-	void setPoint(Point2D<double> point) { _points[0] = point; }
-
-	// Set start point
-	void setPoint(double x, double y) { _points[0] = Point2D<double>(x, y); }
+	void setPoint(Point2D<double> point)
+	{
+		_points[0] = point;
+		updatePoints();
+	}
 
 	// Get rectangle size
 	Size2D<double> getSize() { return _size; }
 
 	// Set rectangle size
-	void setSize(Size2D<double> size) { _size = size; }
-
-	// Set rectangle size
-	void setSize(double width, double height) { _size = Size2D<double>(width, height); }
+	void setSize(Size2D<double> size)
+	{
+		_size = size;
+		updatePoints();
+	}
 
 	// Get rectangle width
 	double getWidth() { return _size.width; }
 
 	// Set rectangle width
-	void setWidth(double width) { _size.width = width; }
+	void setWidth(double width)
+	{
+		_size.width = width;
+		updatePoints();
+	}
 
 	// Get rectangle height
 	double getHeight() { return _size.height; }
 
 	// Set rectangle height
-	void setHeight(double height) { _size.height = height; }
+	void setHeight(double height)
+	{
+		_size.height = height;
+		updatePoints();
+	}
 
 	// Check if the rectangle is a screen
 	bool isScreen() { return _isScreen; }

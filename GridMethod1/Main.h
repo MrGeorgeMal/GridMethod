@@ -10,6 +10,7 @@
 #include "Vector.h"
 #include "Material.h"
 #include "Shape2D.h"
+#include "StripStructure.h"
 #include "Rasterizer.h"
 
 #endif // !MAIN_H

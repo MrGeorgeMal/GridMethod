@@ -2,10 +2,13 @@
 #ifndef STRIPSTRUCTURE_H
 #define STRIPSTRUCTURE_H
 
+#include <iostream>
 #include "Vector.h"
 #include "Matrix2D.h"
 #include "Shape2D.h"
 #include "Rect2D.h"
+#include "Point2D.h"
+#include "Rasterizer.h"
 
 
 
@@ -17,7 +20,7 @@ class StripStructure
 public:
 
 	// Base constructor
-	StripStructure() {}
+	StripStructure() : _rasterizer(new Rasterizer()) { }
 
 #pragma endregion
 
@@ -43,13 +46,13 @@ public:
 private:
 
 	// Find or create screen
-	Rectangle2D* defineScreenRectangle() const;
+	Rectangle2D* defineScreenRectangle();
 
 	// Try to find screen
 	Rectangle2D* findScreenRectangle() const;
 
 	// Create new screen if could not find it
-	Rectangle2D* createScreenRectangle() const;
+	Rectangle2D* createScreenRectangle();
 
 	// Get strip structure rect bound
 	Rect2D<double> getRectBound() const;
@@ -61,7 +64,7 @@ private:
 	Size2D<double> defineOptimalCellSize() const;
 
 	// Get offset shapes to center [0 ; 0]
-	const Vector<Shape2D>& getOffsetShapesToCenter() const;
+	const Vector<Shape2D*> getOffsetShapesToCenter() const;
 
 #pragma endregion
 
@@ -70,8 +73,14 @@ private:
 
 private:
 
+	// Rasterizer
+	Rasterizer* _rasterizer;
+
 	// Vector of shapes
-	Vector<Shape2D> _shapes;
+	Vector<Shape2D*> _shapes;
+
+	// Screen
+	Rectangle2D* _screen = nullptr;
 
 	// Gap between shapes and screen
 	double _screenDistance = 10.0;
@@ -86,7 +95,6 @@ private:
 	Matrix2D<bool> _conductorMap;
 
 #pragma endregion
-
 
 };
 

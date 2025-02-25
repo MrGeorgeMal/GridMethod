@@ -30,183 +30,183 @@ Size2D<int> Rasterizer::discretizeSize(const Size2D<double> size) const
 
 
 
-// Define matrix size
-Size2D<int> Rasterizer::defineMatrixSize(const Vector<Shape2D> shapes) const
+// Find screen in shapes
+Rectangle2D* Rasterizer::findScreen(const Vector<Shape2D*>& shapes) const
 {
-	// Try to find a screen rectangle
-
-	// If there is no screen
-
-	double minX = shapes[0].getPoints()[0].x;
-	double minY = polygon2d->getPoints()[0].y;
-	double maxX = 0;
-	double maxY = 0;
-
+	Rectangle2D* screen = nullptr;
 	for (int i = 0; i < shapes.getLength(); i++)
 	{
-
+		if (shapes[i]->getType() == "Rectangle2D")
+		{
+			Rectangle2D* rectangle = dynamic_cast<Rectangle2D*>(shapes[i]);
+			if (rectangle->isScreen())
+			{
+				screen = rectangle;
+				break;
+			}
+		}
 	}
+	return screen;
+}
+
+
+// Define matrix size
+Size2D<int> Rasterizer::defineMatrixSize(const Vector<Shape2D*>& shapes) const
+{
+	Rectangle2D* screen = findScreen(shapes);
+	Size2D<int> matrixSize = discretizeSize(screen->getSize());
+	return matrixSize;
 }
 
 
 
 // Rasterize shape 2D
-Matrix2D<Rasterizer::CellInfo> Rasterizer::rasterize(Vector<Shape2D> shapes) const
+const Matrix2D<Rasterizer::CellInfo> Rasterizer::rasterize(const Vector<Shape2D*>& shapes) const
 {
-	// Try to find a screen rectangle (realize in StripStructure class)
-	Rectangle2D* screen = nullptr;
-	for (int i = 0; i < shapes.getLength(); i++)
+	// Create matrix
+	Size2D<int> matrixSize = defineMatrixSize(shapes);
+	int rows = matrixSize.height + _screenBorder * 2;
+	int cols = matrixSize.width + _screenBorder * 2;
+	Matrix2D<CellInfo> matrix(rows, cols);
+
+	// Fill matrix with screen material
+	Rectangle2D* screen = findScreen(shapes);
+	Dielectric* fillMaterial = nullptr;
+
+	if (findScreen(shapes)->getMaterial()->getType() == "Dielectric")
 	{
-		if (shapes[i].getType() == "Rectangle2D")
+		fillMaterial = dynamic_cast<Dielectric*>(screen->getMaterial());
+	}
+
+	if (fillMaterial == nullptr)
+	{
+		throw "Rasterizer::rasterize::Bad screen material";
+		return matrix;
+	}
+
+	for (int y = 0; y < matrix.getRows(); y++)
+	{
+		for (int x = 0; x < matrix.getCols(); x++)
 		{
-			screen = dynamic_cast<Rectangle2D*>(&shapes[i]);
+			CellInfo cellInfo;
+			cellInfo.dielectricValue = fillMaterial->getDielectricValue();
+			cellInfo.potential = 0.0;
+			cellInfo.isConductor = false;
 		}
 	}
 
-	// Copy all shapes to a new vector and offset them to the [0 ; 0] coordinate
-
-	// Create matrix
-
-	// Rasterize all shapes
-
-
-
+	// Rasterize all dielectric shapes
+	// it is necessary that cells with conductors also have information about the dielectric layer on which they lie
 	for (int i = 0; i < shapes.getLength(); i++)
 	{
-		Line2D* line2d = dynamic_cast<Line2D*>(shapes[i]);
-	}
-	if (shape2d->getType() == "Line2D")
-	{
-		Line2D* line2d = dynamic_cast<Line2D*>(shape2d);
-		return rasterizeLine(line2d);
+		if (shapes[i]->getMaterial()->getType() == "Dielectric")
+		{
+			if (shapes[i]->getType() == "Line2D")
+			{
+				Line2D* line = dynamic_cast<Line2D*>(shapes[i]);
+				rasterizeLine(line, matrix);
+			}
+
+			if (shapes[i]->getType() == "Polygon2D" || shapes[i]->getType() == "Rectangle2D")
+			{
+				Polygon2D* polygon = dynamic_cast<Polygon2D*>(shapes[i]);
+				rasterizePolygon(polygon, matrix);
+			}
+		}
 	}
 
-	else if (shape2d->getType() == "Polygon2D" || shape2d->getType() == "Rectangle2D")
+	// Rasterize all shapes
+	for (int i = 0; i < shapes.getLength(); i++)
 	{
-		Polygon2D* poligon2d = dynamic_cast<Polygon2D*>(shape2d);
-		return rasterizePolygon(poligon2d);
+		if (shapes[i]->getType() == "Line2D")
+		{
+			Line2D* line = dynamic_cast<Line2D*>(shapes[i]);
+			rasterizeLine(line, matrix);
+		}
+
+		if (shapes[i]->getType() == "Polygon2D" || shapes[i]->getType() == "Rectangle2D")
+		{
+			Polygon2D* polygon = dynamic_cast<Polygon2D*>(shapes[i]);
+			rasterizePolygon(polygon, matrix);
+		}
 	}
 
-	else
+	return matrix;
+}
+
+
+
+// Plot matrix element (set cell info)
+void Rasterizer::plot(Matrix2D<CellInfo>& matrix, int x, int y, Rasterizer::CellInfo cellInfo) const
+{
+	x += _screenBorder;
+	y += _screenBorder;
+
+	if (x >= 0 && x < matrix.getCols() - _screenBorder &&
+		y >= 0 && y < matrix.getRows() - _screenBorder)
 	{
-		return Matrix2D<Rasterizer::CellInfo>();
+		matrix[y][x] = cellInfo;
 	}
 }
 
 
 
 // Rasterize line shape
-Matrix2D<Material> Rasterizer::rasterizeLine(const Line2D* line2d) const
+void Rasterizer::rasterizeLine(const Line2D* line2d, Matrix2D<Rasterizer::CellInfo>& matrix) const
 {
-	Size2D<int> size = defineMatrixSize(line2d);
-	
 	if (_antialiasing)
 	{
-		return drawLineWu(line2d);
+		drawLineWu(line2d, matrix);
 	}
 	else
 	{
-		return drawLineBresenham(line2d);
+		drawLineBresenham(line2d, matrix);
 	}
 }
 
 
 
 // Rasterize polygon shape
-Matrix2D<Material> Rasterizer::rasterizePolygon(const Polygon2D* polygon2d) const
+void Rasterizer::rasterizePolygon(const Polygon2D* polygon2d, Matrix2D<Rasterizer::CellInfo>& matrix) const
 {
-	if (polygon2d->getPoints().getLength() < 3)
-	{
-		return Matrix2D<Material>();
-	}
-
 	if (_antialiasing)
 	{
-		drawPolygonSSAA(polygon2d);
+		drawPolygonSSAA(polygon2d, matrix);
 	}
 	else
 	{
-		drawPolygon(polygon2d);
+		drawPolygon(polygon2d, matrix);
 	}
 }
 
+
+
 // Rasterize line, Bresenham method
-Matrix2D<Material> Rasterizer::drawLineBresenham(const Line2D* line2d) const
+void Rasterizer::drawLineBresenham(const Line2D* line2d, Matrix2D<Rasterizer::CellInfo>& matrix) const
 {
-	return Matrix2D<Material>();
-}
 
-
-// Rasterize line, Wu method
-Matrix2D<Material> Rasterizer::drawLineWu(const Line2D* line2d) const
-{
-	return Matrix2D<Material>();
 }
 
 
 
 // Rasterize polygon, no antialiasing method
-Matrix2D<Material> Rasterizer::drawPolygon(const Polygon2D* polygon2d) const
+void Rasterizer::drawPolygon(const Polygon2D* polygon2d, Matrix2D<Rasterizer::CellInfo>& matrix) const
 {
-	return Matrix2D<Material>();
+
+}
+
+
+
+// Rasterize line, Wu method
+void Rasterizer::drawLineWu(const Line2D* line2d, Matrix2D<Rasterizer::CellInfo>& matrix) const
+{
+
 }
 
 
 
 // Rasterize polygon, super sampled antialiasing method
-Matrix2D<Material> Rasterizer::drawPolygonSSAA(const Polygon2D* polygon2d) const
+void Rasterizer::drawPolygonSSAA(const Polygon2D* polygon2d, Matrix2D<Rasterizer::CellInfo>& matrix) const
 {
-	return Matrix2D<Material>();
+
 }
-
-
-/*
-// Define matrix size
-Size2D<int> Rasterizer::defineLineSize(const Line2D* line2d) const
-{
-	double minX = line2d->getP1().x;
-	double minY = line2d->getP1().y;
-	double maxX = line2d->getP2().x;
-	double maxY = line2d->getP2().y;
-
-	if (line2d->getP2().x < minX)
-	{
-		minX = line2d->getP2().x;
-		maxX = line2d->getP1().x;
-	}
-	if (line2d->getP2().y < minY)
-	{
-		minY = line2d->getP2().y;
-		maxY = line2d->getP1().y;
-	}
-
-	int width = floor(maxX - minX);
-	int height = floor(maxY - minY);
-
-	return Size2D<int>(width, height);
-}
-
-
-
-// Define matrix size
-Size2D<int> Rasterizer::definePolygonSize(const Polygon2D* polygon2d) const
-{
-	double minX = polygon2d->getPoints()[0].x;
-	double minY = polygon2d->getPoints()[0].y;
-	double maxX = 0;
-	double maxY = 0;
-
-	for (int i = 0; i < polygon2d->getPoints().getLength(); i++)
-	{
-		minX = std::min(minX, polygon2d->getPoints()[i].x);
-		minY = std::min(minY, polygon2d->getPoints()[i].y);
-		maxX = std::max(maxX, polygon2d->getPoints()[i].x);
-		maxY = std::max(maxY, polygon2d->getPoints()[i].y);
-	}
-
-	int width = floor(maxX - minX);
-	int height = floor(maxY - minY);
-
-	return Size2D<int>(width, height);
-}
-*/
