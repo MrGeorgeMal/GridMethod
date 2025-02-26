@@ -7,6 +7,9 @@
 #include "Matrix2D.h"
 #include "Shape2D.h"
 #include "Material.h"
+#include "Point2D.h"
+#include "Vector.h"
+
 
 
 class Rasterizer
@@ -71,6 +74,9 @@ private:
 	// Define matrix size
 	Size2D<int> defineMatrixSize(const Vector<Shape2D*>& shapes) const;
 
+	// Get updated cell info based on old cell info and new material
+	CellInfo getUpdatedCellInfo(CellInfo oldCellInfo, Material* material) const;
+
 	// Rasterize line shape
 	void rasterizeLine(const Line2D* line2d, Matrix2D<CellInfo>& matrix) const;
 
@@ -78,7 +84,10 @@ private:
 	void rasterizePolygon(const Polygon2D* polygon2d, Matrix2D<CellInfo>& matrix) const;
 
 	// Plot matrix element (set cell info)
-	void plot(Matrix2D<CellInfo>& matrix, int x, int y, CellInfo cellInfo) const;
+	void plot(Matrix2D<CellInfo>& matrix, int x, int y, Material* material) const;
+
+	// Check point if it inside the polygon
+	bool isInsidePolygon(int x, int y, const Vector<Point2D<double>>& polygonPoints) const;
 
 	// Rasterize line, Bresenham method
 	void drawLineBresenham(const Line2D* line2d, Matrix2D<CellInfo>& matrix) const;

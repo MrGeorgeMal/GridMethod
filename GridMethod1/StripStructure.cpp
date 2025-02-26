@@ -7,8 +7,11 @@ void StripStructure::computeElectroStaticAnalysis()
 {
 	_screen = defineScreenRectangle();
 	Vector<Shape2D*> offsetShapes = getOffsetShapesToCenter();
+
+	_rasterizer->setCell(Size2D<double>(1.0, 1.0));
 	Matrix2D<Rasterizer::CellInfo> matrix = _rasterizer->rasterize(offsetShapes);
 
+	// print shapes
 	for (int i = 0; i < _shapes.getLength(); i++)
 	{
 		if (_shapes[i]->getType() == "Line2D")
@@ -32,6 +35,7 @@ void StripStructure::computeElectroStaticAnalysis()
 
 	std::cout << "------------------------------------------------------------\n\n";
 
+	// print offset shapes
 	for (int i = 0; i < offsetShapes.getLength(); i++)
 	{
 		if (offsetShapes[i]->getType() == "Line2D")
@@ -51,6 +55,53 @@ void StripStructure::computeElectroStaticAnalysis()
 			Rectangle2D* rectangle = dynamic_cast<Rectangle2D*>(offsetShapes[i]);
 			std::cout << *rectangle << "\n\n";
 		}
+	}
+
+	std::cout << "------------------------------------------------------------\n\n";
+
+	// print matrix
+	std::cout << "\t";
+	int xi = 0;
+	for (int x = 0; x < matrix.getCols(); x++)
+	{
+		if (xi > 0)
+		{
+			std::cout << xi;
+		}
+		else
+		{
+			std::cout << " ";
+		}
+
+		xi++;
+		if (xi >= 10)
+		{
+			xi = 0;
+		}
+	}
+	std::cout << "\n\n";
+	for (int y = matrix.getRows() - 1; y >= 0; y--)
+	{
+		std::cout << y << "\t";
+		for (int x = 0; x < matrix.getCols(); x++)
+		{
+			if (matrix[y][x].isConductor == false)
+			{
+				if (matrix[y][x].dielectricValue == 1.0)
+				{
+					std::cout << ".";
+				}
+				else
+				{
+					std::cout << "#";
+				}
+			}
+			else
+			{
+				std::cout << "@";
+			}
+		}
+		std::cout << "\n";
 	}
 }
 

@@ -59,6 +59,33 @@ Size2D<int> Rasterizer::defineMatrixSize(const Vector<Shape2D*>& shapes) const
 }
 
 
+// Get updated cell info based on old cell info and new material
+Rasterizer::CellInfo Rasterizer::getUpdatedCellInfo(CellInfo oldCellInfo, Material* material) const
+{
+	CellInfo updatedCellInfo = oldCellInfo;
+
+	if (material->getType() == "Dielectric")
+	{
+		Dielectric* dielectric = dynamic_cast<Dielectric*>(material);
+		updatedCellInfo.dielectricValue = dielectric->getDielectricValue();
+		updatedCellInfo.potential = 0.0;
+		updatedCellInfo.isConductor = false;
+	}
+	else if (material->getType() == "Conductor")
+	{
+		Conductor* conductor = dynamic_cast<Conductor*>(material);
+		updatedCellInfo.potential = conductor->isSignal() ? 1.0 : 0.0;
+		updatedCellInfo.isConductor = true;
+	}
+	else
+	{
+		throw "Rasteriser::getUpdatedCellInfo::Bad material type";
+	}
+
+	return updatedCellInfo;
+}
+
+
 
 // Rasterize shape 2D
 const Matrix2D<Rasterizer::CellInfo> Rasterizer::rasterize(const Vector<Shape2D*>& shapes) const
@@ -71,27 +98,12 @@ const Matrix2D<Rasterizer::CellInfo> Rasterizer::rasterize(const Vector<Shape2D*
 
 	// Fill matrix with screen material
 	Rectangle2D* screen = findScreen(shapes);
-	Dielectric* fillMaterial = nullptr;
-
-	if (findScreen(shapes)->getMaterial()->getType() == "Dielectric")
-	{
-		fillMaterial = dynamic_cast<Dielectric*>(screen->getMaterial());
-	}
-
-	if (fillMaterial == nullptr)
-	{
-		throw "Rasterizer::rasterize::Bad screen material";
-		return matrix;
-	}
-
 	for (int y = 0; y < matrix.getRows(); y++)
 	{
 		for (int x = 0; x < matrix.getCols(); x++)
 		{
-			CellInfo cellInfo;
-			cellInfo.dielectricValue = fillMaterial->getDielectricValue();
-			cellInfo.potential = 0.0;
-			cellInfo.isConductor = false;
+			CellInfo cellInfo = getUpdatedCellInfo(matrix[y][x], screen->getMaterial());
+			matrix[y][x] = cellInfo;
 		}
 	}
 
@@ -99,7 +111,8 @@ const Matrix2D<Rasterizer::CellInfo> Rasterizer::rasterize(const Vector<Shape2D*
 	// it is necessary that cells with conductors also have information about the dielectric layer on which they lie
 	for (int i = 0; i < shapes.getLength(); i++)
 	{
-		if (shapes[i]->getMaterial()->getType() == "Dielectric")
+		if (shapes[i] != findScreen(shapes) &&
+			shapes[i]->getMaterial()->getType() == "Dielectric")
 		{
 			if (shapes[i]->getType() == "Line2D")
 			{
@@ -118,16 +131,19 @@ const Matrix2D<Rasterizer::CellInfo> Rasterizer::rasterize(const Vector<Shape2D*
 	// Rasterize all shapes
 	for (int i = 0; i < shapes.getLength(); i++)
 	{
-		if (shapes[i]->getType() == "Line2D")
+		if (shapes[i] != findScreen(shapes))
 		{
-			Line2D* line = dynamic_cast<Line2D*>(shapes[i]);
-			rasterizeLine(line, matrix);
-		}
+			if (shapes[i]->getType() == "Line2D")
+			{
+				Line2D* line = dynamic_cast<Line2D*>(shapes[i]);
+				rasterizeLine(line, matrix);
+			}
 
-		if (shapes[i]->getType() == "Polygon2D" || shapes[i]->getType() == "Rectangle2D")
-		{
-			Polygon2D* polygon = dynamic_cast<Polygon2D*>(shapes[i]);
-			rasterizePolygon(polygon, matrix);
+			if (shapes[i]->getType() == "Polygon2D" || shapes[i]->getType() == "Rectangle2D")
+			{
+				Polygon2D* polygon = dynamic_cast<Polygon2D*>(shapes[i]);
+				rasterizePolygon(polygon, matrix);
+			}
 		}
 	}
 
@@ -137,16 +153,66 @@ const Matrix2D<Rasterizer::CellInfo> Rasterizer::rasterize(const Vector<Shape2D*
 
 
 // Plot matrix element (set cell info)
-void Rasterizer::plot(Matrix2D<CellInfo>& matrix, int x, int y, Rasterizer::CellInfo cellInfo) const
+void Rasterizer::plot(Matrix2D<Rasterizer::CellInfo>& matrix, int x, int y, Material* material) const
 {
 	x += _screenBorder;
 	y += _screenBorder;
 
-	if (x >= 0 && x < matrix.getCols() - _screenBorder &&
-		y >= 0 && y < matrix.getRows() - _screenBorder)
+	if (x >= _screenBorder && x < matrix.getCols() - _screenBorder &&
+		y >= _screenBorder && y < matrix.getRows() - _screenBorder)
 	{
+		CellInfo cellInfo = getUpdatedCellInfo(matrix[y][x], material);
 		matrix[y][x] = cellInfo;
 	}
+}
+
+
+
+// Check point if it inside the polygon (ray casting)
+bool Rasterizer::isInsidePolygon(int x, int y, const Vector<Point2D<double>>& polygonPoints) const
+{
+	bool isInside = false;
+
+	// Use center of cell for check
+	double cx = (double)x + 0.5;
+	double cy = (double)y + 0.5;
+	
+	int j = polygonPoints.getLength() - 1;
+	for (int i = 0; i < polygonPoints.getLength(); i++)
+	{
+		Point2D<int> pi = discretizePoint(polygonPoints[i]);
+		Point2D<int> pj = discretizePoint(polygonPoints[j]);
+
+		double xi = (double)pi.x;
+		double yi = (double)pi.y;
+		double xj = (double)pj.x;
+		double yj = (double)pj.y;
+
+		// true if the point [cx, cy] lies between yi and yj (if you draw a horizontal line to the points [cx, cy])
+		bool isPointBetweenYiYj = (yi > cy) != (yj > cy);
+
+		// compute x coordinate of intersection of segment coonecting [xi, yi] and [xj, yj] with horizontal line cy (linear interpolation)
+		// 1e-12 - protection against division by zero
+		double intersectionX = (xj - xi) * (cy - yi) / (yj - yi + 1e-12) + xi;
+
+		// true if cx to the left of the compute intersectionX point
+		bool isLeftOfIntesectionX = cx < intersectionX;
+
+		// true if:
+		// 1) the segment connecting (xi,yi) and (xj,yj) intersects a horizontal line passing through the point (cx,cy)
+		// 2) the point of intersection of this segment with the cy line is to the right of (cx,cy)
+		bool isIntersect = isPointBetweenYiYj && isLeftOfIntesectionX;
+
+		// even / odd rule in the ray casting algorithm for determining whether a point belongs to a polygon
+		if (isIntersect)
+		{
+			isInside = !isInside;
+		}
+
+		j = i;
+	}
+
+	return isInside;
 }
 
 
@@ -184,7 +250,35 @@ void Rasterizer::rasterizePolygon(const Polygon2D* polygon2d, Matrix2D<Rasterize
 // Rasterize line, Bresenham method
 void Rasterizer::drawLineBresenham(const Line2D* line2d, Matrix2D<Rasterizer::CellInfo>& matrix) const
 {
+	Point2D<int> p1 = discretizePoint(line2d->getP1());
+	Point2D<int> p2 = discretizePoint(line2d->getP2());
+	int x1 = p1.x;
+	int y1 = p1.y;
+	int x2 = p2.x;
+	int y2 = p2.y;
 
+	int dx = abs(x2 - x1);
+	int dy = abs(y2 - y1);
+	int dirx = x1 < x2 ? 1 : -1;
+	int diry = y1 < y2 ? 1 : -1;
+	int err = dx - dy;
+
+	while (true)
+	{
+		plot(matrix, x1, y1, line2d->getMaterial());
+		if (x1 == x2 && y1 == y2) break;
+		int deltaerr = 2 * err;
+		if (deltaerr > -dy)
+		{
+			err -= dy;
+			x1 += dirx;
+		}
+		if (deltaerr < dx)
+		{
+			err += dx;
+			y1 += diry;
+		}
+	}
 }
 
 
@@ -192,7 +286,17 @@ void Rasterizer::drawLineBresenham(const Line2D* line2d, Matrix2D<Rasterizer::Ce
 // Rasterize polygon, no antialiasing method
 void Rasterizer::drawPolygon(const Polygon2D* polygon2d, Matrix2D<Rasterizer::CellInfo>& matrix) const
 {
-
+	for (int y = 0; y < matrix.getRows(); y++)
+	{
+		for (int x = 0; x < matrix.getCols(); x++)
+		{
+			bool isInside = isInsidePolygon(x, y, polygon2d->getPoints());
+			if (isInside)
+			{
+				plot(matrix, x, y, polygon2d->getMaterial());
+			}
+		}
+	}
 }
 
 
