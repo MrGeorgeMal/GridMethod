@@ -9,9 +9,7 @@ void StripStructure::computeElectroStaticAnalysis()
 	Vector<Shape2D*> offsetShapes = getOffsetShapesToCenter();
 	Matrix2D<Rasterizer::CellInfo> matrix = _rasterizer->rasterize(offsetShapes);
 
-
-	std::cout << *_screen << "\n\n";
-	for (int i = 0; i < offsetShapes.getLength(); i++)
+	for (int i = 0; i < _shapes.getLength(); i++)
 	{
 		if (_shapes[i]->getType() == "Line2D")
 		{
@@ -28,6 +26,29 @@ void StripStructure::computeElectroStaticAnalysis()
 		if (_shapes[i]->getType() == "Rectangle2D")
 		{
 			Rectangle2D* rectangle = dynamic_cast<Rectangle2D*>(_shapes[i]);
+			std::cout << *rectangle << "\n\n";
+		}
+	}
+
+	std::cout << "------------------------------------------------------------\n\n";
+
+	for (int i = 0; i < offsetShapes.getLength(); i++)
+	{
+		if (offsetShapes[i]->getType() == "Line2D")
+		{
+			Line2D* line = dynamic_cast<Line2D*>(offsetShapes[i]);
+			std::cout << *line << "\n\n";
+		}
+
+		if (offsetShapes[i]->getType() == "Polygon2D")
+		{
+			Polygon2D* polygon = dynamic_cast<Polygon2D*>(offsetShapes[i]);
+			std::cout << *polygon << "\n\n";
+		}
+
+		if (offsetShapes[i]->getType() == "Rectangle2D")
+		{
+			Rectangle2D* rectangle = dynamic_cast<Rectangle2D*>(offsetShapes[i]);
 			std::cout << *rectangle << "\n\n";
 		}
 	}
@@ -177,7 +198,7 @@ const Vector<Shape2D*> StripStructure::getOffsetShapesToCenter() const
 
 	for (size_t i = 0; i < _shapes.getLength(); i++)
 	{
-		Shape2D* offsetShape(_shapes[i]);
+		Shape2D* offsetShape = _shapes[i]->getCopy();
 		offsetShape->moveOrigin(offsetPoint);
 		offsetShapes.add(offsetShape);
 	}

@@ -39,6 +39,9 @@ public:
 		_origin = point;
 	}
 
+	// Get shape copy pointer
+	virtual Shape2D* getCopy() const = 0;
+
 #pragma endregion
 
 
@@ -116,6 +119,17 @@ public:
 		setP1(_p1 + offset);
 		setP2(_p2 + offset);
 		Shape2D::moveOrigin(point);
+	}
+
+	// Get shape copy pointer
+	Shape2D* getCopy() const override
+	{
+		Line2D* line = new Line2D();
+		line->_origin = _origin;
+		line->_material = _material;
+		line->_p1 = _p1;
+		line->_p2 = _p2;
+		return line;
 	}
 
 	friend std::ostream& operator<<(std::ostream& os, const Line2D& shape)
@@ -213,6 +227,19 @@ public:
 			_points[i] = _points[i] + offset;
 		}
 		Shape2D::moveOrigin(point);
+	}
+
+	// Get shape copy pointer
+	Shape2D* getCopy() const override
+	{
+		Polygon2D* polygon = new Polygon2D();
+		polygon->_origin = _origin;
+		polygon->_material = _material;
+		for (int i = 0; i < _points.getLength(); i++)
+		{
+			polygon->addPoints(_points[i]);
+		}
+		return polygon;
 	}
 
 	// Add new points to polygon
@@ -313,6 +340,21 @@ public:
 
 	// Get object type
 	const char* getType() const override { return "Rectangle2D"; }
+
+	// Get shape copy pointer
+	Shape2D* getCopy() const override
+	{
+		Rectangle2D* rectangle = new Rectangle2D();
+		rectangle->_origin = _origin;
+		rectangle->_material = _material;
+		rectangle->_isScreen = _isScreen;
+		rectangle->_points[0] = _points[0];
+		rectangle->_points[1] = _points[1];
+		rectangle->_points[2] = _points[2];
+		rectangle->_points[3] = _points[3];
+		rectangle->_size = _size;
+		return rectangle;
+	}
 
 	friend std::ostream& operator<<(std::ostream& os, const Rectangle2D& shape)
 	{
