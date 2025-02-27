@@ -128,6 +128,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="GridSolver.h" />
     <ClInclude Include="Main.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="Matrix2D.h" />
@@ -137,9 +138,11 @@
     <ClInclude Include="Shape2D.h" />
     <ClInclude Include="Size2D.h" />
     <ClInclude Include="StripStructure.h" />
+    <ClInclude Include="Tool.h" />
     <ClInclude Include="Vector.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="GridSolver.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Rasterizer.cpp" />
     <ClCompile Include="StripStructure.cpp" />

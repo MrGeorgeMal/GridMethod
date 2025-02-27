@@ -9,7 +9,7 @@
 #include "Rect2D.h"
 #include "Point2D.h"
 #include "Rasterizer.h"
-
+#include "Tool.h"
 
 
 class StripStructure
@@ -81,6 +81,12 @@ private:
 
 	// Screen
 	Rectangle2D* _screen = nullptr;
+
+	// Determines if the grid is regular (cell width = height) and all cells are the same size
+	bool _isRegularGrid = true;
+
+	// Optimal grid size
+	Size2D<int> _optimalGridSize = Size2D<int>(200, 200);
 
 	// Gap between shapes and screen
 	double _screenDistance = 10.0;

@@ -8,7 +8,7 @@ void StripStructure::computeElectroStaticAnalysis()
 	_screen = defineScreenRectangle();
 	Vector<Shape2D*> offsetShapes = getOffsetShapesToCenter();
 
-	_rasterizer->setCell(Size2D<double>(1.0, 1.0));
+	_rasterizer->setCell(defineOptimalCellSize());
 	Matrix2D<Rasterizer::CellInfo> matrix = _rasterizer->rasterize(offsetShapes);
 
 	// print shapes
@@ -56,6 +56,13 @@ void StripStructure::computeElectroStaticAnalysis()
 			std::cout << *rectangle << "\n\n";
 		}
 	}
+
+	std::cout << "------------------------------------------------------------\n\n";
+
+	// print min size
+	std::cout << "Min size: " << defineMinSize() << "\n\n";
+	std::cout << "Cell size: " << defineOptimalCellSize() << "\n\n";
+	std::cout << "Grid size: [" << matrix.getCols() << " ; " << matrix.getRows() << "]\n\n";
 
 	std::cout << "------------------------------------------------------------\n\n";
 
@@ -263,4 +270,107 @@ const Vector<Shape2D*> StripStructure::getOffsetShapesToCenter() const
 void StripStructure::addShape(Shape2D* shape)
 {
 	_shapes.add(shape);
+}
+
+
+
+// Define min structure size
+Size2D<double> StripStructure::defineMinSize() const
+{
+	// Create a vector of all points of all shapes
+	Vector<double> x;
+	Vector<double> y;
+	for (int i = 0; i < _shapes.getLength(); i++)
+	{
+		if (_shapes[i]->getType() == "Line2D")
+		{
+			Line2D* line = dynamic_cast<Line2D*>(_shapes[i]);
+			x.add(line->getP1().x);
+			x.add(line->getP2().x);
+			y.add(line->getP1().y);
+			y.add(line->getP2().y);
+		}
+
+		if (_shapes[i]->getType() == "Polygon2D" || _shapes[i]->getType() == "Rectangle2D")
+		{
+			Polygon2D* polygon = dynamic_cast<Polygon2D*>(_shapes[i]);
+			for (int i = 0; i < polygon->getPoints().getLength(); i++)
+			{
+				x.add(polygon->getPoints()[i].x);
+				y.add(polygon->getPoints()[i].y);
+			}
+		}
+	}
+
+	// Sort points in increasing order
+	Tool::sort(x);
+	Tool::sort(y);
+
+	// Find minimum length between two points
+	double mindx = abs(x[x.getLength() - 1] - x[0]);
+	for (int i = 1; i < x.getLength() - 1; i++)
+	{
+		if (mindx > x[i + 1] - x[i] && Tool::roundToDouble(x[i + 1] - x[i]) != 0.0)
+		{
+			mindx = abs(x[i + 1] - x[i]);
+		}
+	}
+
+	double mindy = abs(y[y.getLength() - 1] - y[0]);
+	for (int i = 1; i < y.getLength() - 1; i++)
+	{
+		if (mindy > y[i + 1] - y[i] && Tool::roundToDouble(y[i + 1] - y[i]) != 0.0)
+		{
+			mindy = abs(y[i + 1] - y[i]);
+		}
+	}
+
+	return Size2D<double>(mindx, mindy);
+}
+
+
+
+// Define optimal cell size
+Size2D<double> StripStructure::defineOptimalCellSize() const
+{
+	// compute optimal cell size
+	Size2D<double> optimalCellSize;
+	optimalCellSize.width = _screen->getSize().width / (double)_optimalGridSize.width;
+	optimalCellSize.height = _screen->getSize().height / (double)_optimalGridSize.height;
+
+	// if the calculated cell size is larger than the minimum structure size,
+	// so compute it based on the minimum structure size.
+	// division by 2 is necessary to improve accuracy (especially if the minimum size is a gap between two figures)
+	Size2D<double> minSize = defineMinSize();
+	bool isTooBigSize = false;
+	if (minSize.width / 2 < optimalCellSize.width)
+	{
+		optimalCellSize.width = minSize.width / 2;
+		isTooBigSize = true;
+	}
+	if (minSize.height / 2 < optimalCellSize.height)
+	{
+		optimalCellSize.height = minSize.height / 2;
+		isTooBigSize = true;
+	}
+
+	// if the cells are to be the same size, then equate the width and height.
+	// if there were no problems with the size of the initially computed cell size,
+	// it is better to choose the largest size, otherwise, the smallest
+	if (_isRegularGrid)
+	{
+		double size = 1.0;
+		if (isTooBigSize)
+		{
+			size = std::min(optimalCellSize.width, optimalCellSize.height);
+		}
+		else
+		{
+			size = std::max(optimalCellSize.width, optimalCellSize.height);
+		}
+		optimalCellSize.width = size;
+		optimalCellSize.height = size;
+	}
+
+	return optimalCellSize;
 }

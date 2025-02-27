@@ -2,34 +2,6 @@
 
 
 
-// Get discretized point
-Point2D<int> Rasterizer::discretizePoint(const Point2D<double> point) const
-{
-	double dx = _cell.width;
-	double dy = _cell.height;
-
-	int x = floor(point.x / dx);
-	int y = floor(point.y / dy);
-
-	return Point2D<int>(x, y);
-}
-
-
-
-// Get discretized size
-Size2D<int> Rasterizer::discretizeSize(const Size2D<double> size) const
-{
-	double dx = _cell.width;
-	double dy = _cell.height;
-
-	int width = floor(size.width / dx);
-	int height = floor(size.height / dy);
-
-	return Size2D<int>(width, height);
-}
-
-
-
 // Find screen in shapes
 Rectangle2D* Rasterizer::findScreen(const Vector<Shape2D*>& shapes) const
 {
@@ -54,7 +26,7 @@ Rectangle2D* Rasterizer::findScreen(const Vector<Shape2D*>& shapes) const
 Size2D<int> Rasterizer::defineMatrixSize(const Vector<Shape2D*>& shapes) const
 {
 	Rectangle2D* screen = findScreen(shapes);
-	Size2D<int> matrixSize = discretizeSize(screen->getSize());
+	Size2D<int> matrixSize = Tool::discretizeSize(screen->getSize(), _cell);
 	return matrixSize;
 }
 
@@ -180,8 +152,8 @@ bool Rasterizer::isInsidePolygon(int x, int y, const Vector<Point2D<double>>& po
 	int j = polygonPoints.getLength() - 1;
 	for (int i = 0; i < polygonPoints.getLength(); i++)
 	{
-		Point2D<int> pi = discretizePoint(polygonPoints[i]);
-		Point2D<int> pj = discretizePoint(polygonPoints[j]);
+		Point2D<int> pi = Tool::discretizePoint(polygonPoints[i], _cell);
+		Point2D<int> pj = Tool::discretizePoint(polygonPoints[j], _cell);
 
 		double xi = (double)pi.x;
 		double yi = (double)pi.y;
@@ -250,8 +222,8 @@ void Rasterizer::rasterizePolygon(const Polygon2D* polygon2d, Matrix2D<Rasterize
 // Rasterize line, Bresenham method
 void Rasterizer::drawLineBresenham(const Line2D* line2d, Matrix2D<Rasterizer::CellInfo>& matrix) const
 {
-	Point2D<int> p1 = discretizePoint(line2d->getP1());
-	Point2D<int> p2 = discretizePoint(line2d->getP2());
+	Point2D<int> p1 = Tool::discretizePoint(line2d->getP1(), _cell);
+	Point2D<int> p2 = Tool::discretizePoint(line2d->getP2(), _cell);
 	int x1 = p1.x;
 	int y1 = p1.y;
 	int x2 = p2.x;
@@ -265,8 +237,10 @@ void Rasterizer::drawLineBresenham(const Line2D* line2d, Matrix2D<Rasterizer::Ce
 
 	while (true)
 	{
-		plot(matrix, x1, y1, line2d->getMaterial());
 		if (x1 == x2 && y1 == y2) break;
+
+		plot(matrix, x1, y1, line2d->getMaterial());
+		
 		int deltaerr = 2 * err;
 		if (deltaerr > -dy)
 		{

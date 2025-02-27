@@ -4,49 +4,38 @@ int main()
 {
 	try
 	{		
-		Dielectric* diel1 = new Dielectric(4.3);
-		Dielectric* diel2 = new Dielectric(3.2);
-		Dielectric* air = new Dielectric(1.0);
-		Conductor* cond1 = new Conductor(false);
-		Conductor* cond2 = new Conductor(true);
+		Dielectric* diel = new Dielectric(4.5);
+		Conductor* signalCond = new Conductor(true);
+		Conductor* screenCond = new Conductor(false);
 
-		Line2D line1;
-		Line2D line2;
-		Polygon2D poly1;
-		Polygon2D poly2;
-		Rectangle2D rect1;
+		Line2D* line1 = new Line2D();
+		Line2D* line2 = new Line2D();
+		Line2D* line3 = new Line2D();
+		Rectangle2D* rect1 = new Rectangle2D();
 
-		line1.setP1(Point2D<double>(5.0, 15.0));
-		line1.setP2(Point2D<double>(20.0, 5.0));
+		rect1->setPoint(Point2D<double>(0.0, 0.0));
+		rect1->setSize(Size2D<double>(10.0, 1.5));
+		rect1->makeAsScreen(false);
 
-		line2.setP1(Point2D<double>(30.0, 20.0));
-		line2.setP2(Point2D<double>(45.0, 20.0));
+		line1->setP1(Point2D<double>(2.0, 1.5));
+		line1->setP2(Point2D<double>(4.5, 1.5));
 
-		poly1.addPoints(Point2D<double>(5.0, 10.0));
-		poly1.addPoints(Point2D<double>(10.0, 5.0));
-		poly1.addPoints(Point2D<double>(5.0, 5.0));
+		line2->setP1(Point2D<double>(5.5, 1.5));
+		line2->setP2(Point2D<double>(8, 1.5));
 
-		poly2.addPoints(Point2D<double>(20.0, 10.0));
-		poly2.addPoints(Point2D<double>(30.0, 15.0));
-		poly2.addPoints(Point2D<double>(40.0, 5.0));
-		poly2.addPoints(Point2D<double>(20.0, 5.0));
+		line3->setP1(Point2D<double>(0.0, 0.0));
+		line3->setP2(Point2D<double>(0.0, 1.5));
 
-		rect1.setPoint(Point2D<double>(15.0, 20.0));
-		rect1.setSize(Size2D<double>(10.0, 5.0));
-		rect1.makeAsScreen(false);
-
-		line1.setMaterial(cond1);
-		line2.setMaterial(cond2);
-		poly1.setMaterial(diel1);
-		poly2.setMaterial(diel1);
-		rect1.setMaterial(diel1);
+		line1->setMaterial(signalCond);
+		line2->setMaterial(signalCond);
+		line3->setMaterial(screenCond);
+		rect1->setMaterial(diel);
 
 		StripStructure strip;
-		strip.addShape(&poly1);
-		strip.addShape(&poly2);
-		strip.addShape(&rect1);
-		strip.addShape(&line1);
-		strip.addShape(&line2);
+		strip.addShape(rect1);
+		strip.addShape(line1);
+		strip.addShape(line2);
+		strip.addShape(line3);
 
 		strip.computeElectroStaticAnalysis();
 	}

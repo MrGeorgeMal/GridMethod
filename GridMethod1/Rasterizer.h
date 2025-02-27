@@ -9,7 +9,7 @@
 #include "Material.h"
 #include "Point2D.h"
 #include "Vector.h"
-
+#include "Tool.h"
 
 
 class Rasterizer
@@ -61,12 +61,6 @@ public:
 #pragma region Private Methods
 
 private:
-
-	// Get discretized point
-	Point2D<int> discretizePoint(const Point2D<double> point) const;
-
-	// Get discretized size
-	Size2D<int> discretizeSize(const Size2D<double> size) const;
 
 	// Find screen in shapes
 	Rectangle2D* findScreen(const Vector<Shape2D*>& shapes) const;
