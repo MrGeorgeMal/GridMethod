@@ -8,6 +8,7 @@
 #include "Types.h"
 
 
+
 class GridSolver
 {
 #pragma region Constructors
@@ -26,7 +27,7 @@ public:
 
 	// Compute linear parameters of strip structure
 	// matrix - matrix of rasterized strip structure
-	const Matrix2D<Types::LinearParameters>& computeLinearParameters(Matrix2D<Types::CellInfo>& matrix);
+	const Matrix2D<Types::LinearParameters>& computeLinearParameters(const Matrix2D<Types::CellInfo>& matrix) const;
 
 #pragma endregion
 
@@ -36,13 +37,19 @@ public:
 private:
 
 	// Locate the position of the conductor cells
-	const Vector<Point2D<int>>& defineConductorPositionCells(Matrix2D<Types::CellInfo>& matrix);
+	const Vector<Point2D<int>>& defineConductorCells(
+		const Matrix2D<Types::CellInfo>& matrix,
+		Vector<Point2D<int>> condCells,
+		Point2D<int> checkableCell) const;
+
+	// Locate the position all of the conductors cells
+	const Vector<Vector<Point2D<int>>>& defineAllConductorsCells(const Matrix2D<Types::CellInfo>& matrix) const;
 
 	// Locate the initial points of field propagation
-	const Vector<Point2D<int>>& defineInitialCellsForFieldPropagation(Matrix2D<Types::CellInfo>& matrix);
+	const Vector<Point2D<int>>& defineInitialCellsForFieldPropagation(const Matrix2D<Types::CellInfo>& matrix) const;
 
 	// Determine the configuration of the conductor inclusion
-	const Matrix2D<bool>& defineConductorsConfiguration();
+	const Matrix2D<bool>& defineConductorsConfiguration() const;
 
 	// Compute potential cell
 	// u - current potential
@@ -56,22 +63,22 @@ private:
 	// er - right dielectrical value
 	// eb - bottom dielectrical value
 	double computeCellPotential(
-		double u,
-		double uold,
-		double ul,
-		double ut,
-		double ur,
-		double ub,
-		double el,
-		double et,
-		double er,
-		double eb);
+		const double u,
+		const double uold,
+		const double ul,
+		const double ut,
+		const double ur,
+		const double ub,
+		const double el,
+		const double et,
+		const double er,
+		const double eb) const;
 
 	// Compute potential field
-	const Matrix2D<double>& computeFieldPotential(Matrix2D<Types::CellInfo>& matrix);
+	const Matrix2D<double>& computeFieldPotential(const Matrix2D<Types::CellInfo>& matrix) const;
 
 	// Compute energy
-	double computeEnergy(Matrix2D<Types::CellInfo>& matrix);
+	double computeEnergy(const Matrix2D<Types::CellInfo>& matrix) const;
 
 #pragma endregion
 
