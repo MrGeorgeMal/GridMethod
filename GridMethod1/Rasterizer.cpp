@@ -32,9 +32,9 @@ Size2D<int> Rasterizer::defineMatrixSize(const Vector<Shape2D*>& shapes) const
 
 
 // Get updated cell info based on old cell info and new material
-Rasterizer::CellInfo Rasterizer::getUpdatedCellInfo(CellInfo oldCellInfo, Material* material) const
+Types::CellInfo Rasterizer::getUpdatedCellInfo(Types::CellInfo oldCellInfo, Material* material) const
 {
-	CellInfo updatedCellInfo = oldCellInfo;
+	Types::CellInfo updatedCellInfo = oldCellInfo;
 
 	if (material->getType() == "Dielectric")
 	{
@@ -60,13 +60,13 @@ Rasterizer::CellInfo Rasterizer::getUpdatedCellInfo(CellInfo oldCellInfo, Materi
 
 
 // Rasterize shape 2D
-const Matrix2D<Rasterizer::CellInfo> Rasterizer::rasterize(const Vector<Shape2D*>& shapes) const
+const Matrix2D<Types::CellInfo> Rasterizer::rasterize(const Vector<Shape2D*>& shapes) const
 {
 	// Create matrix
 	Size2D<int> matrixSize = defineMatrixSize(shapes);
 	int rows = matrixSize.height + _screenBorder * 2;
 	int cols = matrixSize.width + _screenBorder * 2;
-	Matrix2D<CellInfo> matrix(rows, cols);
+	Matrix2D<Types::CellInfo> matrix(rows, cols);
 
 	// Fill matrix with screen material
 	Rectangle2D* screen = findScreen(shapes);
@@ -74,7 +74,7 @@ const Matrix2D<Rasterizer::CellInfo> Rasterizer::rasterize(const Vector<Shape2D*
 	{
 		for (int x = 0; x < matrix.getCols(); x++)
 		{
-			CellInfo cellInfo = getUpdatedCellInfo(matrix[y][x], screen->getMaterial());
+			Types::CellInfo cellInfo = getUpdatedCellInfo(matrix[y][x], screen->getMaterial());
 			matrix[y][x] = cellInfo;
 		}
 	}
@@ -125,7 +125,7 @@ const Matrix2D<Rasterizer::CellInfo> Rasterizer::rasterize(const Vector<Shape2D*
 
 
 // Plot matrix element (set cell info)
-void Rasterizer::plot(Matrix2D<Rasterizer::CellInfo>& matrix, int x, int y, Material* material) const
+void Rasterizer::plot(Matrix2D<Types::CellInfo>& matrix, int x, int y, Material* material) const
 {
 	x += _screenBorder;
 	y += _screenBorder;
@@ -133,7 +133,7 @@ void Rasterizer::plot(Matrix2D<Rasterizer::CellInfo>& matrix, int x, int y, Mate
 	if (x >= _screenBorder && x < matrix.getCols() - _screenBorder &&
 		y >= _screenBorder && y < matrix.getRows() - _screenBorder)
 	{
-		CellInfo cellInfo = getUpdatedCellInfo(matrix[y][x], material);
+		Types::CellInfo cellInfo = getUpdatedCellInfo(matrix[y][x], material);
 		matrix[y][x] = cellInfo;
 	}
 }
@@ -190,7 +190,7 @@ bool Rasterizer::isInsidePolygon(int x, int y, const Vector<Point2D<double>>& po
 
 
 // Rasterize line shape
-void Rasterizer::rasterizeLine(const Line2D* line2d, Matrix2D<Rasterizer::CellInfo>& matrix) const
+void Rasterizer::rasterizeLine(const Line2D* line2d, Matrix2D<Types::CellInfo>& matrix) const
 {
 	if (_antialiasing)
 	{
@@ -205,7 +205,7 @@ void Rasterizer::rasterizeLine(const Line2D* line2d, Matrix2D<Rasterizer::CellIn
 
 
 // Rasterize polygon shape
-void Rasterizer::rasterizePolygon(const Polygon2D* polygon2d, Matrix2D<Rasterizer::CellInfo>& matrix) const
+void Rasterizer::rasterizePolygon(const Polygon2D* polygon2d, Matrix2D<Types::CellInfo>& matrix) const
 {
 	if (_antialiasing)
 	{
@@ -220,7 +220,7 @@ void Rasterizer::rasterizePolygon(const Polygon2D* polygon2d, Matrix2D<Rasterize
 
 
 // Rasterize line, Bresenham method
-void Rasterizer::drawLineBresenham(const Line2D* line2d, Matrix2D<Rasterizer::CellInfo>& matrix) const
+void Rasterizer::drawLineBresenham(const Line2D* line2d, Matrix2D<Types::CellInfo>& matrix) const
 {
 	Point2D<int> p1 = Tool::discretizePoint(line2d->getP1(), _cell);
 	Point2D<int> p2 = Tool::discretizePoint(line2d->getP2(), _cell);
@@ -258,7 +258,7 @@ void Rasterizer::drawLineBresenham(const Line2D* line2d, Matrix2D<Rasterizer::Ce
 
 
 // Rasterize polygon, no antialiasing method
-void Rasterizer::drawPolygon(const Polygon2D* polygon2d, Matrix2D<Rasterizer::CellInfo>& matrix) const
+void Rasterizer::drawPolygon(const Polygon2D* polygon2d, Matrix2D<Types::CellInfo>& matrix) const
 {
 	for (int y = 0; y < matrix.getRows(); y++)
 	{
@@ -276,7 +276,7 @@ void Rasterizer::drawPolygon(const Polygon2D* polygon2d, Matrix2D<Rasterizer::Ce
 
 
 // Rasterize line, Wu method
-void Rasterizer::drawLineWu(const Line2D* line2d, Matrix2D<Rasterizer::CellInfo>& matrix) const
+void Rasterizer::drawLineWu(const Line2D* line2d, Matrix2D<Types::CellInfo>& matrix) const
 {
 
 }
@@ -284,7 +284,7 @@ void Rasterizer::drawLineWu(const Line2D* line2d, Matrix2D<Rasterizer::CellInfo>
 
 
 // Rasterize polygon, super sampled antialiasing method
-void Rasterizer::drawPolygonSSAA(const Polygon2D* polygon2d, Matrix2D<Rasterizer::CellInfo>& matrix) const
+void Rasterizer::drawPolygonSSAA(const Polygon2D* polygon2d, Matrix2D<Types::CellInfo>& matrix) const
 {
 
 }

@@ -91,15 +91,6 @@ private:
 	// Gap between shapes and screen
 	double _screenDistance = 10.0;
 
-	// Potential mapping (matrix of potential)
-	Matrix2D<float> _potentialMap;
-
-	// Dielectric mapping
-	Matrix2D<float> _dielectricMap;
-
-	// Conductor mapping
-	Matrix2D<bool> _conductorMap;
-
 #pragma endregion
 
 };

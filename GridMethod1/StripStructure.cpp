@@ -9,7 +9,7 @@ void StripStructure::computeElectroStaticAnalysis()
 	Vector<Shape2D*> offsetShapes = getOffsetShapesToCenter();
 
 	_rasterizer->setCell(defineOptimalCellSize());
-	Matrix2D<Rasterizer::CellInfo> matrix = _rasterizer->rasterize(offsetShapes);
+	Matrix2D<Types::CellInfo> matrix = _rasterizer->rasterize(offsetShapes);
 
 	// print shapes
 	for (int i = 0; i < _shapes.getLength(); i++)
