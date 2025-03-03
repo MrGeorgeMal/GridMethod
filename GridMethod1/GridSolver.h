@@ -53,7 +53,7 @@ private:
 		const Vector<Vector<Point2D<int>>>& allConductorsCells) const;
 
 	// Determine the configuration of the conductors inclusion
-	const Matrix2D<bool>& defineConductorsConfiguration(const int conductorsCount) const;
+	Matrix2D<bool> defineConductorsConfiguration(const int conductorsCount) const;
 
 	// Compute potential cell
 	// u - current potential

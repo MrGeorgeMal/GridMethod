@@ -27,12 +27,12 @@ int main()
 		line3->setP1(Point2D<double>(0.0, 0.0));
 		line3->setP2(Point2D<double>(10.0, 0.0));
 
-		line4->setP1(Point2D<double>(0, 1.5));
-		line4->setP2(Point2D<double>(0.0, 0.0));
+		line4->setP1(Point2D<double>(0, 2.0));
+		line4->setP2(Point2D<double>(10.0, 2.0));
 
 		line1->setMaterial(signalCond);
 		line2->setMaterial(signalCond);
-		line3->setMaterial(screenCond);
+		line3->setMaterial(signalCond);
 		line4->setMaterial(signalCond);
 		rect1->setMaterial(diel);
 
@@ -41,7 +41,7 @@ int main()
 		strip.addShape(line1);
 		strip.addShape(line2);
 		strip.addShape(line3);
-		//strip.addShape(line4);
+		strip.addShape(line4);
 
 		strip.computeElectroStaticAnalysis();
 	}

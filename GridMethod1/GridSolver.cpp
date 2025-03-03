@@ -30,7 +30,6 @@ const Matrix2D<Types::LinearParameters>& GridSolver::computeLinearParameters(Mat
 	std::cout << "\nConductors configuration matrix: " << "\n";
 	std::cout << configConductors << "\n";
 
-
 	return Matrix2D<Types::LinearParameters>();
 }
 
@@ -294,10 +293,106 @@ Vector<Point2D<int>> GridSolver::defineInitialCellsForFieldPropagation(
 
 
 // Determine the configuration of the conductors inclusion
-const Matrix2D<bool>& GridSolver::defineConductorsConfiguration(const int conductorsCount) const
-{
+Matrix2D<bool> GridSolver::defineConductorsConfiguration(const int conductorsCount) const
+{	
+	Vector<Vector<bool>> config;
 
-	return Matrix2D<bool>();
+	// 2^conductorsCount (bit shift)
+	int rows = 1 << conductorsCount;
+
+	for (int i = 0; i < rows; i++)
+	{
+		Vector<bool> configLine;
+		for (int j = conductorsCount - 1; j >= 0; j--)
+		{
+			bool current = (i >> j) & 1;
+			configLine.add(current);
+		}
+
+		bool skipThisConfigLine = true;
+
+		// skip line if all elements are zero
+		for (int j = 0; j < configLine.getLength(); j++)
+		{
+			if (configLine[j] == true)
+			{
+				skipThisConfigLine = false;
+				break;
+			}
+		}
+
+		// skip line if is mirror for other line
+		bool isMirror = true;
+
+		if (config.getLength() == 0)
+		{
+			isMirror = false;
+		}
+
+		for (int j = 0; j < config.getLength(); j++)
+		{
+			// dont check on mirror if there only one conductor is signal
+			int signalConductorcount = 0;
+			for (int k = 0; k < configLine.getLength(); k++)
+			{
+				if (configLine[k] == true)
+				{
+					signalConductorcount++;
+				}
+			}
+			if (signalConductorcount == 1)
+			{
+				isMirror = false;
+				break;
+			}
+
+			// check on mirror
+			isMirror = true;
+			int count = configLine.getLength() - 1;
+
+			for (int k = 0; k < config[j].getLength(); k++)
+			{
+				bool first = configLine[count];
+				bool second = config[j][k];
+				if (isMirror == true && first != second)
+				{
+					isMirror = false;
+					break;
+				}
+				count--;
+			}
+			if (isMirror == true)
+			{
+				break;
+			}
+		}
+		if (isMirror)
+		{
+			skipThisConfigLine = true;
+		}
+
+		// skip line if the number of nearby conductors is equal to the same number of nearby conductors in another line
+		// if the line has elements with 0 between them - such a line is not checked
+
+
+
+		if (skipThisConfigLine == false)
+		{
+			config.add(configLine);
+		}
+	}
+
+	Matrix2D<bool> matrixConfig(config.getLength(), config[0].getLength());
+
+	for (int i = 0; i < config.getLength(); i++)
+	{
+		for (int j = 0; j < config[i].getLength(); j++)
+		{
+			matrixConfig[i][j] = config[i][j];
+		}
+	}
+
+	return matrixConfig;
 }
 
 
