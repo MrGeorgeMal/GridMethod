@@ -11,7 +11,9 @@ class Vector
 public:
 
 	// Base constructor
-	Vector() { }
+	Vector()
+	{
+	}
 
 	// Constructor
 	// length - vector length
@@ -20,6 +22,14 @@ public:
 		resize(length);
 	}
 
+	
+	Vector(const Vector<T>& vector)
+	{
+		for (int i = 0; i < vector.getLength(); i++)
+		{
+			add(vector[i]);
+		}
+	}
 
     // Destructor
     ~Vector()
@@ -48,16 +58,17 @@ public:
 		{
 			temp[i] = _vector[i];
 		}
-		temp[_length - 1] = element;
 
 		resize(_length);
 
-		for (int i = 0; i < _length; i++)
+		for (int i = 0; i < _length - 1; i++)
 		{
 			_vector[i] = temp[i];
 		}
 
 		delete[] temp;
+
+		_vector[_length - 1] = element;
 	}
 
 	// Add new element to vector
@@ -92,6 +103,15 @@ public:
 			throw "Vector :: The out-of-bounds index";
 		}
 		return _vector[index];
+	}
+
+	Vector<T>& operator = (Vector<T>& vector)
+	{
+		for (int  i = 0; i < vector.getLength(); i++)
+		{
+			this->add(vector[i]);
+		}
+		return *this;
 	}
 
 	friend std::ostream& operator<<(std::ostream& os, const Vector<T>& vector)

@@ -2,9 +2,11 @@
 #ifndef GRIDSOLVER_H
 #define GRIDSOLVER_H
 
+#include <iostream>
 #include "Vector.h"
 #include "Matrix2D.h"
 #include "Point2D.h"
+#include "Rect2D.h"
 #include "Types.h"
 
 
@@ -27,7 +29,7 @@ public:
 
 	// Compute linear parameters of strip structure
 	// matrix - matrix of rasterized strip structure
-	const Matrix2D<Types::LinearParameters>& computeLinearParameters(const Matrix2D<Types::CellInfo>& matrix) const;
+	const Matrix2D<Types::LinearParameters>& computeLinearParameters(Matrix2D<Types::CellInfo>& matrix) const;
 
 #pragma endregion
 
@@ -37,19 +39,21 @@ public:
 private:
 
 	// Locate the position of the conductor cells
-	const Vector<Point2D<int>>& defineConductorCells(
-		const Matrix2D<Types::CellInfo>& matrix,
-		Vector<Point2D<int>> condCells,
+	void defineConductorCells(
+		Matrix2D<Types::CellInfo>& matrix,
+		Vector<Point2D<int>>& condCells,
 		Point2D<int> checkableCell) const;
 
 	// Locate the position all of the conductors cells
-	const Vector<Vector<Point2D<int>>>& defineAllConductorsCells(const Matrix2D<Types::CellInfo>& matrix) const;
+	Vector<Vector<Point2D<int>>> defineAllConductorsCells(Matrix2D<Types::CellInfo>& matrix) const;
 
 	// Locate the initial points of field propagation
-	const Vector<Point2D<int>>& defineInitialCellsForFieldPropagation(const Matrix2D<Types::CellInfo>& matrix) const;
+	Vector<Point2D<int>> defineInitialCellsForFieldPropagation(
+		const Matrix2D<Types::CellInfo>& matrix,
+		const Vector<Vector<Point2D<int>>>& allConductorsCells) const;
 
-	// Determine the configuration of the conductor inclusion
-	const Matrix2D<bool>& defineConductorsConfiguration() const;
+	// Determine the configuration of the conductors inclusion
+	const Matrix2D<bool>& defineConductorsConfiguration(const int conductorsCount) const;
 
 	// Compute potential cell
 	// u - current potential

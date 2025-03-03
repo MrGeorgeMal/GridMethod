@@ -10,6 +10,7 @@
 #include "Point2D.h"
 #include "Rasterizer.h"
 #include "Tool.h"
+#include "GridSolver.h"
 
 
 class StripStructure
@@ -20,7 +21,7 @@ class StripStructure
 public:
 
 	// Base constructor
-	StripStructure() : _rasterizer(new Rasterizer()) { }
+	StripStructure() : _rasterizer(new Rasterizer()), _gridSolver(new GridSolver()) { }
 
 #pragma endregion
 
@@ -64,7 +65,7 @@ private:
 	Size2D<double> defineOptimalCellSize() const;
 
 	// Get offset shapes to center [0 ; 0]
-	const Vector<Shape2D*> getOffsetShapesToCenter() const;
+	Vector<Shape2D*> getOffsetShapesToCenter() const;
 
 #pragma endregion
 
@@ -76,6 +77,9 @@ private:
 	// Rasterizer
 	Rasterizer* _rasterizer;
 
+	// GridSolver
+	GridSolver* _gridSolver;
+
 	// Vector of shapes
 	Vector<Shape2D*> _shapes;
 
@@ -86,7 +90,7 @@ private:
 	bool _isRegularGrid = true;
 
 	// Optimal grid size
-	Size2D<int> _optimalGridSize = Size2D<int>(200, 200);
+	Size2D<int> _optimalGridSize = Size2D<int>(100, 100);
 
 	// Gap between shapes and screen
 	double _screenDistance = 10.0;

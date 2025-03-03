@@ -8,9 +8,9 @@ namespace Types {
 	// Cell info type
 	struct CellInfo
 	{
-		double potential = 0.0;
 		double dielectricValue = 1.0;
 		bool isConductor = false;
+		bool isSignalConductor = false;
 	};
 
 	// Linear parameters

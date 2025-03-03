@@ -11,6 +11,10 @@ void StripStructure::computeElectroStaticAnalysis()
 	_rasterizer->setCell(defineOptimalCellSize());
 	Matrix2D<Types::CellInfo> matrix = _rasterizer->rasterize(offsetShapes);
 
+	Matrix2D<Types::LinearParameters> linearParamenetrs = _gridSolver->computeLinearParameters(matrix);
+
+	std::cout << "------------------------------------------------------------\n\n";
+	/*
 	// print shapes
 	for (int i = 0; i < _shapes.getLength(); i++)
 	{
@@ -63,7 +67,7 @@ void StripStructure::computeElectroStaticAnalysis()
 	std::cout << "Min size: " << defineMinSize() << "\n\n";
 	std::cout << "Cell size: " << defineOptimalCellSize() << "\n\n";
 	std::cout << "Grid size: [" << matrix.getCols() << " ; " << matrix.getRows() << "]\n\n";
-
+	*/
 	std::cout << "------------------------------------------------------------\n\n";
 
 	// print matrix
@@ -105,7 +109,14 @@ void StripStructure::computeElectroStaticAnalysis()
 			}
 			else
 			{
-				std::cout << "@";
+				if (matrix[y][x].isSignalConductor)
+				{
+					std::cout << "P";
+				}
+				else
+				{
+					std::cout << "O";
+				}
 			}
 		}
 		std::cout << "\n";
@@ -249,7 +260,7 @@ Rect2D<double> StripStructure::getRectBound() const
 
 
 // Get offset shapes to center [0 ; 0]
-const Vector<Shape2D*> StripStructure::getOffsetShapesToCenter() const
+Vector<Shape2D*> StripStructure::getOffsetShapesToCenter() const
 {
 	Vector<Shape2D*> offsetShapes;
 	Point2D<double> offsetPoint = Point2D<double>(0.0, 0.0) - _screen->getPoint();

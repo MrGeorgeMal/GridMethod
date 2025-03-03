@@ -48,6 +48,18 @@ public:
 		return Point2D<T>(this->x / point.x, this->y / point.y);
 	}
 
+	bool operator == (Point2D<T> point)
+	{
+		if (this->x == point.x && this->y == point.y)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
 	friend std::ostream& operator<<(std::ostream& os, const Point2D<T>& point)
 	{
 		os << "[" << point.x << " ; " << point.y << "]";
