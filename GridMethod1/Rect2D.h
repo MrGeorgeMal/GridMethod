@@ -16,8 +16,10 @@ public:
 	Rect2D() {}
 
 	// Constructor
-	// width - width size
-	// height - height size
+	// left - left coordinate of rect
+	// top - top coordinate of rect
+	// right - right coordinate of rect
+	// bottom - bottom coordinate of rect
 	Rect2D(
 		T left,
 		T top,

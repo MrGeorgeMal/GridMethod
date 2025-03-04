@@ -53,7 +53,10 @@ private:
 		const Vector<Vector<Point2D<int>>>& allConductorsCells) const;
 
 	// Determine the configuration of the conductors inclusion
-	Matrix2D<bool> defineConductorsConfiguration(const int conductorsCount) const;
+	Matrix2D<double> setupInitialPotential(
+		Matrix2D<Types::CellInfo>& matrix,
+		const Vector<Vector<Point2D<int>>>& conductorsCells,
+		const Vector<bool>& conductorsConfig) const;
 
 	// Compute potential cell
 	// u - current potential
@@ -67,24 +70,32 @@ private:
 	// er - right dielectrical value
 	// eb - bottom dielectrical value
 	double computeCellPotential(
-		const double u,
-		const double uold,
-		const double ul,
-		const double ut,
-		const double ur,
-		const double ub,
-		const double el,
-		const double et,
-		const double er,
-		const double eb) const;
+		const Matrix2D<Types::CellInfo>& matrix,
+		const Matrix2D<double>& oldPotentialField,
+		Matrix2D<double>& potentialField,
+		Point2D<int>& computedPoint) const;
+
+	// Compute all cells around the edges of rect propagation
+	void computeRectPropagation(
+		const Matrix2D<Types::CellInfo>& matrix,
+		Matrix2D<double>& oldPotentialField,
+		Matrix2D<double>& bufferPotentialField,
+		Matrix2D<double>& potentialField,
+		const Point2D<int>& initPoint,
+		const Rect2D<int>& rect) const;
 
 	// Compute potential field
-	const Matrix2D<double>& computeFieldPotential(const Matrix2D<Types::CellInfo>& matrix) const;
+	void computeFieldPotential(
+		const Matrix2D<Types::CellInfo>& matrix,
+		Matrix2D<double>& potentialField,
+		const Vector<Point2D<int>>& initCells) const;
 
-	// Compute energy
-	double computeEnergy(const Matrix2D<Types::CellInfo>& matrix) const;
+	// Compute capacity for potentialField
+	double computeCapacity(
+		const Matrix2D<Types::CellInfo>& matrix,
+		const Matrix2D<double>& potentialField) const;
 
-#pragma endregion
+#pragma endregion‚Û
 
 
 #pragma region Private Members
