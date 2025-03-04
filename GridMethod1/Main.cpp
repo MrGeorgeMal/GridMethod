@@ -12,6 +12,7 @@ int main()
 		Line2D* line2 = new Line2D();
 		Line2D* line3 = new Line2D();
 		Line2D* line4 = new Line2D();
+		Line2D* line5 = new Line2D();
 		Rectangle2D* rect1 = new Rectangle2D();
 
 		rect1->setPoint(Point2D<double>(0.0, 0.0));
@@ -29,11 +30,15 @@ int main()
 
 		line4->setP1(Point2D<double>(0, 2.0));
 		line4->setP2(Point2D<double>(10.0, 2.0));
+		
+		line5->setP1(Point2D<double>(0, 3.0));
+		line5->setP2(Point2D<double>(10.0, 3.0));
 
 		line1->setMaterial(signalCond);
 		line2->setMaterial(signalCond);
 		line3->setMaterial(signalCond);
 		line4->setMaterial(signalCond);
+		line5->setMaterial(signalCond);
 		rect1->setMaterial(diel);
 
 		StripStructure strip;
@@ -42,6 +47,7 @@ int main()
 		strip.addShape(line2);
 		strip.addShape(line3);
 		strip.addShape(line4);
+		strip.addShape(line5);
 
 		strip.computeElectroStaticAnalysis();
 	}

@@ -332,15 +332,15 @@ Matrix2D<bool> GridSolver::defineConductorsConfiguration(const int conductorsCou
 		for (int j = 0; j < config.getLength(); j++)
 		{
 			// dont check on mirror if there only one conductor is signal
-			int signalConductorcount = 0;
+			int signalConductorCount = 0;
 			for (int k = 0; k < configLine.getLength(); k++)
 			{
 				if (configLine[k] == true)
 				{
-					signalConductorcount++;
+					signalConductorCount++;
 				}
 			}
-			if (signalConductorcount == 1)
+			if (signalConductorCount == 1)
 			{
 				isMirror = false;
 				break;
@@ -373,7 +373,107 @@ Matrix2D<bool> GridSolver::defineConductorsConfiguration(const int conductorsCou
 
 		// skip line if the number of nearby conductors is equal to the same number of nearby conductors in another line
 		// if the line has elements with 0 between them - such a line is not checked
+		int nearConductorCount = 0;
+		int minNearConductorCount = configLine.getLength();
+		int maxNearConductorCount = 0;
+		for (int j = 0; j < configLine.getLength() - 1; j++)
+		{
+			if (configLine[j] == true)
+			{
+				nearConductorCount++;
 
+				for (int k = j + 1; k < configLine.getLength(); k++)
+				{
+					if (configLine[k] == true)
+					{
+						nearConductorCount++;
+
+						if (maxNearConductorCount < nearConductorCount)
+						{
+							maxNearConductorCount = nearConductorCount;
+						}
+						if (minNearConductorCount > nearConductorCount)
+						{
+							minNearConductorCount = nearConductorCount;
+						}
+					}
+					else
+					{
+						if (maxNearConductorCount < nearConductorCount)
+						{
+							maxNearConductorCount = nearConductorCount;
+						}
+						if (minNearConductorCount > nearConductorCount)
+						{
+							minNearConductorCount = nearConductorCount;
+						}
+						j = k + 1;
+						nearConductorCount = 0;
+						break;
+					}
+				}
+			}
+		}
+
+		if (minNearConductorCount == maxNearConductorCount && maxNearConductorCount > 1)
+		{
+			int nearConductorCountInCurrentLine = maxNearConductorCount;
+
+			for (int j = 0; j < config.getLength(); j++)
+			{
+				nearConductorCount = 0;
+				minNearConductorCount = configLine.getLength();
+				maxNearConductorCount = 0;
+
+				for (int k = 0; k < config[j].getLength() - 1; k++)
+				{
+					if (config[j][k] == true)
+					{
+						nearConductorCount++;
+
+						for (int count = k + 1; count < config[j].getLength(); count++)
+						{
+							if (config[j][count] == true)
+							{
+								nearConductorCount++;
+
+								if (maxNearConductorCount < nearConductorCount)
+								{
+									maxNearConductorCount = nearConductorCount;
+								}
+								if (minNearConductorCount > nearConductorCount)
+								{
+									minNearConductorCount = nearConductorCount;
+								}
+							}
+							else
+							{
+								if (maxNearConductorCount < nearConductorCount)
+								{
+									maxNearConductorCount = nearConductorCount;
+								}
+								if (minNearConductorCount > nearConductorCount)
+								{
+									minNearConductorCount = nearConductorCount;
+								}
+								k = count + 1;
+								nearConductorCount = 0;
+								break;
+							}
+						}
+					}
+				}
+
+				if (minNearConductorCount == maxNearConductorCount)
+				{
+					if (maxNearConductorCount == nearConductorCountInCurrentLine)
+					{
+						skipThisConfigLine = true;
+						break;
+					}
+				}
+			}
+		}
 
 
 		if (skipThisConfigLine == false)
