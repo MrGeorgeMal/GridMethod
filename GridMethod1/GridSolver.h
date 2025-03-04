@@ -59,21 +59,12 @@ private:
 		const Vector<bool>& conductorsConfig) const;
 
 	// Compute potential cell
-	// u - current potential
-	// uold - potential at the previous iteration
-	// ul - left potential
-	// ut - top potential
-	// ur - right potential
-	// ub - bottom potential
-	// el - left dielectrical value
-	// et - top dielectrical value
-	// er - right dielectrical value
-	// eb - bottom dielectrical value
-	double computeCellPotential(
+	void computeCellPotential(
 		const Matrix2D<Types::CellInfo>& matrix,
-		const Matrix2D<double>& oldPotentialField,
+		Matrix2D<double>& oldPotentialField,
+		Matrix2D<double>& bufferPotentialField,
 		Matrix2D<double>& potentialField,
-		Point2D<int>& computedPoint) const;
+		const Point2D<int>& computedPoint) const;
 
 	// Compute all cells around the edges of rect propagation
 	void computeRectPropagation(

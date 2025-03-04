@@ -376,10 +376,46 @@ Matrix2D<double> GridSolver::setupInitialPotential(
 // Compute potential cell
 void GridSolver::computeCellPotential(
 	const Matrix2D<Types::CellInfo>& matrix,
-	const Matrix2D<double>& oldPotentialField,
+	Matrix2D<double>& oldPotentialField,
+	Matrix2D<double>& bufferPotentialField,
 	Matrix2D<double>& potentialField,
-	Point2D<int>& computedPoint) const
+	const Point2D<int>& computedPoint) const
 {
+	int rows = potentialField.getRows() - 1;
+	int cols = potentialField.getRows() - 1;
+	int x = computedPoint.x;
+	int y = computedPoint.y;
+
+	if (x > 0 && x < cols &&
+		y > 0 && y < rows)
+	{
+		if (matrix[y][x].isConductor == false)
+		{
+			double lu = potentialField[y][x - 1];
+			double tu = potentialField[y + 1][x];
+			double ru = potentialField[y][x + 1];
+			double bu = potentialField[y - 1][x];
+			double le = matrix[y][x - 1].dielectricValue;
+			double te = matrix[y + 1][x].dielectricValue;
+			double re = matrix[y][x + 1].dielectricValue;
+			double be = matrix[y - 1][x].dielectricValue;
+			double oldu = oldPotentialField[y][x];
+			double u = 0.25 * (tu + bu + lu + ru);
+			potentialField[y][x] = relaxationCoeff * (u);
+
+		}
+	}
+
+	potentialField[x][y] = computeCellPotential(
+		oldPotentialField[lcenter.x][lcenter.y],
+		potentialField[lcenter.x - 1][lcenter.y],
+		potentialField[lcenter.x][lcenter.y + 1],
+		potentialField[lcenter.x + 1][lcenter.y],
+		potentialField[lcenter.x][lcenter.y - 1],
+		matrix[lcenter.x - 1][lcenter.y].dielectricValue,
+		matrix[lcenter.x][lcenter.y + 1].dielectricValue,
+		matrix[lcenter.x + 1][lcenter.y].dielectricValue,
+		matrix[lcenter.x][lcenter.y - 1].dielectricValue);
 
 }
 
