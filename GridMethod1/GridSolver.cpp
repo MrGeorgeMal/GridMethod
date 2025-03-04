@@ -376,13 +376,11 @@ Matrix2D<double> GridSolver::setupInitialPotential(
 // Compute potential cell
 void GridSolver::computeCellPotential(
 	const Matrix2D<Types::CellInfo>& matrix,
-	Matrix2D<double>& oldPotentialField,
-	Matrix2D<double>& bufferPotentialField,
 	Matrix2D<double>& potentialField,
 	const Point2D<int>& computedPoint) const
 {
 	int rows = potentialField.getRows() - 1;
-	int cols = potentialField.getRows() - 1;
+	int cols = potentialField.getCols() - 1;
 	int x = computedPoint.x;
 	int y = computedPoint.y;
 
@@ -399,24 +397,16 @@ void GridSolver::computeCellPotential(
 			double te = matrix[y + 1][x].dielectricValue;
 			double re = matrix[y][x + 1].dielectricValue;
 			double be = matrix[y - 1][x].dielectricValue;
-			double oldu = oldPotentialField[y][x];
-			double u = 0.25 * (tu + bu + lu + ru);
-			potentialField[y][x] = relaxationCoeff * (u);
 
+			lu = (2 * le * lu) / (le + re);
+			tu = (2 * te * tu) / (be + te);
+			ru = (2 * re * ru) / (le + re);
+			bu = (2 * be * bu) / (be + te);
+
+			double u = 0.25 * (tu + bu + lu + ru);
+			potentialField[y][x] = relaxationCoeff * u + (1 - relaxationCoeff) * potentialField[y][x];
 		}
 	}
-
-	potentialField[x][y] = computeCellPotential(
-		oldPotentialField[lcenter.x][lcenter.y],
-		potentialField[lcenter.x - 1][lcenter.y],
-		potentialField[lcenter.x][lcenter.y + 1],
-		potentialField[lcenter.x + 1][lcenter.y],
-		potentialField[lcenter.x][lcenter.y - 1],
-		matrix[lcenter.x - 1][lcenter.y].dielectricValue,
-		matrix[lcenter.x][lcenter.y + 1].dielectricValue,
-		matrix[lcenter.x + 1][lcenter.y].dielectricValue,
-		matrix[lcenter.x][lcenter.y - 1].dielectricValue);
-
 }
 
 
@@ -424,8 +414,6 @@ void GridSolver::computeCellPotential(
 // Compute all cells around the edges of rect propagation
 void GridSolver::computeRectPropagation(
 	const Matrix2D<Types::CellInfo>& matrix,
-	Matrix2D<double>& oldPotentialField,
-	Matrix2D<double>& bufferPotentialField,
 	Matrix2D<double>& potentialField,
 	const Point2D<int>& initPoint,
 	const Rect2D<int>& rect) const
@@ -463,250 +451,110 @@ void GridSolver::computeRectPropagation(
 	leftBottom.y = bcenter.y;
 
 	// compute central points on edges
-	potentialField[lcenter.x][lcenter.y] = computeCellPotential(
-		oldPotentialField[lcenter.x][lcenter.y],
-		potentialField[lcenter.x - 1][lcenter.y],
-		potentialField[lcenter.x][lcenter.y + 1],
-		potentialField[lcenter.x + 1][lcenter.y],
-		potentialField[lcenter.x][lcenter.y - 1],
-		matrix[lcenter.x - 1][lcenter.y].dielectricValue,
-		matrix[lcenter.x][lcenter.y + 1].dielectricValue,
-		matrix[lcenter.x + 1][lcenter.y].dielectricValue,
-		matrix[lcenter.x][lcenter.y - 1].dielectricValue);
+	computeCellPotential(
+		matrix,
+		potentialField,
+		lcenter);
 
-	potentialField[tcenter.x][tcenter.y] = computeCellPotential(
-		oldPotentialField[tcenter.x][tcenter.y],
-		potentialField[tcenter.x - 1][tcenter.y],
-		potentialField[tcenter.x][tcenter.y + 1],
-		potentialField[tcenter.x + 1][tcenter.y],
-		potentialField[tcenter.x][tcenter.y - 1],
-		matrix[tcenter.x - 1][tcenter.y].dielectricValue,
-		matrix[tcenter.x][tcenter.y + 1].dielectricValue,
-		matrix[tcenter.x + 1][tcenter.y].dielectricValue,
-		matrix[tcenter.x][tcenter.y - 1].dielectricValue);
-	
-	potentialField[rcenter.x][rcenter.y] = computeCellPotential(
-		oldPotentialField[rcenter.x][rcenter.y],
-		potentialField[rcenter.x - 1][rcenter.y],
-		potentialField[rcenter.x][rcenter.y + 1],
-		potentialField[rcenter.x + 1][rcenter.y],
-		potentialField[rcenter.x][rcenter.y - 1],
-		matrix[rcenter.x - 1][rcenter.y].dielectricValue,
-		matrix[rcenter.x][rcenter.y + 1].dielectricValue,
-		matrix[rcenter.x + 1][rcenter.y].dielectricValue,
-		matrix[rcenter.x][rcenter.y - 1].dielectricValue);
+	computeCellPotential(
+		matrix,
+		potentialField,
+		tcenter);
 
-	potentialField[bcenter.x][bcenter.y] = computeCellPotential(
-		oldPotentialField[bcenter.x][bcenter.y],
-		potentialField[bcenter.x - 1][bcenter.y],
-		potentialField[bcenter.x][bcenter.y + 1],
-		potentialField[bcenter.x + 1][bcenter.y],
-		potentialField[bcenter.x][bcenter.y - 1],
-		matrix[bcenter.x - 1][bcenter.y].dielectricValue,
-		matrix[bcenter.x][bcenter.y + 1].dielectricValue,
-		matrix[bcenter.x + 1][bcenter.y].dielectricValue,
-		matrix[bcenter.x][bcenter.y - 1].dielectricValue);
+	computeCellPotential(
+		matrix,
+		potentialField,
+		rcenter);
 
-	oldPotentialField[lcenter.x][lcenter.y] = bufferPotentialField[lcenter.x][lcenter.y];
-	oldPotentialField[tcenter.x][tcenter.y] = bufferPotentialField[tcenter.x][tcenter.y];
-	oldPotentialField[rcenter.x][rcenter.y] = bufferPotentialField[rcenter.x][rcenter.y];
-	oldPotentialField[bcenter.x][bcenter.y] = bufferPotentialField[bcenter.x][bcenter.y];
-
-	bufferPotentialField[lcenter.x][lcenter.y] = potentialField[lcenter.x][lcenter.y];
-	bufferPotentialField[tcenter.x][tcenter.y] = potentialField[tcenter.x][tcenter.y];
-	bufferPotentialField[rcenter.x][rcenter.y] = potentialField[rcenter.x][rcenter.y];
-	bufferPotentialField[bcenter.x][bcenter.y] = potentialField[bcenter.x][bcenter.y];
+	computeCellPotential(
+		matrix,
+		potentialField,
+		bcenter);
 	
 	// compute left vertical edge
 	for (int y = lcenter.y + 1; y < leftTop.y; y++)
 	{
-		potentialField[lcenter.x][y] = computeCellPotential(
-			oldPotentialField[lcenter.x][y],
-			potentialField[lcenter.x - 1][y],
-			potentialField[lcenter.x][y + 1],
-			potentialField[lcenter.x + 1][y],
-			potentialField[lcenter.x][y - 1],
-			matrix[lcenter.x - 1][y].dielectricValue,
-			matrix[lcenter.x][y + 1].dielectricValue,
-			matrix[lcenter.x + 1][y].dielectricValue,
-			matrix[lcenter.x][y - 1].dielectricValue);
-		
-		oldPotentialField[lcenter.x][y] = potentialField[lcenter.x][y];
-		bufferPotentialField[lcenter.x][y] = potentialField[lcenter.x][y];
+		computeCellPotential(
+			matrix,
+			potentialField,
+			Point2D<int>(lcenter.x, y));
 	}
 	for (int y = lcenter.y - 1; y > leftBottom.y; y--)
 	{
-		potentialField[lcenter.x][y] = computeCellPotential(
-			oldPotentialField[lcenter.x][y],
-			potentialField[lcenter.x - 1][y],
-			potentialField[lcenter.x][y + 1],
-			potentialField[lcenter.x + 1][y],
-			potentialField[lcenter.x][y - 1],
-			matrix[lcenter.x - 1][y].dielectricValue,
-			matrix[lcenter.x][y + 1].dielectricValue,
-			matrix[lcenter.x + 1][y].dielectricValue,
-			matrix[lcenter.x][y - 1].dielectricValue);
-
-		oldPotentialField[lcenter.x][y] = potentialField[lcenter.x][y];
-		bufferPotentialField[lcenter.x][y] = potentialField[lcenter.x][y];
+		computeCellPotential(
+			matrix,
+			potentialField,
+			Point2D<int>(lcenter.x, y));
 	}
 
 	// compute top horizontal edge
 	for (int x = tcenter.x + 1; x < rightTop.x; x++)
 	{
-		potentialField[x][tcenter.y] = computeCellPotential(
-			oldPotentialField[x][tcenter.y],
-			potentialField[x - 1][tcenter.y],
-			potentialField[x][tcenter.y + 1],
-			potentialField[x + 1][tcenter.y],
-			potentialField[x][tcenter.y - 1],
-			matrix[x - 1][tcenter.y].dielectricValue,
-			matrix[x][tcenter.y + 1].dielectricValue,
-			matrix[x + 1][tcenter.y].dielectricValue,
-			matrix[x][tcenter.y - 1].dielectricValue);
-
-		oldPotentialField[x][tcenter.y] = potentialField[x][tcenter.y];
-		bufferPotentialField[x][tcenter.y] = potentialField[x][tcenter.y];
+		computeCellPotential(
+			matrix,
+			potentialField,
+			Point2D<int>(x, tcenter.y));
 	}
 	for (int x = tcenter.x - 1; x > leftTop.x; x--)
 	{
-		potentialField[x][tcenter.y] = computeCellPotential(
-			oldPotentialField[x][tcenter.y],
-			potentialField[x - 1][tcenter.y],
-			potentialField[x][tcenter.y + 1],
-			potentialField[x + 1][tcenter.y],
-			potentialField[x][tcenter.y - 1],
-			matrix[x - 1][tcenter.y].dielectricValue,
-			matrix[x][tcenter.y + 1].dielectricValue,
-			matrix[x + 1][tcenter.y].dielectricValue,
-			matrix[x][tcenter.y - 1].dielectricValue);
-
-		oldPotentialField[x][tcenter.y] = potentialField[x][tcenter.y];
-		bufferPotentialField[x][tcenter.y] = potentialField[x][tcenter.y];
+		computeCellPotential(
+			matrix,
+			potentialField,
+			Point2D<int>(x, tcenter.y));
 	}
 
 	//compute right vertical edge
 	for (int y = rcenter.y + 1; y < rightTop.y; y++)
 	{
-		potentialField[rcenter.x][y] = computeCellPotential(
-			oldPotentialField[rcenter.x][y],
-			potentialField[rcenter.x - 1][y],
-			potentialField[rcenter.x][y + 1],
-			potentialField[rcenter.x + 1][y],
-			potentialField[rcenter.x][y - 1],
-			matrix[rcenter.x - 1][y].dielectricValue,
-			matrix[rcenter.x][y + 1].dielectricValue,
-			matrix[rcenter.x + 1][y].dielectricValue,
-			matrix[rcenter.x][y - 1].dielectricValue);
-
-		oldPotentialField[rcenter.x][y] = potentialField[rcenter.x][y];
-		bufferPotentialField[rcenter.x][y] = potentialField[rcenter.x][y];
+		computeCellPotential(
+			matrix,
+			potentialField,
+			Point2D<int>(rcenter.x, y));
 	}
 	for (int y = rcenter.y - 1; y > rightBottom.y; y--)
 	{
-		potentialField[rcenter.x][y] = computeCellPotential(
-			oldPotentialField[rcenter.x][y],
-			potentialField[rcenter.x - 1][y],
-			potentialField[rcenter.x][y + 1],
-			potentialField[rcenter.x + 1][y],
-			potentialField[rcenter.x][y - 1],
-			matrix[rcenter.x - 1][y].dielectricValue,
-			matrix[rcenter.x][y + 1].dielectricValue,
-			matrix[rcenter.x + 1][y].dielectricValue,
-			matrix[rcenter.x][y - 1].dielectricValue);
-
-		oldPotentialField[rcenter.x][y] = potentialField[rcenter.x][y];
-		bufferPotentialField[rcenter.x][y] = potentialField[rcenter.x][y];
+		computeCellPotential(
+			matrix,
+			potentialField,
+			Point2D<int>(rcenter.x, y));
 	}
 
 	// compute bottom horizontal edge
 	for (int x = bcenter.x + 1; x < rightBottom.x; x++)
 	{
-		potentialField[x][bcenter.y] = computeCellPotential(
-			oldPotentialField[x][bcenter.y],
-			potentialField[x - 1][bcenter.y],
-			potentialField[x][bcenter.y + 1],
-			potentialField[x + 1][bcenter.y],
-			potentialField[x][bcenter.y - 1],
-			matrix[x - 1][bcenter.y].dielectricValue,
-			matrix[x][bcenter.y + 1].dielectricValue,
-			matrix[x + 1][bcenter.y].dielectricValue,
-			matrix[x][bcenter.y - 1].dielectricValue);
-
-		oldPotentialField[x][bcenter.y] = potentialField[x][bcenter.y];
-		bufferPotentialField[x][bcenter.y] = potentialField[x][bcenter.y];
+		computeCellPotential(
+			matrix,
+			potentialField,
+			Point2D<int>(x, bcenter.y));
 	}
 	for (int x = tcenter.x - 1; x > leftTop.x; x--)
 	{
-		potentialField[x][bcenter.y] = computeCellPotential(
-			oldPotentialField[x][bcenter.y],
-			potentialField[x - 1][bcenter.y],
-			potentialField[x][bcenter.y + 1],
-			potentialField[x + 1][bcenter.y],
-			potentialField[x][bcenter.y - 1],
-			matrix[x - 1][bcenter.y].dielectricValue,
-			matrix[x][bcenter.y + 1].dielectricValue,
-			matrix[x + 1][bcenter.y].dielectricValue,
-			matrix[x][bcenter.y - 1].dielectricValue);
-
-		oldPotentialField[x][bcenter.y] = potentialField[x][bcenter.y];
-		bufferPotentialField[x][bcenter.y] = potentialField[x][bcenter.y];
+		computeCellPotential(
+			matrix,
+			potentialField,
+			Point2D<int>(x, bcenter.y));
 	}
 
 	// compute corner points on edges
-	potentialField[leftTop.x][leftTop.y] = computeCellPotential(
-		oldPotentialField[leftTop.x][leftTop.y],
-		potentialField[leftTop.x - 1][leftTop.y],
-		potentialField[leftTop.x][leftTop.y + 1],
-		potentialField[leftTop.x + 1][leftTop.y],
-		potentialField[leftTop.x][leftTop.y - 1],
-		matrix[leftTop.x - 1][leftTop.y].dielectricValue,
-		matrix[leftTop.x][leftTop.y + 1].dielectricValue,
-		matrix[leftTop.x + 1][leftTop.y].dielectricValue,
-		matrix[leftTop.x][leftTop.y - 1].dielectricValue);
-	
-	potentialField[rightTop.x][rightTop.y] = computeCellPotential(
-		oldPotentialField[rightTop.x][rightTop.y],
-		potentialField[rightTop.x - 1][rightTop.y],
-		potentialField[rightTop.x][rightTop.y + 1],
-		potentialField[rightTop.x + 1][rightTop.y],
-		potentialField[rightTop.x][rightTop.y - 1],
-		matrix[rightTop.x - 1][rightTop.y].dielectricValue,
-		matrix[rightTop.x][rightTop.y + 1].dielectricValue,
-		matrix[rightTop.x + 1][rightTop.y].dielectricValue,
-		matrix[rightTop.x][rightTop.y - 1].dielectricValue);
+	computeCellPotential(
+		matrix,
+		potentialField,
+		leftTop);
 
-	potentialField[rightBottom.x][rightBottom.y] = computeCellPotential(
-		oldPotentialField[rightBottom.x][rightBottom.y],
-		potentialField[rightBottom.x - 1][rightBottom.y],
-		potentialField[rightBottom.x][rightBottom.y + 1],
-		potentialField[rightBottom.x + 1][rightBottom.y],
-		potentialField[rightBottom.x][rightBottom.y - 1],
-		matrix[rightBottom.x - 1][rightBottom.y].dielectricValue,
-		matrix[rightBottom.x][rightBottom.y + 1].dielectricValue,
-		matrix[rightBottom.x + 1][rightBottom.y].dielectricValue,
-		matrix[rightBottom.x][rightBottom.y - 1].dielectricValue);
+	computeCellPotential(
+		matrix,
+		potentialField,
+		rightTop);
 
-	potentialField[leftBottom.x][leftBottom.y] = computeCellPotential(
-		oldPotentialField[leftBottom.x][leftBottom.y],
-		potentialField[leftBottom.x - 1][leftBottom.y],
-		potentialField[leftBottom.x][leftBottom.y + 1],
-		potentialField[leftBottom.x + 1][leftBottom.y],
-		potentialField[leftBottom.x][leftBottom.y - 1],
-		matrix[leftBottom.x - 1][leftBottom.y].dielectricValue,
-		matrix[leftBottom.x][leftBottom.y + 1].dielectricValue,
-		matrix[leftBottom.x + 1][leftBottom.y].dielectricValue,
-		matrix[leftBottom.x][leftBottom.y - 1].dielectricValue);
+	computeCellPotential(
+		matrix,
+		potentialField,
+		rightBottom);
 
-	oldPotentialField[leftTop.x][leftTop.y] = bufferPotentialField[leftTop.x][leftTop.y];
-	oldPotentialField[rightTop.x][rightTop.y] = bufferPotentialField[rightTop.x][rightTop.y];
-	oldPotentialField[rightBottom.x][rightBottom.y] = bufferPotentialField[rightBottom.x][rightBottom.y];
-	oldPotentialField[leftBottom.x][leftBottom.y] = bufferPotentialField[leftBottom.x][leftBottom.y];
-
-	bufferPotentialField[leftTop.x][leftTop.y] = potentialField[leftTop.x][leftTop.y];
-	bufferPotentialField[rightTop.x][rightTop.y] = potentialField[rightTop.x][rightTop.y];
-	bufferPotentialField[rightBottom.x][rightBottom.y] = potentialField[rightBottom.x][rightBottom.y];
-	bufferPotentialField[leftBottom.x][leftBottom.y] = potentialField[leftBottom.x][leftBottom.y];
+	computeCellPotential(
+		matrix,
+		potentialField,
+		leftBottom);
 }
 
 
@@ -720,27 +568,15 @@ void GridSolver::computeFieldPotential(
 	int rows = matrix.getRows() - 1;
 	int cols = matrix.getCols() - 1;
 
-	Matrix2D<double> oldPotentialField(rows, cols);
+	Vector<bool> isPropagationComplited(initCells.getLength());
 
 	Matrix2D<double> bufferPotentialField(rows, cols);
 
-	for (int y = 0; y < rows; y++)
-	{
-		for (int x = 0; x < cols; x++)
-		{
-			oldPotentialField[y][x] = potentialField[y][x];
-			bufferPotentialField[y][x] = potentialField[y][x];
-		}
-	}
-
-	Vector<bool> isPropagationComplited(initCells.getLength());
-
 	double currentAccuracy = 0.0;
+	int iteration = 0;
 
-	while (currentAccuracy >= accuracy)
+	while (currentAccuracy <= accuracy)
 	{
-		currentAccuracy = 1.0;
-
 		int offsetPropagationRect = 0;
 
 		bool isAllPropagationComplited = false;
@@ -750,12 +586,25 @@ void GridSolver::computeFieldPotential(
 			isPropagationComplited[i] = false;
 		}
 
+		for (int y = 0; y < rows; y++)
+		{
+			for (int x = 0; x < cols; x++)
+			{
+				bufferPotentialField[y][x] = potentialField[y][x];
+			}
+		}
+
 		while (!isAllPropagationComplited)
 		{
 			offsetPropagationRect++;
 
 			for (int i = 0; i < initCells.getLength(); i++)
 			{
+				if (potentialField[initCells[i].y][initCells[i].x] == 0.0)
+				{
+					isPropagationComplited[i] = true;
+				}
+
 				if (isPropagationComplited[i] == false)
 				{
 					int l = initCells[i].x;
@@ -783,8 +632,6 @@ void GridSolver::computeFieldPotential(
 					{
 						computeRectPropagation(
 							matrix,
-							oldPotentialField,
-							bufferPotentialField,
 							potentialField,
 							Point2D<int>(initCells[i].x, initCells[i].y),
 							Rect2D<int>(l, t, r, b));
@@ -803,21 +650,29 @@ void GridSolver::computeFieldPotential(
 			}
 		}
 
-		// compute min accuracy
-		for (int y = 0; y < rows; y++)
+		// compute min current accuracy
+		double minTempAccuracy = 1.0;
+
+		for (int y = 1; y < rows; y++)
 		{
-			for (int x = 0; x < cols; x++)
+			for (int x = 1; x < cols; x++)
 			{
 				if (matrix[y][x].isConductor == false && potentialField[y][x] != 0.0)
 				{
-					double tempAccuracy = abs(oldPotentialField[y][x] / potentialField[y][x]);
-					if (currentAccuracy > tempAccuracy)
+					double bufferPotential = bufferPotentialField[y][x];
+					double potential = potentialField[y][x];
+					double tempAccuracy = abs(bufferPotential / potential);
+					if (minTempAccuracy > tempAccuracy)
 					{
-						currentAccuracy = tempAccuracy;
+						minTempAccuracy = tempAccuracy;
 					}
 				}
 			}
 		}
+
+		currentAccuracy = minTempAccuracy;
+		iteration++;
+		std::cout << iteration << ": " << currentAccuracy << "\n";
 	}
 }
 

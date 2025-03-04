@@ -14,6 +14,7 @@ void StripStructure::computeElectroStaticAnalysis()
 	Matrix2D<Types::LinearParameters> linearParamenetrs = _gridSolver->computeLinearParameters(matrix);
 
 	std::cout << "------------------------------------------------------------\n\n";
+
 	/*
 	// print shapes
 	for (int i = 0; i < _shapes.getLength(); i++)
@@ -60,14 +61,15 @@ void StripStructure::computeElectroStaticAnalysis()
 			std::cout << *rectangle << "\n\n";
 		}
 	}
-
+	
 	std::cout << "------------------------------------------------------------\n\n";
+	*/
 
 	// print min size
 	std::cout << "Min size: " << defineMinSize() << "\n\n";
 	std::cout << "Cell size: " << defineOptimalCellSize() << "\n\n";
 	std::cout << "Grid size: [" << matrix.getCols() << " ; " << matrix.getRows() << "]\n\n";
-	*/
+	
 	std::cout << "------------------------------------------------------------\n\n";
 
 	// print matrix

@@ -61,16 +61,12 @@ private:
 	// Compute potential cell
 	void computeCellPotential(
 		const Matrix2D<Types::CellInfo>& matrix,
-		Matrix2D<double>& oldPotentialField,
-		Matrix2D<double>& bufferPotentialField,
 		Matrix2D<double>& potentialField,
 		const Point2D<int>& computedPoint) const;
 
 	// Compute all cells around the edges of rect propagation
 	void computeRectPropagation(
 		const Matrix2D<Types::CellInfo>& matrix,
-		Matrix2D<double>& oldPotentialField,
-		Matrix2D<double>& bufferPotentialField,
 		Matrix2D<double>& potentialField,
 		const Point2D<int>& initPoint,
 		const Rect2D<int>& rect) const;
@@ -96,7 +92,7 @@ private:
 	// relaxationCoeff used for the relaxation method to calculate the potential in the cell
 	// 1 - disable relaxation
 	// 1.5 - optimal value
-	double relaxationCoeff = 1.5;
+	double relaxationCoeff = 1.8;
 
 	// Cumpute accuracy
 	// must be 0.0 < value < 1.0

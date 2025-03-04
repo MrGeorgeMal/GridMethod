@@ -45,9 +45,9 @@ int main()
 		strip.addShape(rect1);
 		strip.addShape(line1);
 		strip.addShape(line2);
-		strip.addShape(line3);
-		strip.addShape(line4);
-		strip.addShape(line5);
+		//strip.addShape(line3);
+		//strip.addShape(line4);
+		//strip.addShape(line5);
 
 		strip.computeElectroStaticAnalysis();
 	}
