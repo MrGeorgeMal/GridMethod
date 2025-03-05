@@ -359,6 +359,11 @@ Vector<Point2D<int>> GridSolver::defineSymmetyConductors(
 {
 	Vector<Point2D<int>> symmetryConductrors;
 
+	if (symmetryPoint == Point2D<int>(0, 0))
+	{
+		return symmetryConductrors;
+	}
+
 	for (int i = 0; i < conductorsCells.getLength() - 1; i++)
 	{
 		for (int j = i + 1; j < conductorsCells.getLength(); j++)

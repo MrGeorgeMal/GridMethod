@@ -17,8 +17,6 @@ void StripStructure::computeElectroStaticAnalysis()
 
 	Point2D<int> symmetryPoint = defineVerticalSymmetryPoint(matrix);
 
-	Matrix2D<Types::LinearParameters> linearParamenetrs = _gridSolver->computeLinearParameters(matrix, symmetryPoint);
-
 	std::cout << "------------------------------------------------------------\n\n";
 
 	/*
@@ -135,6 +133,9 @@ void StripStructure::computeElectroStaticAnalysis()
 		}
 		std::cout << "\n";
 	}
+
+
+	Matrix2D<Types::LinearParameters> linearParamenetrs = _gridSolver->computeLinearParameters(matrix, symmetryPoint);
 }
 
 
