@@ -65,7 +65,7 @@ const Matrix2D<Types::CellInfo> Rasterizer::rasterize(const Vector<Shape2D*>& sh
 	Size2D<int> matrixSize = defineMatrixSize(shapes);
 	int rows = matrixSize.height + _screenBorder * 2;
 	int cols = matrixSize.width + _screenBorder * 2;
-	Matrix2D<Types::CellInfo> matrix(rows, cols);
+	Matrix2D<Types::CellInfo> matrix(rows + 1, cols);
 
 	// Fill matrix with screen material
 	Rectangle2D* screen = findScreen(shapes);

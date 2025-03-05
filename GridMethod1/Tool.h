@@ -47,9 +47,9 @@ public:
 	{
 		double dx = cellSize.width;
 		double dy = cellSize.height;
-
-		int x = round(point.x / dx);
-		int y = round(point.y / dy);
+		
+		int x = floor(point.x / dx);
+		int y = floor(point.y / dy);
 
 		return Point2D<int>(x, y);
 	}
@@ -61,8 +61,8 @@ public:
 		double dx = cellSize.width;
 		double dy = cellSize.height;
 
-		int width = round(size.width / dx);
-		int height = round(size.height / dy);
+		int width = floor(size.width / dx);
+		int height = floor(size.height / dy);
 
 		return Size2D<int>(width, height);
 	}

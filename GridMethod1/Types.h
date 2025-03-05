@@ -17,6 +17,21 @@ namespace Types {
 		double dielectricValue = 1.0;
 		bool isConductor = false;
 		bool isSignalConductor = false;
+
+
+		bool operator == (CellInfo cellInfo)
+		{
+			if (this->dielectricValue == cellInfo.dielectricValue &&
+				this->isConductor == cellInfo.isConductor &&
+				this->isSignalConductor == cellInfo.isSignalConductor)
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
 	};
 
 	// Linear parameters

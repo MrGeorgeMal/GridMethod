@@ -21,6 +21,18 @@ public:
 		resize(rows, cols);
 	}
 
+	Matrix2D(const Matrix2D<T>& matrix)
+	{
+		resize(matrix.getRows(), matrix.getCols());
+		for (int i = 0; i < matrix.getRows(); i++)
+		{
+			for (int j = 0; j < matrix.getCols(); j++)
+			{
+				_matrix[i * matrix.getCols() + j] = matrix[i][j];
+			}
+		}
+	}
+
 	// Destructor
 	~Matrix2D()
 	{

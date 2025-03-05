@@ -15,24 +15,26 @@ int main()
 		Line2D* line5 = new Line2D();
 		Rectangle2D* rect1 = new Rectangle2D();
 
+		double width = 10.0;
+
 		rect1->setPoint(Point2D<double>(0.0, 0.0));
-		rect1->setSize(Size2D<double>(10.0, 1.5));
+		rect1->setSize(Size2D<double>(width, 1.5));
 		rect1->makeAsScreen(false);
 
-		line1->setP1(Point2D<double>(2.0, 1.5));
-		line1->setP2(Point2D<double>(4.5, 1.5));
+		line1->setP1(Point2D<double>(0.0, 1.5));
+		line1->setP2(Point2D<double>(width / 2 - 0.5, 1.5));
 
-		line2->setP1(Point2D<double>(5.5, 1.5));
-		line2->setP2(Point2D<double>(8, 1.5));
+		line2->setP1(Point2D<double>(width / 2 + 0.5, 1.5));
+		line2->setP2(Point2D<double>(width, 1.5));
 
 		line3->setP1(Point2D<double>(0.0, 0.0));
-		line3->setP2(Point2D<double>(10.0, 0.0));
+		line3->setP2(Point2D<double>(width, 0.0));
 
 		line4->setP1(Point2D<double>(0, 2.0));
-		line4->setP2(Point2D<double>(10.0, 2.0));
+		line4->setP2(Point2D<double>(width, 2.0));
 		
 		line5->setP1(Point2D<double>(0, 3.0));
-		line5->setP2(Point2D<double>(10.0, 3.0));
+		line5->setP2(Point2D<double>(width, 3.0));
 
 		line1->setMaterial(signalCond);
 		line2->setMaterial(signalCond);

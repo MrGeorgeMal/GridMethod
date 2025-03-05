@@ -62,10 +62,13 @@ private:
 	Size2D<double> defineMinSize() const;
 
 	// Define optimal cell size
-	Size2D<double> defineOptimalCellSize() const;
+	Size2D<double> defineOptimalCellSize(const Size2D<double>& screenSize) const;
 
 	// Get offset shapes to center [0 ; 0]
-	Vector<Shape2D*> getOffsetShapesToCenter() const;
+	Vector<Shape2D*> getOffsetShapesToCenter(const Vector<Shape2D*>& shapes) const;
+
+	// Check structure on symmetry
+	bool checkOnSymmetry();
 
 #pragma endregion
 
@@ -89,11 +92,11 @@ private:
 	// Determines if the grid is regular (cell width = height) and all cells are the same size
 	bool _isRegularGrid = true;
 
-	// Optimal grid size
-	Size2D<int> _optimalGridSize = Size2D<int>(300, 300);
+	// Optimal grid size, ONLY EVEN numbers
+	Size2D<int> _optimalGridSize = Size2D<int>(100, 100);
 
 	// Gap between shapes and screen
-	double _screenDistance = 5.0;
+	double _screenDistance = 0.0;
 
 #pragma endregion
 

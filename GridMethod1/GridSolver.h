@@ -8,7 +8,7 @@
 #include "Point2D.h"
 #include "Rect2D.h"
 #include "Types.h"
-
+#include <iomanip>
 
 
 class GridSolver
@@ -29,7 +29,7 @@ public:
 
 	// Compute linear parameters of strip structure
 	// matrix - matrix of rasterized strip structure
-	const Matrix2D<Types::LinearParameters>& computeLinearParameters(Matrix2D<Types::CellInfo>& matrix) const;
+	const Matrix2D<Types::LinearParameters>& computeLinearParameters(const Matrix2D<Types::CellInfo>& matrix) const;
 
 #pragma endregion
 

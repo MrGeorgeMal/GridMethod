@@ -4,8 +4,12 @@
 
 // Compute linear parameters of strip structure
 // matrix - matrix of rasterized strip structure
-const Matrix2D<Types::LinearParameters>& GridSolver::computeLinearParameters(Matrix2D<Types::CellInfo>& matrix) const
+const Matrix2D<Types::LinearParameters>& GridSolver::computeLinearParameters(const Matrix2D<Types::CellInfo>& structureMatrix) const
 {
+	// create copy matrix for change it
+	Matrix2D<Types::CellInfo> matrix(structureMatrix);
+
+
 	// defines
 	Vector<Vector<Point2D<int>>> condCells = defineAllConductorsCells(matrix);
 	Vector<Point2D<int>> initCells = defineInitialCellsForFieldPropagation(matrix, condCells);
@@ -13,7 +17,7 @@ const Matrix2D<Types::LinearParameters>& GridSolver::computeLinearParameters(Mat
 	// compute linear capacity
 	Matrix2D<Types::LinearParameters> linearParam(condCells.getLength(), condCells.getLength());
 
-	// compute diagonal elements in linear capacity matrix (full capacity for each signal conductor)
+	// compute diagonal elements in linear capacity matrix for dielectric fill (full capacity for each signal conductor)
 	Vector<bool> conductorsConfig(condCells.getLength());
 
 	for (int i = 0; i < condCells.getLength(); i++)
@@ -33,7 +37,7 @@ const Matrix2D<Types::LinearParameters>& GridSolver::computeLinearParameters(Mat
 		std::cout << "\n\n\n";
 	}
 
-	// compute other elements in linear capacity matrix
+	// compute other elements in linear capacity matrix for dielectric fill 
 	for (int i = 0; i < condCells.getLength(); i++)
 	{
 		for (int j = 0; j < conductorsConfig.getLength(); j++)
@@ -50,6 +54,58 @@ const Matrix2D<Types::LinearParameters>& GridSolver::computeLinearParameters(Mat
 			computeFieldPotential(matrix, potentialField, initCells);
 			linearParam[i][j].C = (computeCapacity(matrix, potentialField) - linearParam[i][i].C - linearParam[j][j].C) / 2.0;
 			linearParam[j][i].C = linearParam[i][j].C;
+
+			conductorsConfig[j] = false;
+
+			drawField(potentialField);
+			std::cout << "\n\n\n";
+		}
+	}
+
+	// set air fill
+	for (int y = 0; y < matrix.getRows(); y++)
+	{
+		for (int x = 0; x < matrix.getCols(); x++)
+		{
+			matrix[y][x].dielectricValue = 1.0;
+		}
+	}
+
+	// compute diagonal elements in linear capacity matrix for air fill (full capacity for each signal conductor)
+	for (int i = 0; i < condCells.getLength(); i++)
+	{
+		for (int i = 0; i < conductorsConfig.getLength(); i++)
+		{
+			conductorsConfig[i] = false;
+		}
+
+		conductorsConfig[i] = true;
+
+		Matrix2D<double>potentialField = setupInitialPotential(matrix, condCells, conductorsConfig);
+		computeFieldPotential(matrix, potentialField, initCells);
+		linearParam[i][i].CAir = computeCapacity(matrix, potentialField);
+
+		drawField(potentialField);
+		std::cout << "\n\n\n";
+	}
+
+	// compute other elements in linear capacity matrix for air fill 
+	for (int i = 0; i < condCells.getLength(); i++)
+	{
+		for (int j = 0; j < conductorsConfig.getLength(); j++)
+		{
+			conductorsConfig[j] = false;
+		}
+		conductorsConfig[i] = true;
+
+		for (int j = i + 1; j < conductorsConfig.getLength(); j++)
+		{
+			conductorsConfig[j] = true;
+
+			Matrix2D<double>potentialField = setupInitialPotential(matrix, condCells, conductorsConfig);
+			computeFieldPotential(matrix, potentialField, initCells);
+			linearParam[i][j].CAir = (computeCapacity(matrix, potentialField) - linearParam[i][i].CAir - linearParam[j][j].CAir) / 2.0;
+			linearParam[j][i].CAir = linearParam[i][j].CAir;
 
 			conductorsConfig[j] = false;
 
@@ -81,10 +137,29 @@ const Matrix2D<Types::LinearParameters>& GridSolver::computeLinearParameters(Mat
 	{
 		for (int j = 0; j < linearParam.getCols(); j++)
 		{
+			if (i == j)
+			{
+				std::cout << " ";
+			}
 			std::cout << linearParam[i][j].C << "\t";
 		}
 		std::cout << "\n\n";
 	}
+
+	std::cout << "\nLinear capacity matrix for air fill: " << "\n";
+	for (int i = 0; i < linearParam.getRows(); i++)
+	{
+		for (int j = 0; j < linearParam.getCols(); j++)
+		{
+			if (i == j)
+			{
+				std::cout << " ";
+			}
+			std::cout << linearParam[i][j].CAir << "\t";
+		}
+		std::cout << "\n\n";
+	}
+
 
 	return Matrix2D<Types::LinearParameters>();
 }
@@ -754,21 +829,11 @@ void GridSolver::drawField(const Matrix2D<double>& potentialField) const
 	}
 
 	int cols = 0;
+
+	std::cout << std::fixed << std::setprecision(3);
 	for (int i = 0; i < gradValue.getLength() - 1; i++)
 	{
-		std::cout.precision(3);
-		if ((double)gradValue[i] == 0.0)
-		{
-			std::cout << gradSymbols[i] << " -> " << (double)gradValue[i] << "\t\t|\t";
-		}
-		else if ((double)gradValue[i] == 1.0)
-		{
-			std::cout << char(219) << " -> " << (double)gradValue[i] << "\t\t|\t";
-		}
-		else
-		{
-			std::cout << gradSymbols[i] << " -> " << (double)gradValue[i] << "\t|\t";
-		}
+		std::cout << gradSymbols[i] << " -> " << (double)gradValue[i] << "\t|\t";
 
 		cols++;
 		if (cols >= 4)
@@ -777,6 +842,7 @@ void GridSolver::drawField(const Matrix2D<double>& potentialField) const
 			cols = 0;
 		}
 	}
+	std::cout << std::defaultfloat << std::setprecision(3);
 
 	std::cout << "\n\t";
 	int xi = 0;

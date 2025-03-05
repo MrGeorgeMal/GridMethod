@@ -5,13 +5,18 @@
 // Compute electrostatic analysis
 void StripStructure::computeElectroStaticAnalysis()
 {
-	_screen = defineScreenRectangle();
-	Vector<Shape2D*> offsetShapes = getOffsetShapesToCenter();
+	bool isSymmetry = false;
+	isSymmetry = checkOnSymmetry();
 
-	_rasterizer->setCell(defineOptimalCellSize());
+	_screen = defineScreenRectangle();
+	_shapes.addToHead(_screen);
+
+	Vector<Shape2D*> offsetShapes = getOffsetShapesToCenter(_shapes);
+
+	_rasterizer->setCell(defineOptimalCellSize(_screen->getSize()));
 	Matrix2D<Types::CellInfo> matrix = _rasterizer->rasterize(offsetShapes);
 
-	Matrix2D<Types::LinearParameters> linearParamenetrs = _gridSolver->computeLinearParameters(matrix);
+	//Matrix2D<Types::LinearParameters> linearParamenetrs = _gridSolver->computeLinearParameters(matrix);
 
 	std::cout << "------------------------------------------------------------\n\n";
 
@@ -67,8 +72,14 @@ void StripStructure::computeElectroStaticAnalysis()
 
 	// print min size
 	std::cout << "Min size: " << defineMinSize() << "\n\n";
-	std::cout << "Cell size: " << defineOptimalCellSize() << "\n\n";
+	std::cout << "Cell size: " << defineOptimalCellSize(_screen->getSize()) << "\n\n";
 	std::cout << "Grid size: [" << matrix.getCols() << " ; " << matrix.getRows() << "]\n\n";
+
+	if (isSymmetry)
+		std::cout << "The strip structure is symmetrical\n\n";
+	else
+		std::cout << "The strip structure is non-symmetrical\n\n";
+
 	
 	std::cout << "------------------------------------------------------------\n\n";
 
@@ -188,8 +199,6 @@ Rectangle2D* StripStructure::createScreenRectangle()
 	screen->setMaterial(material);
 	screen->makeAsScreen(true);
 
-	_shapes.addToHead(screen);
-
 	return screen;
 }
 
@@ -262,14 +271,15 @@ Rect2D<double> StripStructure::getRectBound() const
 
 
 // Get offset shapes to center [0 ; 0]
-Vector<Shape2D*> StripStructure::getOffsetShapesToCenter() const
+Vector<Shape2D*> StripStructure::getOffsetShapesToCenter(const Vector<Shape2D*>& shapes) const
 {
 	Vector<Shape2D*> offsetShapes;
-	Point2D<double> offsetPoint = Point2D<double>(0.0, 0.0) - _screen->getPoint();
+	Rectangle2D* screen = dynamic_cast<Rectangle2D*>(shapes[0]);
+	Point2D<double> offsetPoint = Point2D<double>(0.0, 0.0) - screen->getPoint();
 
-	for (size_t i = 0; i < _shapes.getLength(); i++)
+	for (int i = 0; i < shapes.getLength(); i++)
 	{
-		Shape2D* offsetShape = _shapes[i]->getCopy();
+		Shape2D* offsetShape = shapes[i]->getCopy();
 		offsetShape->moveOrigin(offsetPoint);
 		offsetShapes.add(offsetShape);
 	}
@@ -344,12 +354,12 @@ Size2D<double> StripStructure::defineMinSize() const
 
 
 // Define optimal cell size
-Size2D<double> StripStructure::defineOptimalCellSize() const
+Size2D<double> StripStructure::defineOptimalCellSize(const Size2D<double>& screenSize) const
 {
 	// compute optimal cell size
 	Size2D<double> optimalCellSize;
-	optimalCellSize.width = _screen->getSize().width / (double)_optimalGridSize.width;
-	optimalCellSize.height = _screen->getSize().height / (double)_optimalGridSize.height;
+	optimalCellSize.width = screenSize.width / (double)_optimalGridSize.width;
+	optimalCellSize.height = screenSize.height / (double)_optimalGridSize.height;
 
 	// if the calculated cell size is larger than the minimum structure size,
 	// so compute it based on the minimum structure size.
@@ -386,4 +396,82 @@ Size2D<double> StripStructure::defineOptimalCellSize() const
 	}
 
 	return optimalCellSize;
+}
+
+
+
+// Check structure on symmetry
+bool StripStructure::checkOnSymmetry()
+{
+	// Rasterize structure with zero distance to screen
+	double tempScreenDistance = _screenDistance;
+	Size2D<double> tempCell = _rasterizer->getCell();
+
+	_screenDistance = 0.0;
+	Vector<Shape2D*> shapes(_shapes.getLength());
+	for (int i = 0; i < shapes.getLength(); i++)
+	{
+		shapes[i] = _shapes[i]->getCopy();
+	}
+
+	Rectangle2D* screen = defineScreenRectangle();
+	shapes.addToHead(screen);
+
+	_rasterizer->setCell(defineOptimalCellSize(screen->getSize()));
+	Vector<Shape2D*> offsetShapes = getOffsetShapesToCenter(shapes);
+	Matrix2D<Types::CellInfo> matrix = _rasterizer->rasterize(offsetShapes);
+
+	_screenDistance = tempScreenDistance;
+	_rasterizer->setCell(tempCell);
+
+	// check vertical symmetry
+	int rows = matrix.getRows();
+	int cols = matrix.getCols();
+	bool isSymmentry = true;
+	int center = cols / 2 - 1;
+
+	for (int x = center - 1; x >= 1; x--)
+	{
+		int offset = center - x;
+		for (int y = 1; y < matrix.getRows(); y++)
+		{
+			if (matrix[y][x] != matrix[y][center + offset])
+			{
+				isSymmentry = false;
+				break;
+			}
+		}
+		if (isSymmentry == false)
+		{
+			break;
+		}
+	}
+
+	if (isSymmentry == true)
+	{
+		return isSymmentry;
+	}
+
+	isSymmentry = true;
+	int rightCenter = (double)cols / 2.0;
+	int leftCenter = rightCenter - 1;
+
+	for (int x = leftCenter - 1; x >= 1; x--)
+	{
+		int offset = leftCenter - x;
+		for (int y = 1; y < matrix.getRows(); y++)
+		{
+			if (matrix[y][x] != matrix[y][rightCenter + offset])
+			{
+				isSymmentry = false;
+				break;
+			}
+		}
+		if (isSymmentry == false)
+		{
+			break;
+		}
+	}
+
+	return isSymmentry;
 }
