@@ -5,18 +5,19 @@
 // Compute electrostatic analysis
 void StripStructure::computeElectroStaticAnalysis()
 {
-	bool isSymmetry = false;
-	isSymmetry = checkOnSymmetry();
+	
 
 	_screen = defineScreenRectangle();
 	_shapes.addToHead(_screen);
 
-	Vector<Shape2D*> offsetShapes = getOffsetShapesToCenter(_shapes);
+	Vector<Shape2D*> offsetShapes = getOffsetShapesToCenter();
 
-	_rasterizer->setCell(defineOptimalCellSize(_screen->getSize()));
+	_rasterizer->setCell(defineOptimalCellSize());
 	Matrix2D<Types::CellInfo> matrix = _rasterizer->rasterize(offsetShapes);
 
-	//Matrix2D<Types::LinearParameters> linearParamenetrs = _gridSolver->computeLinearParameters(matrix);
+	Point2D<int> symmetryPoint = defineVerticalSymmetryPoint(matrix);
+
+	Matrix2D<Types::LinearParameters> linearParamenetrs = _gridSolver->computeLinearParameters(matrix, symmetryPoint);
 
 	std::cout << "------------------------------------------------------------\n\n";
 
@@ -72,11 +73,11 @@ void StripStructure::computeElectroStaticAnalysis()
 
 	// print min size
 	std::cout << "Min size: " << defineMinSize() << "\n\n";
-	std::cout << "Cell size: " << defineOptimalCellSize(_screen->getSize()) << "\n\n";
+	std::cout << "Cell size: " << defineOptimalCellSize() << "\n\n";
 	std::cout << "Grid size: [" << matrix.getCols() << " ; " << matrix.getRows() << "]\n\n";
 
-	if (isSymmetry)
-		std::cout << "The strip structure is symmetrical\n\n";
+	if (symmetryPoint != Point2D(0, 0))
+		std::cout << "The strip structure is symmetrical.\nSymmetry point [leftX, rightX]: " << symmetryPoint << "\n\n";
 	else
 		std::cout << "The strip structure is non-symmetrical\n\n";
 
@@ -271,15 +272,14 @@ Rect2D<double> StripStructure::getRectBound() const
 
 
 // Get offset shapes to center [0 ; 0]
-Vector<Shape2D*> StripStructure::getOffsetShapesToCenter(const Vector<Shape2D*>& shapes) const
+Vector<Shape2D*> StripStructure::getOffsetShapesToCenter() const
 {
 	Vector<Shape2D*> offsetShapes;
-	Rectangle2D* screen = dynamic_cast<Rectangle2D*>(shapes[0]);
-	Point2D<double> offsetPoint = Point2D<double>(0.0, 0.0) - screen->getPoint();
+	Point2D<double> offsetPoint = Point2D<double>(0.0, 0.0) - _screen->getPoint();
 
-	for (int i = 0; i < shapes.getLength(); i++)
+	for (int i = 0; i < _shapes.getLength(); i++)
 	{
-		Shape2D* offsetShape = shapes[i]->getCopy();
+		Shape2D* offsetShape = _shapes[i]->getCopy();
 		offsetShape->moveOrigin(offsetPoint);
 		offsetShapes.add(offsetShape);
 	}
@@ -354,12 +354,12 @@ Size2D<double> StripStructure::defineMinSize() const
 
 
 // Define optimal cell size
-Size2D<double> StripStructure::defineOptimalCellSize(const Size2D<double>& screenSize) const
+Size2D<double> StripStructure::defineOptimalCellSize() const
 {
 	// compute optimal cell size
 	Size2D<double> optimalCellSize;
-	optimalCellSize.width = screenSize.width / (double)_optimalGridSize.width;
-	optimalCellSize.height = screenSize.height / (double)_optimalGridSize.height;
+	optimalCellSize.width = _screen->getWidth() / (double)_optimalGridSize.width;
+	optimalCellSize.height = _screen->getHeight() / (double)_optimalGridSize.height;
 
 	// if the calculated cell size is larger than the minimum structure size,
 	// so compute it based on the minimum structure size.
@@ -401,9 +401,13 @@ Size2D<double> StripStructure::defineOptimalCellSize(const Size2D<double>& scree
 
 
 // Check structure on symmetry
-bool StripStructure::checkOnSymmetry()
+// return symmetry point: left and right X coordinate - Point(leftX ; rightX)
+// left and right coordinates may be equal
+// return Point(0 ; 0) if structure has no symmetry
+Point2D<int> StripStructure::defineVerticalSymmetryPoint(const Matrix2D<Types::CellInfo>& matrix)
 {
 	// Rasterize structure with zero distance to screen
+	/*
 	double tempScreenDistance = _screenDistance;
 	Size2D<double> tempCell = _rasterizer->getCell();
 
@@ -423,6 +427,7 @@ bool StripStructure::checkOnSymmetry()
 
 	_screenDistance = tempScreenDistance;
 	_rasterizer->setCell(tempCell);
+	*/
 
 	// check vertical symmetry
 	int rows = matrix.getRows();
@@ -449,7 +454,7 @@ bool StripStructure::checkOnSymmetry()
 
 	if (isSymmentry == true)
 	{
-		return isSymmentry;
+		return Point2D(center, center);
 	}
 
 	isSymmentry = true;
@@ -473,5 +478,10 @@ bool StripStructure::checkOnSymmetry()
 		}
 	}
 
-	return isSymmentry;
+	if (isSymmentry == true)
+	{
+		return Point2D(leftCenter, rightCenter);
+	}
+
+	return Point2D(0, 0);
 }

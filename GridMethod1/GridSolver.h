@@ -29,7 +29,9 @@ public:
 
 	// Compute linear parameters of strip structure
 	// matrix - matrix of rasterized strip structure
-	const Matrix2D<Types::LinearParameters>& computeLinearParameters(const Matrix2D<Types::CellInfo>& matrix) const;
+	const Matrix2D<Types::LinearParameters>& computeLinearParameters(
+		const Matrix2D<Types::CellInfo>& matrix,
+		const Point2D<int>& symmetryPoint) const;
 
 #pragma endregion
 
@@ -46,6 +48,13 @@ private:
 
 	// Locate the position all of the conductors cells
 	Vector<Vector<Point2D<int>>> defineAllConductorsCells(Matrix2D<Types::CellInfo>& matrix) const;
+
+	// Define pair of symmetrycal conductors
+	// return point: first and numbers - numbers of symmetrical conductors
+	// return Point2D(-1 ; -1) if there is no symmetry
+	Vector<Point2D<int>> defineSymmetyConductors(
+		const Vector<Vector<Point2D<int>>>& conductorsCells,
+		const Point2D<int>& symmetryPoint) const;
 
 	// Locate the initial points of field propagation
 	Vector<Point2D<int>> defineInitialCellsForFieldPropagation(

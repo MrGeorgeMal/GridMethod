@@ -62,13 +62,16 @@ private:
 	Size2D<double> defineMinSize() const;
 
 	// Define optimal cell size
-	Size2D<double> defineOptimalCellSize(const Size2D<double>& screenSize) const;
+	Size2D<double> defineOptimalCellSize() const;
 
 	// Get offset shapes to center [0 ; 0]
-	Vector<Shape2D*> getOffsetShapesToCenter(const Vector<Shape2D*>& shapes) const;
+	Vector<Shape2D*> getOffsetShapesToCenter() const;
 
 	// Check structure on symmetry
-	bool checkOnSymmetry();
+	// return symmetry point: left and right X coordinate - Point(leftX ; rightX)
+	// left and right coordinates may be equal
+	// return Point(0 ; 0) if structure has no symmetry
+	Point2D<int> defineVerticalSymmetryPoint(const Matrix2D<Types::CellInfo>& matrix);
 
 #pragma endregion
 
@@ -96,7 +99,7 @@ private:
 	Size2D<int> _optimalGridSize = Size2D<int>(100, 100);
 
 	// Gap between shapes and screen
-	double _screenDistance = 0.0;
+	double _screenDistance = 10.0;
 
 #pragma endregion
 

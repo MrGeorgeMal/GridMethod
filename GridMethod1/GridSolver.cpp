@@ -4,7 +4,9 @@
 
 // Compute linear parameters of strip structure
 // matrix - matrix of rasterized strip structure
-const Matrix2D<Types::LinearParameters>& GridSolver::computeLinearParameters(const Matrix2D<Types::CellInfo>& structureMatrix) const
+const Matrix2D<Types::LinearParameters>& GridSolver::computeLinearParameters(
+	const Matrix2D<Types::CellInfo>& structureMatrix,
+	const Point2D<int>& symmetryPoint) const
 {
 	// create copy matrix for change it
 	Matrix2D<Types::CellInfo> matrix(structureMatrix);
@@ -12,6 +14,7 @@ const Matrix2D<Types::LinearParameters>& GridSolver::computeLinearParameters(con
 
 	// defines
 	Vector<Vector<Point2D<int>>> condCells = defineAllConductorsCells(matrix);
+	Vector<Point2D<int>> symmetryConductors = defineSymmetyConductors(condCells, symmetryPoint);
 	Vector<Point2D<int>> initCells = defineInitialCellsForFieldPropagation(matrix, condCells);
 
 	// compute linear capacity
@@ -22,19 +25,34 @@ const Matrix2D<Types::LinearParameters>& GridSolver::computeLinearParameters(con
 
 	for (int i = 0; i < condCells.getLength(); i++)
 	{
-		for (int i = 0; i < conductorsConfig.getLength(); i++)
+		bool computeTisConfig = true;
+
+		for (int j = 0; j < symmetryConductors.getLength(); j++)
 		{
-			conductorsConfig[i] = false;
+			if (symmetryConductors[j].y == i)
+			{
+				linearParam[i][i].C = linearParam[symmetryConductors[j].x][j].C;
+				computeTisConfig = false;
+				break;
+			}
 		}
 
-		conductorsConfig[i] = true;
+		if (computeTisConfig == true)
+		{
+			for (int j = 0; j < conductorsConfig.getLength(); j++)
+			{
+				conductorsConfig[j] = false;
+			}
 
-		Matrix2D<double>potentialField = setupInitialPotential(matrix, condCells, conductorsConfig);
-		computeFieldPotential(matrix, potentialField, initCells);
-		linearParam[i][i].C = computeCapacity(matrix, potentialField);
+			conductorsConfig[i] = true;
 
-		drawField(potentialField);
-		std::cout << "\n\n\n";
+			Matrix2D<double>potentialField = setupInitialPotential(matrix, condCells, conductorsConfig);
+			computeFieldPotential(matrix, potentialField, initCells);
+			linearParam[i][i].C = computeCapacity(matrix, potentialField);
+
+			drawField(potentialField);
+			std::cout << "\n\n\n";
+		}
 	}
 
 	// compute other elements in linear capacity matrix for dielectric fill 
@@ -48,17 +66,33 @@ const Matrix2D<Types::LinearParameters>& GridSolver::computeLinearParameters(con
 
 		for (int j = i + 1; j < conductorsConfig.getLength(); j++)
 		{
-			conductorsConfig[j] = true;
+			bool computeTisConfig = true;
 
-			Matrix2D<double>potentialField = setupInitialPotential(matrix, condCells, conductorsConfig);
-			computeFieldPotential(matrix, potentialField, initCells);
-			linearParam[i][j].C = (computeCapacity(matrix, potentialField) - linearParam[i][i].C - linearParam[j][j].C) / 2.0;
-			linearParam[j][i].C = linearParam[i][j].C;
+			for (int k = 0; k < symmetryConductors.getLength(); k++)
+			{
+				if (symmetryConductors[k].y == i)
+				{
+					linearParam[i][j].C = linearParam[symmetryConductors[k].x][j].C;
+					linearParam[j][i].C = linearParam[i][j].C;
+					computeTisConfig = false;
+					break;
+				}
+			}
 
-			conductorsConfig[j] = false;
+			if (computeTisConfig == true)
+			{
+				conductorsConfig[j] = true;
 
-			drawField(potentialField);
-			std::cout << "\n\n\n";
+				Matrix2D<double>potentialField = setupInitialPotential(matrix, condCells, conductorsConfig);
+				computeFieldPotential(matrix, potentialField, initCells);
+				linearParam[i][j].C = (computeCapacity(matrix, potentialField) - linearParam[i][i].C - linearParam[j][j].C) / 2.0;
+				linearParam[j][i].C = linearParam[i][j].C;
+
+				conductorsConfig[j] = false;
+
+				drawField(potentialField);
+				std::cout << "\n\n\n";
+			}
 		}
 	}
 
@@ -74,19 +108,34 @@ const Matrix2D<Types::LinearParameters>& GridSolver::computeLinearParameters(con
 	// compute diagonal elements in linear capacity matrix for air fill (full capacity for each signal conductor)
 	for (int i = 0; i < condCells.getLength(); i++)
 	{
-		for (int i = 0; i < conductorsConfig.getLength(); i++)
+		bool computeTisConfig = true;
+
+		for (int j = 0; j < symmetryConductors.getLength(); j++)
 		{
-			conductorsConfig[i] = false;
+			if (symmetryConductors[j].y == i)
+			{
+				linearParam[i][i].CAir = linearParam[symmetryConductors[j].x][j].CAir;
+				computeTisConfig = false;
+				break;
+			}
 		}
 
-		conductorsConfig[i] = true;
+		if (computeTisConfig == true)
+		{
+			for (int j = 0; j < conductorsConfig.getLength(); j++)
+			{
+				conductorsConfig[j] = false;
+			}
 
-		Matrix2D<double>potentialField = setupInitialPotential(matrix, condCells, conductorsConfig);
-		computeFieldPotential(matrix, potentialField, initCells);
-		linearParam[i][i].CAir = computeCapacity(matrix, potentialField);
+			conductorsConfig[i] = true;
 
-		drawField(potentialField);
-		std::cout << "\n\n\n";
+			Matrix2D<double>potentialField = setupInitialPotential(matrix, condCells, conductorsConfig);
+			computeFieldPotential(matrix, potentialField, initCells);
+			linearParam[i][i].CAir = computeCapacity(matrix, potentialField);
+
+			drawField(potentialField);
+			std::cout << "\n\n\n";
+		}
 	}
 
 	// compute other elements in linear capacity matrix for air fill 
@@ -100,22 +149,38 @@ const Matrix2D<Types::LinearParameters>& GridSolver::computeLinearParameters(con
 
 		for (int j = i + 1; j < conductorsConfig.getLength(); j++)
 		{
-			conductorsConfig[j] = true;
+			bool computeTisConfig = true;
 
-			Matrix2D<double>potentialField = setupInitialPotential(matrix, condCells, conductorsConfig);
-			computeFieldPotential(matrix, potentialField, initCells);
-			linearParam[i][j].CAir = (computeCapacity(matrix, potentialField) - linearParam[i][i].CAir - linearParam[j][j].CAir) / 2.0;
-			linearParam[j][i].CAir = linearParam[i][j].CAir;
+			for (int k = 0; k < symmetryConductors.getLength(); k++)
+			{
+				if (symmetryConductors[k].y == i)
+				{
+					linearParam[i][j].CAir = linearParam[symmetryConductors[k].x][j].CAir;
+					linearParam[j][i].CAir = linearParam[i][j].CAir;
+					computeTisConfig = false;
+					break;
+				}
+			}
 
-			conductorsConfig[j] = false;
+			if (computeTisConfig == true)
+			{
+				conductorsConfig[j] = true;
 
-			drawField(potentialField);
-			std::cout << "\n\n\n";
+				Matrix2D<double>potentialField = setupInitialPotential(matrix, condCells, conductorsConfig);
+				computeFieldPotential(matrix, potentialField, initCells);
+				linearParam[i][j].CAir = (computeCapacity(matrix, potentialField) - linearParam[i][i].CAir - linearParam[j][j].CAir) / 2.0;
+				linearParam[j][i].CAir = linearParam[i][j].CAir;
+
+				conductorsConfig[j] = false;
+
+				drawField(potentialField);
+				std::cout << "\n\n\n";
+			}
 		}
 	}
 
 	std::cout << "Conductors count: " << condCells.getLength() << "\n";
-	std::cout << "Conductors psotions: " << "\n";
+	std::cout << "Conductors positions: " << "\n";
 	for (int i = 0; i < condCells.getLength(); i++)
 	{
 		std::cout << i + 1 <<") ";
@@ -125,6 +190,7 @@ const Matrix2D<Types::LinearParameters>& GridSolver::computeLinearParameters(con
 		}
 		std::cout << "\n";
 	}
+	std::cout << "Symmetrical conductors: " << symmetryConductors << "\n";
 
 	std::cout << "\nInitial cells for field propagation: " << "\n";
 	for (int i = 0; i < initCells.getLength(); i++)
@@ -280,6 +346,55 @@ Vector<Vector<Point2D<int>>> GridSolver::defineAllConductorsCells(Matrix2D<Types
 	}
 
 	return allCondsCells;
+}
+
+
+
+// Define pair of symmetrycal conductors
+// return point: first and numbers - numbers of symmetrical conductors
+// return empty Vector if there is no symmetry
+Vector<Point2D<int>> GridSolver::defineSymmetyConductors(
+	const Vector<Vector<Point2D<int>>>& conductorsCells,
+	const Point2D<int>& symmetryPoint) const
+{
+	Vector<Point2D<int>> symmetryConductrors;
+
+	for (int i = 0; i < conductorsCells.getLength() - 1; i++)
+	{
+		for (int j = i + 1; j < conductorsCells.getLength(); j++)
+		{
+			bool isSymmetry = true;
+
+			if (conductorsCells[i].getLength() == conductorsCells[j].getLength())
+			{
+				for (int k = 0; k < conductorsCells[i].getLength(); k++)
+				{
+					int leftPoint = conductorsCells[i].getLength() - 1 - k;
+					int rightPoint = k;
+					Point2D<int> firstCondPoint = conductorsCells[i][leftPoint];
+					Point2D<int> secondCondPoint = conductorsCells[j][rightPoint];
+					firstCondPoint.x = abs(symmetryPoint.x - firstCondPoint.x);
+					secondCondPoint.x = abs(symmetryPoint.y - secondCondPoint.x);
+					if (firstCondPoint != secondCondPoint)
+					{
+						isSymmetry = false;
+						break;
+					}
+				}
+			}
+			else
+			{
+				isSymmetry = false;
+			}
+
+			if (isSymmetry == true)
+			{
+				symmetryConductrors.add(Point2D<int>(i, j));
+			}
+		}
+	}
+
+	return symmetryConductrors;
 }
 
 

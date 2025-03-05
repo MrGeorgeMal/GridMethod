@@ -15,7 +15,7 @@ int main()
 		Line2D* line5 = new Line2D();
 		Rectangle2D* rect1 = new Rectangle2D();
 
-		double width = 10.0;
+		double width = 9.0;
 
 		rect1->setPoint(Point2D<double>(0.0, 0.0));
 		rect1->setSize(Size2D<double>(width, 1.5));
