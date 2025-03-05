@@ -12,5 +12,6 @@
 #include "Shape2D.h"
 #include "StripStructure.h"
 #include "Rasterizer.h"
+#include "StructureCreator.h"
 
 #endif // !MAIN_H

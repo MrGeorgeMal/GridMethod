@@ -3,7 +3,9 @@
 int main()
 {
 	try
-	{		
+	{
+		StructureCreator::createStripStructureFromJson("C:/Users/mrmag/Desktop/strip_structure_1.json");
+
 		Dielectric* diel1 = new Dielectric(9.8);
 		Dielectric* diel2 = new Dielectric(6.5);
 		Conductor* signalCond = new Conductor(true);

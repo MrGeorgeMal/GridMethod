@@ -94,7 +94,7 @@ private:
 	// Draw potential field
 	void drawField(const Matrix2D<double>& potentialField) const;
 
-#pragma endregion‚Û
+#pragma endregion
 
 
 #pragma region Private Members

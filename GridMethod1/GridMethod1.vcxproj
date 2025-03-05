@@ -138,6 +138,7 @@
     <ClInclude Include="Shape2D.h" />
     <ClInclude Include="Size2D.h" />
     <ClInclude Include="StripStructure.h" />
+    <ClInclude Include="StructureCreator.h" />
     <ClInclude Include="Tool.h" />
     <ClInclude Include="Types.h" />
     <ClInclude Include="Vector.h" />

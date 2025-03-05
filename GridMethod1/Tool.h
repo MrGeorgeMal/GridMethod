@@ -74,7 +74,6 @@ public:
 		return std::round(a * roundOrder) / round;
 	}
 
-
 private:
 
 	// Number of significant digits in rounding
