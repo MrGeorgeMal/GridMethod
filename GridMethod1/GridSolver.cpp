@@ -18,13 +18,19 @@ const Matrix2D<Types::LinearParameters>& GridSolver::computeLinearParameters(Mat
 
 	for (int i = 0; i < condCells.getLength(); i++)
 	{
+		for (int i = 0; i < conductorsConfig.getLength(); i++)
+		{
+			conductorsConfig[i] = false;
+		}
+
 		conductorsConfig[i] = true;
 
 		Matrix2D<double>potentialField = setupInitialPotential(matrix, condCells, conductorsConfig);
 		computeFieldPotential(matrix, potentialField, initCells);
 		linearParam[i][i].C = computeCapacity(matrix, potentialField);
 
-		conductorsConfig[i] = false;
+		drawField(potentialField);
+		std::cout << "\n\n\n";
 	}
 
 	// compute other elements in linear capacity matrix
@@ -42,9 +48,13 @@ const Matrix2D<Types::LinearParameters>& GridSolver::computeLinearParameters(Mat
 
 			Matrix2D<double>potentialField = setupInitialPotential(matrix, condCells, conductorsConfig);
 			computeFieldPotential(matrix, potentialField, initCells);
-			linearParam[i][j].C = computeCapacity(matrix, potentialField);
+			linearParam[i][j].C = (computeCapacity(matrix, potentialField) - linearParam[i][i].C - linearParam[j][j].C) / 2.0;
+			linearParam[j][i].C = linearParam[i][j].C;
 
 			conductorsConfig[j] = false;
+
+			drawField(potentialField);
+			std::cout << "\n\n\n";
 		}
 	}
 
@@ -672,13 +682,155 @@ void GridSolver::computeFieldPotential(
 
 		currentAccuracy = minTempAccuracy;
 		iteration++;
-		std::cout << iteration << ": " << currentAccuracy << "\n";
 	}
 }
+
 
 
 // Compute capacity for potentialField
 double GridSolver::computeCapacity(const Matrix2D<Types::CellInfo>& matrix, const Matrix2D<double>& potentialField) const
 {
-	return 0.0;
+	int rows = matrix.getRows() - 1;
+	int cols = matrix.getCols() - 1;
+
+	double energy = 0.0;
+
+	for (int y = 1; y < rows; y++)
+	{
+		for (int x = 1; x < cols; x++)
+		{
+			if (matrix[y][x].isConductor == false)
+			{
+				double first = potentialField[y][x] - potentialField[y + 1][x + 1];
+				double second = potentialField[y][x + 1] - potentialField[y + 1][x];
+				first = first * first;
+				second = second * second;
+
+				energy += (matrix[y][x].dielectricValue / 4) * (first + second);
+			}
+		}
+	}
+
+	double capacity = 2 * Types::e0 * energy;
+
+	return capacity;
+}
+
+
+
+// Draw potential field
+void GridSolver::drawField(const Matrix2D<double>& potentialField) const
+{
+	Vector <char> gradSymbols;
+	gradSymbols.add((char)39);
+	gradSymbols.add((char)96);
+	gradSymbols.add((char)44);
+	gradSymbols.add((char)46);
+	gradSymbols.add((char)45);
+	gradSymbols.add((char)43);
+	gradSymbols.add((char)42);
+	gradSymbols.add((char)101);
+	gradSymbols.add((char)99);
+	gradSymbols.add((char)97);
+	gradSymbols.add((char)111);
+	gradSymbols.add((char)56);
+	gradSymbols.add((char)69);
+	gradSymbols.add((char)83);
+	gradSymbols.add((char)71);
+	gradSymbols.add((char)81);
+	gradSymbols.add((char)82);
+	gradSymbols.add((char)66);
+	gradSymbols.add((char)38);
+	gradSymbols.add((char)37);
+	gradSymbols.add((char)77);
+	gradSymbols.add((char)87);
+	gradSymbols.add((char)35);
+	gradSymbols.add((char)64);
+
+	Vector<double> gradValue(gradSymbols.getLength());
+	for (int i = 0; i < gradValue.getLength() - 1; i++)
+	{
+		gradValue[i] = (Types::initHightPotential - Types::initLowPotential) / (gradValue.getLength() - 2) * i + Types::initLowPotential;
+	}
+
+	int cols = 0;
+	for (int i = 0; i < gradValue.getLength() - 1; i++)
+	{
+		std::cout.precision(3);
+		if ((double)gradValue[i] == 0.0)
+		{
+			std::cout << gradSymbols[i] << " -> " << (double)gradValue[i] << "\t\t|\t";
+		}
+		else if ((double)gradValue[i] == 1.0)
+		{
+			std::cout << char(219) << " -> " << (double)gradValue[i] << "\t\t|\t";
+		}
+		else
+		{
+			std::cout << gradSymbols[i] << " -> " << (double)gradValue[i] << "\t|\t";
+		}
+
+		cols++;
+		if (cols >= 4)
+		{
+			std::cout << "\n";
+			cols = 0;
+		}
+	}
+
+	std::cout << "\n\t";
+	int xi = 0;
+	for (int x = 0; x < potentialField.getCols(); x++)
+	{
+		if (xi > 0)
+		{
+			std::cout << xi;
+		}
+		else
+		{
+			std::cout << " ";
+		}
+
+		xi++;
+		if (xi >= 10)
+		{
+			xi = 0;
+		}
+	}
+
+	std::cout << "\n\n";
+	for (int y = potentialField.getRows() - 1; y >= 0; y--)
+	{
+		std::cout << y << "\t";
+
+		for (int x = 0; x < potentialField.getCols(); x++)
+		{
+			double value = potentialField[y][x];
+
+			if (value < gradValue[0])
+			{
+				char symbol = gradSymbols[gradValue.getLength() - 1];
+				std::cout << symbol;
+			}
+			else if (value == 1.0)
+			{
+				char symbol = char(219);
+				std::cout << symbol;
+			}
+			else
+			{
+				for (int i = 0; i < gradValue.getLength() - 1; i++)
+				{
+					double lvalue = gradValue[i];
+					double rvalue = gradValue[i + 1];
+					if (value >= lvalue && value < rvalue)
+					{
+						char symbol = gradSymbols[i];
+						std::cout << gradSymbols[i];
+					}
+				}
+			}
+		}
+		std::cout << "\n";
+	}
 }

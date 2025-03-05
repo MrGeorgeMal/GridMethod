@@ -90,10 +90,10 @@ private:
 	bool _isRegularGrid = true;
 
 	// Optimal grid size
-	Size2D<int> _optimalGridSize = Size2D<int>(500, 500);
+	Size2D<int> _optimalGridSize = Size2D<int>(300, 300);
 
 	// Gap between shapes and screen
-	double _screenDistance = 10.0;
+	double _screenDistance = 5.0;
 
 #pragma endregion
 

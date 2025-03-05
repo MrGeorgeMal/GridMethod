@@ -36,7 +36,7 @@ int main()
 
 		line1->setMaterial(signalCond);
 		line2->setMaterial(signalCond);
-		line3->setMaterial(signalCond);
+		line3->setMaterial(screenCond);
 		line4->setMaterial(signalCond);
 		line5->setMaterial(signalCond);
 		rect1->setMaterial(diel);
@@ -45,8 +45,8 @@ int main()
 		strip.addShape(rect1);
 		strip.addShape(line1);
 		strip.addShape(line2);
-		//strip.addShape(line3);
-		//strip.addShape(line4);
+		strip.addShape(line3);
+		strip.addShape(line4);
 		//strip.addShape(line5);
 
 		strip.computeElectroStaticAnalysis();

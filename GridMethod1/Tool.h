@@ -69,9 +69,9 @@ public:
 
 
 	//Round double number
-	static double roundToDouble(double a)
+	static double roundToDouble(double a, int round = roundOrder)
 	{
-		return std::round(a * roundOrder) / roundOrder;
+		return std::round(a * roundOrder) / round;
 	}
 
 

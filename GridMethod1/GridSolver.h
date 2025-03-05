@@ -82,6 +82,9 @@ private:
 		const Matrix2D<Types::CellInfo>& matrix,
 		const Matrix2D<double>& potentialField) const;
 
+	// Draw potential field
+	void drawField(const Matrix2D<double>& potentialField) const;
+
 #pragma endregion‚Û
 
 
@@ -90,13 +93,12 @@ private:
 private:
 
 	// relaxationCoeff used for the relaxation method to calculate the potential in the cell
-	// 1 - disable relaxation
-	// 1.5 - optimal value
+	// must be 1.0 < value < 2.0
 	double relaxationCoeff = 1.8;
 
 	// Cumpute accuracy
 	// must be 0.0 < value < 1.0
-	double accuracy = 0.8;
+	double accuracy = 0.99;
 
 #pragma endregion
 
