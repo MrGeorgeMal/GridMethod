@@ -4,16 +4,14 @@
 
 // Compute linear parameters of strip structure
 // matrix - matrix of rasterized strip structure
-const Matrix2D<Types::LinearParameters>& GridSolver::computeLinearParameters(
-	const Matrix2D<Types::CellInfo>& structureMatrix,
-	const Point2D<int>& symmetryPoint) const
+const Matrix2D<Types::LinearParameters>& GridSolver::computeLinearParameters(const Matrix2D<Types::CellInfo>& structureMatrix) const
 {
-	// create copy matrix for change it
+	// create copy matrix for some changes
 	Matrix2D<Types::CellInfo> matrix(structureMatrix);
-
 
 	// defines
 	Vector<Vector<Point2D<int>>> condCells = defineAllConductorsCells(matrix);
+	Point2D<int> symmetryPoint = defineVerticalSymmetryPoint(matrix);
 	Vector<Point2D<int>> symmetryConductors = defineSymmetyConductors(condCells, symmetryPoint);
 	Vector<Point2D<int>> initCells = defineInitialCellsForFieldPropagation(matrix, condCells);
 
@@ -190,6 +188,12 @@ const Matrix2D<Types::LinearParameters>& GridSolver::computeLinearParameters(
 		}
 		std::cout << "\n";
 	}
+
+	if (symmetryPoint != Point2D(0, 0))
+		std::cout << "The strip structure is symmetrical.\nSymmetry point [leftX, rightX]: " << symmetryPoint << "\n\n";
+	else
+		std::cout << "The strip structure is non-symmetrical\n\n";
+
 	std::cout << "Symmetrical conductors: " << symmetryConductors << "\n";
 
 	std::cout << "\nInitial cells for field propagation: " << "\n";
@@ -226,8 +230,7 @@ const Matrix2D<Types::LinearParameters>& GridSolver::computeLinearParameters(
 		std::cout << "\n\n";
 	}
 
-
-	return Matrix2D<Types::LinearParameters>();
+	return linearParam;
 }
 
 
@@ -909,6 +912,71 @@ double GridSolver::computeCapacity(const Matrix2D<Types::CellInfo>& matrix, cons
 	double capacity = 2 * Types::e0 * energy;
 
 	return capacity;
+}
+
+
+
+// Check structure on symmetry
+// return symmetry point: left and right X coordinate - Point(leftX ; rightX)
+// left and right coordinates may be equal
+// return Point(0 ; 0) if structure has no symmetry
+Point2D<int> GridSolver::defineVerticalSymmetryPoint(const Matrix2D<Types::CellInfo>& matrix) const
+{
+	// check vertical symmetry
+	int rows = matrix.getRows();
+	int cols = matrix.getCols();
+	bool isSymmentry = true;
+	int center = cols / 2 - 1;
+
+	for (int x = center - 1; x >= 1; x--)
+	{
+		int offset = center - x;
+		for (int y = 1; y < matrix.getRows(); y++)
+		{
+			if (matrix[y][x] != matrix[y][center + offset])
+			{
+				isSymmentry = false;
+				break;
+			}
+		}
+		if (isSymmentry == false)
+		{
+			break;
+		}
+	}
+
+	if (isSymmentry == true)
+	{
+		return Point2D(center, center);
+	}
+
+	isSymmentry = true;
+	int rightCenter = (double)cols / 2.0;
+	int leftCenter = rightCenter - 1;
+
+	for (int x = leftCenter - 1; x >= 1; x--)
+	{
+		int offset = leftCenter - x;
+		for (int y = 1; y < matrix.getRows(); y++)
+		{
+			if (matrix[y][x] != matrix[y][rightCenter + offset])
+			{
+				isSymmentry = false;
+				break;
+			}
+		}
+		if (isSymmentry == false)
+		{
+			break;
+		}
+	}
+
+	if (isSymmentry == true)
+	{
+		return Point2D(leftCenter, rightCenter);
+	}
+
+	return Point2D(0, 0);
 }
 
 

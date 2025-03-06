@@ -61,6 +61,8 @@ public:
 	// Get material
 	Material* getMaterial() const { return _material; }
 
+	// Print shape info
+	virtual std::ostream& print(std::ostream& os) const = 0;
 
 #pragma endregion
 
@@ -132,22 +134,22 @@ public:
 		return line;
 	}
 
-	friend std::ostream& operator<<(std::ostream& os, const Line2D& shape)
+	std::ostream& print(std::ostream& os) const override
 	{
-		os << "| Line2D (" << &shape << "):\n";
-		if (shape._material->getType() == "Dielectric")
+		os << "| Line2D (" << this << "):\n";
+		if (_material->getType() == "Dielectric")
 		{
-			Dielectric* material = dynamic_cast<Dielectric*>(shape._material);
+			Dielectric* material = dynamic_cast<Dielectric*>(_material);
 			os << "|-- material -> " << *material << "\n";
 		}
-		if (shape._material->getType() == "Conductor")
+		if (_material->getType() == "Conductor")
 		{
-			Conductor* material = dynamic_cast<Conductor*>(shape._material);
+			Conductor* material = dynamic_cast<Conductor*>(_material);
 			os << "|-- material -> " << *material << "\n";
 		}
-		os << "|-- point 1 -> " << shape._p1 << "\n";
-		os << "|-- point 2 -> " << shape._p2 << "\n";
-		os << "|-- origin -> " << shape._origin;
+		os << "|-- point 1 -> " << _p1 << "\n";
+		os << "|-- point 2 -> " << _p2 << "\n";
+		os << "|-- origin -> " << _origin;
 		return os;
 	}
 
@@ -188,7 +190,7 @@ private:
 class Polygon2D : public Shape2D
 {
 
-#pragma region Contructors
+#pragma region Constructors
 
 public:
 
@@ -249,24 +251,24 @@ public:
 		(_points.add(points), ...);
 	}
 
-	friend std::ostream& operator<<(std::ostream& os, const Polygon2D& shape)
+	std::ostream& print(std::ostream& os) const override
 	{
-		os << "| Polygon2D (" << &shape << "):\n";
-		if (shape._material->getType() == "Dielectric")
+		os << "| Polygon2D (" << this << "):\n";
+		if (_material->getType() == "Dielectric")
 		{
-			Dielectric* material = dynamic_cast<Dielectric*>(shape._material);
+			Dielectric* material = dynamic_cast<Dielectric*>(_material);
 			os << "|-- material -> " << *material << "\n";
 		}
-		if (shape._material->getType() == "Conductor")
+		if (_material->getType() == "Conductor")
 		{
-			Conductor* material = dynamic_cast<Conductor*>(shape._material);
+			Conductor* material = dynamic_cast<Conductor*>(_material);
 			os << "|-- material -> " << *material << "\n";
 		}
-		for (int i = 0; i < shape._points.getLength(); i++)
+		for (int i = 0; i < _points.getLength(); i++)
 		{
-			os << "|-- point " << i + 1 << ": " << shape._points[i] << "\n";
+			os << "|-- point " << i + 1 << ": " << _points[i] << "\n";
 		}
-		os << "|-- origin -> " << shape._origin;
+		os << "|-- origin -> " << _origin;
 		return os;
 	}
 
@@ -356,23 +358,23 @@ public:
 		return rectangle;
 	}
 
-	friend std::ostream& operator<<(std::ostream& os, const Rectangle2D& shape)
+	std::ostream& print(std::ostream& os) const override
 	{
-		os << "| Rectangle2D (" << &shape << "):\n";
-		if (shape._material->getType() == "Dielectric")
+		os << "| Rectangle2D (" << this << "):\n";
+		if (_material->getType() == "Dielectric")
 		{
-			Dielectric* material = dynamic_cast<Dielectric*>(shape._material);
+			Dielectric* material = dynamic_cast<Dielectric*>(_material);
 			os << "|-- material -> " << *material << "\n";
 		}
-		if (shape._material->getType() == "Conductor")
+		if (_material->getType() == "Conductor")
 		{
-			Conductor* material = dynamic_cast<Conductor*>(shape._material);
+			Conductor* material = dynamic_cast<Conductor*>(_material);
 			os << "|-- material -> " << *material << "\n";
 		}
-		os << "|-- isScreen -> " << shape._isScreen << "\n";
-		os << "|-- point -> " << shape._points[0] << "\n";
-		os << "|-- size -> " << shape._size << "\n";
-		os << "|-- origin -> " << shape._origin;
+		os << "|-- isScreen -> " << _isScreen << "\n";
+		os << "|-- point -> " << _points[0] << "\n";
+		os << "|-- size -> " << _size << "\n";
+		os << "|-- origin -> " << _origin;
 
 		return os;
 	}
@@ -470,5 +472,11 @@ private:
 #pragma endregion
 
 };
+
+
+
+inline std::ostream& operator<<(std::ostream& os, const Shape2D& shape) {
+	return shape.print(os);
+}
 
 #endif // !SHAPE2D_H

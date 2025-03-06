@@ -15,8 +15,6 @@ void StripStructure::computeElectroStaticAnalysis()
 	_rasterizer->setCell(defineOptimalCellSize());
 	Matrix2D<Types::CellInfo> matrix = _rasterizer->rasterize(offsetShapes);
 
-	Point2D<int> symmetryPoint = defineVerticalSymmetryPoint(matrix);
-
 	std::cout << "------------------------------------------------------------\n\n";
 
 	/*
@@ -73,12 +71,6 @@ void StripStructure::computeElectroStaticAnalysis()
 	std::cout << "Min size: " << defineMinSize() << "\n\n";
 	std::cout << "Cell size: " << defineOptimalCellSize() << "\n\n";
 	std::cout << "Grid size: [" << matrix.getCols() << " ; " << matrix.getRows() << "]\n\n";
-
-	if (symmetryPoint != Point2D(0, 0))
-		std::cout << "The strip structure is symmetrical.\nSymmetry point [leftX, rightX]: " << symmetryPoint << "\n\n";
-	else
-		std::cout << "The strip structure is non-symmetrical\n\n";
-
 	
 	std::cout << "------------------------------------------------------------\n\n";
 
@@ -135,7 +127,7 @@ void StripStructure::computeElectroStaticAnalysis()
 	}
 
 
-	Matrix2D<Types::LinearParameters> linearParamenetrs = _gridSolver->computeLinearParameters(matrix, symmetryPoint);
+	Matrix2D<Types::LinearParameters> linearParamenetrs = _gridSolver->computeLinearParameters(matrix);
 }
 
 
@@ -397,92 +389,4 @@ Size2D<double> StripStructure::defineOptimalCellSize() const
 	}
 
 	return optimalCellSize;
-}
-
-
-
-// Check structure on symmetry
-// return symmetry point: left and right X coordinate - Point(leftX ; rightX)
-// left and right coordinates may be equal
-// return Point(0 ; 0) if structure has no symmetry
-Point2D<int> StripStructure::defineVerticalSymmetryPoint(const Matrix2D<Types::CellInfo>& matrix)
-{
-	// Rasterize structure with zero distance to screen
-	/*
-	double tempScreenDistance = _screenDistance;
-	Size2D<double> tempCell = _rasterizer->getCell();
-
-	_screenDistance = 0.0;
-	Vector<Shape2D*> shapes(_shapes.getLength());
-	for (int i = 0; i < shapes.getLength(); i++)
-	{
-		shapes[i] = _shapes[i]->getCopy();
-	}
-
-	Rectangle2D* screen = defineScreenRectangle();
-	shapes.addToHead(screen);
-
-	_rasterizer->setCell(defineOptimalCellSize(screen->getSize()));
-	Vector<Shape2D*> offsetShapes = getOffsetShapesToCenter(shapes);
-	Matrix2D<Types::CellInfo> matrix = _rasterizer->rasterize(offsetShapes);
-
-	_screenDistance = tempScreenDistance;
-	_rasterizer->setCell(tempCell);
-	*/
-
-	// check vertical symmetry
-	int rows = matrix.getRows();
-	int cols = matrix.getCols();
-	bool isSymmentry = true;
-	int center = cols / 2 - 1;
-
-	for (int x = center - 1; x >= 1; x--)
-	{
-		int offset = center - x;
-		for (int y = 1; y < matrix.getRows(); y++)
-		{
-			if (matrix[y][x] != matrix[y][center + offset])
-			{
-				isSymmentry = false;
-				break;
-			}
-		}
-		if (isSymmentry == false)
-		{
-			break;
-		}
-	}
-
-	if (isSymmentry == true)
-	{
-		return Point2D(center, center);
-	}
-
-	isSymmentry = true;
-	int rightCenter = (double)cols / 2.0;
-	int leftCenter = rightCenter - 1;
-
-	for (int x = leftCenter - 1; x >= 1; x--)
-	{
-		int offset = leftCenter - x;
-		for (int y = 1; y < matrix.getRows(); y++)
-		{
-			if (matrix[y][x] != matrix[y][rightCenter + offset])
-			{
-				isSymmentry = false;
-				break;
-			}
-		}
-		if (isSymmentry == false)
-		{
-			break;
-		}
-	}
-
-	if (isSymmentry == true)
-	{
-		return Point2D(leftCenter, rightCenter);
-	}
-
-	return Point2D(0, 0);
 }

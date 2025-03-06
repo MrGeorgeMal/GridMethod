@@ -3,6 +3,7 @@
 #define MAIN_H
 
 #include <iostream>
+#include <string>
 
 #include "Point2D.h"
 #include "Size2D.h"

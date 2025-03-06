@@ -29,9 +29,7 @@ public:
 
 	// Compute linear parameters of strip structure
 	// matrix - matrix of rasterized strip structure
-	const Matrix2D<Types::LinearParameters>& computeLinearParameters(
-		const Matrix2D<Types::CellInfo>& matrix,
-		const Point2D<int>& symmetryPoint) const;
+	const Matrix2D<Types::LinearParameters>& computeLinearParameters(const Matrix2D<Types::CellInfo>& matrix) const;
 
 #pragma endregion
 
@@ -93,6 +91,12 @@ private:
 
 	// Draw potential field
 	void drawField(const Matrix2D<double>& potentialField) const;
+
+	// Check structure on symmetry
+	// return symmetry point: left and right X coordinate - Point(leftX ; rightX)
+	// left and right coordinates may be equal
+	// return Point(0 ; 0) if structure has no symmetry
+	Point2D<int> defineVerticalSymmetryPoint(const Matrix2D<Types::CellInfo>& matrix) const;
 
 #pragma endregion
 

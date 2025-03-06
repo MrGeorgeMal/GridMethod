@@ -67,11 +67,15 @@ private:
 	// Get offset shapes to center [0 ; 0]
 	Vector<Shape2D*> getOffsetShapesToCenter() const;
 
-	// Check structure on symmetry
-	// return symmetry point: left and right X coordinate - Point(leftX ; rightX)
-	// left and right coordinates may be equal
-	// return Point(0 ; 0) if structure has no symmetry
-	Point2D<int> defineVerticalSymmetryPoint(const Matrix2D<Types::CellInfo>& matrix);
+#pragma endregion
+
+
+#pragma region Getter Setter
+
+public:
+
+	// Get shapes
+	const Vector<Shape2D*> getShapes() const { return _shapes; }
 
 #pragma endregion
 

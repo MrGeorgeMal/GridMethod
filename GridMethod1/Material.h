@@ -3,6 +3,7 @@
 #define MATERIAL_H
 
 #include <iostream>
+#include <string>
 
 // Class material
 class Material
@@ -19,7 +20,7 @@ public:
 	};
 
 	// Base constructor
-	Material() : _materialType(EType::NONE) {}
+	Material() : _materialType(EType::NONE), _name("material") {}
 
 	// Constructor
 	// materialType - type of material (Material::EType)
@@ -30,10 +31,21 @@ public:
 	// Get object type
 	virtual const char* getType() const = 0;
 
+	// Set material name
+	void setName(std::string name) { _name = name; }
+
+	// Get material name
+	std::string getName() const { return _name; }
+
+	// Print material info
+	virtual std::ostream& print(std::ostream& os) const = 0;
+
 protected:
 
 	// Type of material
 	EType _materialType;
+
+	std::string _name;
 };
 
 
@@ -52,12 +64,13 @@ public:
 	double getDielectricValue() { return _dielectricValue; }
 
 	const char* getType() const override { return "Dielectric"; }
-
-	friend std::ostream& operator<<(std::ostream& os, Dielectric& material)
+	
+	std::ostream& print(std::ostream& os) const override
 	{
 		os << "[";
-		os << "Dielectric";
-		os << " ; " << material.getDielectricValue() << "]";
+		os << "Dielectric ; ";
+		os << _name << " ; ";
+		os << _dielectricValue << "]";
 		return os;
 	}
 
@@ -83,12 +96,13 @@ public:
 
 	const char* getType() const override { return "Conductor"; }
 
-	friend std::ostream& operator<<(std::ostream& os, Conductor& material)
+	std::ostream& print(std::ostream& os) const override
 	{
 		os << "[";
-		os << "Conductor";
-		const char* str = (material.isSignal() == true) ? "signal mode" : "free mode";
-		os << " ; " << str;
+		os << "Conductor ; ";
+		os << _name << " ; ";
+		const char* str = (_isSignal == true) ? "signal mode" : "ground mode";
+		os << str;
 		os << "]";
 		return os;
 	}
@@ -97,5 +111,10 @@ private:
 	bool _isSignal;
 };
 
+
+
+inline std::ostream& operator<<(std::ostream& os, const Material& material) {
+	return material.print(os);
+}
 
 #endif // !MATERIAL_H
