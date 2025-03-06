@@ -15,117 +15,18 @@ void StripStructure::computeElectroStaticAnalysis()
 	_rasterizer->setCell(defineOptimalCellSize());
 	Matrix2D<Types::CellInfo> matrix = _rasterizer->rasterize(offsetShapes);
 
-	std::cout << "------------------------------------------------------------\n\n";
+	std::cout << "**********************************************************************************************************************************************************************\n";
+	std::cout << "* > Strip structure info\n";
+	std::cout << "**********************************************************************************************************************************************************************\n\n";
 
-	/*
-	// print shapes
-	for (int i = 0; i < _shapes.getLength(); i++)
-	{
-		if (_shapes[i]->getType() == "Line2D")
-		{
-			Line2D* line = dynamic_cast<Line2D*>(_shapes[i]);
-			std::cout << *line << "\n\n";
-		}
-
-		if (_shapes[i]->getType() == "Polygon2D")
-		{
-			Polygon2D* polygon = dynamic_cast<Polygon2D*>(_shapes[i]);
-			std::cout << *polygon << "\n\n";
-		}
-
-		if (_shapes[i]->getType() == "Rectangle2D")
-		{
-			Rectangle2D* rectangle = dynamic_cast<Rectangle2D*>(_shapes[i]);
-			std::cout << *rectangle << "\n\n";
-		}
-	}
-
-	std::cout << "------------------------------------------------------------\n\n";
-
-	// print offset shapes
-	for (int i = 0; i < offsetShapes.getLength(); i++)
-	{
-		if (offsetShapes[i]->getType() == "Line2D")
-		{
-			Line2D* line = dynamic_cast<Line2D*>(offsetShapes[i]);
-			std::cout << *line << "\n\n";
-		}
-
-		if (offsetShapes[i]->getType() == "Polygon2D")
-		{
-			Polygon2D* polygon = dynamic_cast<Polygon2D*>(offsetShapes[i]);
-			std::cout << *polygon << "\n\n";
-		}
-
-		if (offsetShapes[i]->getType() == "Rectangle2D")
-		{
-			Rectangle2D* rectangle = dynamic_cast<Rectangle2D*>(offsetShapes[i]);
-			std::cout << *rectangle << "\n\n";
-		}
-	}
-	
-	std::cout << "------------------------------------------------------------\n\n";
-	*/
-
-	// print min size
-	std::cout << "Min size: " << defineMinSize() << "\n\n";
-	std::cout << "Cell size: " << defineOptimalCellSize() << "\n\n";
-	std::cout << "Grid size: [" << matrix.getCols() << " ; " << matrix.getRows() << "]\n\n";
-	
-	std::cout << "------------------------------------------------------------\n\n";
-
-	// print matrix
-	std::cout << "\t";
-	int xi = 0;
-	for (int x = 0; x < matrix.getCols(); x++)
-	{
-		if (xi > 0)
-		{
-			std::cout << xi;
-		}
-		else
-		{
-			std::cout << " ";
-		}
-
-		xi++;
-		if (xi >= 10)
-		{
-			xi = 0;
-		}
-	}
+	printStructureInfo(matrix);
 	std::cout << "\n\n";
-	for (int y = matrix.getRows() - 1; y >= 0; y--)
-	{
-		std::cout << y << "\t";
-		for (int x = 0; x < matrix.getCols(); x++)
-		{
-			if (matrix[y][x].isConductor == false)
-			{
-				if (matrix[y][x].dielectricValue == 1.0)
-				{
-					std::cout << ".";
-				}
-				else
-				{
-					std::cout << "#";
-				}
-			}
-			else
-			{
-				if (matrix[y][x].isSignalConductor)
-				{
-					std::cout << "P";
-				}
-				else
-				{
-					std::cout << "O";
-				}
-			}
-		}
-		std::cout << "\n";
-	}
+	
+	std::cout << "**********************************************************************************************************************************************************************\n";
+	std::cout << "* > Discretized strip structure\n";
+	std::cout << "**********************************************************************************************************************************************************************\n\n";
 
+	drawStructure(matrix);
 
 	Matrix2D<Types::LinearParameters> linearParamenetrs = _gridSolver->computeLinearParameters(matrix);
 }
@@ -389,4 +290,111 @@ Size2D<double> StripStructure::defineOptimalCellSize() const
 	}
 
 	return optimalCellSize;
+}
+
+
+
+// Print strip structure info
+void StripStructure::printStructureInfo(const Matrix2D<Types::CellInfo>& matrix) const
+{
+	std::cout << "Min size  [x ; y]:\t" << defineMinSize() << "\n";
+	std::cout << "Cell size [x ; y]:\t" << defineOptimalCellSize() << "\n";
+	std::cout << "Grid size [x ; y]:\t[" << matrix.getCols() << " ; " << matrix.getRows() << "]";
+}
+
+
+
+// Draw strip structure
+void StripStructure::drawStructure(const Matrix2D<Types::CellInfo>& matrix) const
+{
+	char air = '.';
+	char dielectric = '#';
+	char signalConductor = char(219);
+	char groundConductor = char(177);
+
+	std::cout << "\t";
+	for (int x = 0; x < matrix.getCols(); x++)
+	{
+		if (x * 10 > matrix.getCols())
+		{
+			break;
+		}
+
+		std::cout << ">" << x * 10;
+
+		int number = (x * 10);
+		int numberLength = 1;
+
+		while (number /= 10)
+		{
+			numberLength++;
+		}
+
+		for (int i = 0; i < 9; i++)
+		{
+			if (i < 9 - numberLength)
+			{
+				std::cout << " ";
+			}
+			else
+			{
+				break;
+			}
+		}
+	}
+
+	std::cout << "\n\t";
+	int xi = 0;
+	for (int x = 0; x < matrix.getCols(); x++)
+	{
+		if (xi > 0)
+		{
+			std::cout << xi;
+		}
+		else
+		{
+			std::cout << " ";
+		}
+
+		xi++;
+		if (xi >= 10)
+		{
+			xi = 0;
+		}
+	}
+	std::cout << "\n\n";
+
+	for (int y = matrix.getRows() - 1; y >= 0; y--)
+	{
+		std::cout << y << "\t";
+		for (int x = 0; x < matrix.getCols(); x++)
+		{
+			if (matrix[y][x].isConductor == false)
+			{
+				if (matrix[y][x].dielectricValue == 1.0)
+				{
+					std::cout << air;
+				}
+				else
+				{
+					std::cout << dielectric;
+				}
+			}
+			else
+			{
+				if (matrix[y][x].isSignalConductor)
+				{
+					std::cout << signalConductor;
+				}
+				else
+				{
+					std::cout << groundConductor;
+				}
+			}
+		}
+		if (y > 0)
+		{
+			std::cout << "\n";
+		}
+	}
 }

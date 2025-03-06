@@ -4,8 +4,10 @@
 
 // Compute linear parameters of strip structure
 // matrix - matrix of rasterized strip structure
-const Matrix2D<Types::LinearParameters>& GridSolver::computeLinearParameters(const Matrix2D<Types::CellInfo>& structureMatrix) const
+Matrix2D<Types::LinearParameters> GridSolver::computeLinearParameters(const Matrix2D<Types::CellInfo>& structureMatrix) const
 {
+	auto start = std::chrono::steady_clock::now();
+
 	// create copy matrix for some changes
 	Matrix2D<Types::CellInfo> matrix(structureMatrix);
 
@@ -15,220 +17,48 @@ const Matrix2D<Types::LinearParameters>& GridSolver::computeLinearParameters(con
 	Vector<Point2D<int>> symmetryConductors = defineSymmetyConductors(condCells, symmetryPoint);
 	Vector<Point2D<int>> initCells = defineInitialCellsForFieldPropagation(matrix, condCells);
 
-	// compute linear capacity
+	// compute linear capacity matrix for dielectric and air fill
 	Matrix2D<Types::LinearParameters> linearParam(condCells.getLength(), condCells.getLength());
 
-	// compute diagonal elements in linear capacity matrix for dielectric fill (full capacity for each signal conductor)
-	Vector<bool> conductorsConfig(condCells.getLength());
+	computeLinearCapacityMatrix(
+		matrix,
+		condCells,
+		initCells,
+		symmetryConductors,
+		linearParam,
+		false);
 
-	for (int i = 0; i < condCells.getLength(); i++)
-	{
-		bool computeTisConfig = true;
+	computeLinearCapacityMatrix(
+		matrix,
+		condCells,
+		initCells,
+		symmetryConductors,
+		linearParam,
+		true);
 
-		for (int j = 0; j < symmetryConductors.getLength(); j++)
-		{
-			if (symmetryConductors[j].y == i)
-			{
-				linearParam[i][i].C = linearParam[symmetryConductors[j].x][j].C;
-				computeTisConfig = false;
-				break;
-			}
-		}
-
-		if (computeTisConfig == true)
-		{
-			for (int j = 0; j < conductorsConfig.getLength(); j++)
-			{
-				conductorsConfig[j] = false;
-			}
-
-			conductorsConfig[i] = true;
-
-			Matrix2D<double>potentialField = setupInitialPotential(matrix, condCells, conductorsConfig);
-			computeFieldPotential(matrix, potentialField, initCells);
-			linearParam[i][i].C = computeCapacity(matrix, potentialField);
-
-			drawField(potentialField);
-			std::cout << "\n\n\n";
-		}
-	}
-
-	// compute other elements in linear capacity matrix for dielectric fill 
-	for (int i = 0; i < condCells.getLength(); i++)
-	{
-		for (int j = 0; j < conductorsConfig.getLength(); j++)
-		{
-			conductorsConfig[j] = false;
-		}
-		conductorsConfig[i] = true;
-
-		for (int j = i + 1; j < conductorsConfig.getLength(); j++)
-		{
-			bool computeTisConfig = true;
-
-			for (int k = 0; k < symmetryConductors.getLength(); k++)
-			{
-				if (symmetryConductors[k].y == i)
-				{
-					linearParam[i][j].C = linearParam[symmetryConductors[k].x][j].C;
-					linearParam[j][i].C = linearParam[i][j].C;
-					computeTisConfig = false;
-					break;
-				}
-			}
-
-			if (computeTisConfig == true)
-			{
-				conductorsConfig[j] = true;
-
-				Matrix2D<double>potentialField = setupInitialPotential(matrix, condCells, conductorsConfig);
-				computeFieldPotential(matrix, potentialField, initCells);
-				linearParam[i][j].C = (computeCapacity(matrix, potentialField) - linearParam[i][i].C - linearParam[j][j].C) / 2.0;
-				linearParam[j][i].C = linearParam[i][j].C;
-
-				conductorsConfig[j] = false;
-
-				drawField(potentialField);
-				std::cout << "\n\n\n";
-			}
-		}
-	}
-
-	// set air fill
-	for (int y = 0; y < matrix.getRows(); y++)
-	{
-		for (int x = 0; x < matrix.getCols(); x++)
-		{
-			matrix[y][x].dielectricValue = 1.0;
-		}
-	}
-
-	// compute diagonal elements in linear capacity matrix for air fill (full capacity for each signal conductor)
-	for (int i = 0; i < condCells.getLength(); i++)
-	{
-		bool computeTisConfig = true;
-
-		for (int j = 0; j < symmetryConductors.getLength(); j++)
-		{
-			if (symmetryConductors[j].y == i)
-			{
-				linearParam[i][i].CAir = linearParam[symmetryConductors[j].x][j].CAir;
-				computeTisConfig = false;
-				break;
-			}
-		}
-
-		if (computeTisConfig == true)
-		{
-			for (int j = 0; j < conductorsConfig.getLength(); j++)
-			{
-				conductorsConfig[j] = false;
-			}
-
-			conductorsConfig[i] = true;
-
-			Matrix2D<double>potentialField = setupInitialPotential(matrix, condCells, conductorsConfig);
-			computeFieldPotential(matrix, potentialField, initCells);
-			linearParam[i][i].CAir = computeCapacity(matrix, potentialField);
-
-			drawField(potentialField);
-			std::cout << "\n\n\n";
-		}
-	}
-
-	// compute other elements in linear capacity matrix for air fill 
-	for (int i = 0; i < condCells.getLength(); i++)
-	{
-		for (int j = 0; j < conductorsConfig.getLength(); j++)
-		{
-			conductorsConfig[j] = false;
-		}
-		conductorsConfig[i] = true;
-
-		for (int j = i + 1; j < conductorsConfig.getLength(); j++)
-		{
-			bool computeTisConfig = true;
-
-			for (int k = 0; k < symmetryConductors.getLength(); k++)
-			{
-				if (symmetryConductors[k].y == i)
-				{
-					linearParam[i][j].CAir = linearParam[symmetryConductors[k].x][j].CAir;
-					linearParam[j][i].CAir = linearParam[i][j].CAir;
-					computeTisConfig = false;
-					break;
-				}
-			}
-
-			if (computeTisConfig == true)
-			{
-				conductorsConfig[j] = true;
-
-				Matrix2D<double>potentialField = setupInitialPotential(matrix, condCells, conductorsConfig);
-				computeFieldPotential(matrix, potentialField, initCells);
-				linearParam[i][j].CAir = (computeCapacity(matrix, potentialField) - linearParam[i][i].CAir - linearParam[j][j].CAir) / 2.0;
-				linearParam[j][i].CAir = linearParam[i][j].CAir;
-
-				conductorsConfig[j] = false;
-
-				drawField(potentialField);
-				std::cout << "\n\n\n";
-			}
-		}
-	}
-
-	std::cout << "Conductors count: " << condCells.getLength() << "\n";
-	std::cout << "Conductors positions: " << "\n";
-	for (int i = 0; i < condCells.getLength(); i++)
-	{
-		std::cout << i + 1 <<") ";
-		for (int j = 0; j < condCells[i].getLength(); j++)
-		{
-			std::cout << condCells[i][j];
-		}
-		std::cout << "\n";
-	}
-
-	if (symmetryPoint != Point2D(0, 0))
-		std::cout << "The strip structure is symmetrical.\nSymmetry point [leftX, rightX]: " << symmetryPoint << "\n\n";
-	else
-		std::cout << "The strip structure is non-symmetrical\n\n";
-
-	std::cout << "Symmetrical conductors: " << symmetryConductors << "\n";
-
-	std::cout << "\nInitial cells for field propagation: " << "\n";
-	for (int i = 0; i < initCells.getLength(); i++)
-	{
-		std::cout << "For " << i + 1 << " conductor: " << initCells[i] << "\n";
-	}
-
-	std::cout << "\nLinear capacity matrix: " << "\n";
+	/*
 	for (int i = 0; i < linearParam.getRows(); i++)
 	{
 		for (int j = 0; j < linearParam.getCols(); j++)
 		{
-			if (i == j)
-			{
-				std::cout << " ";
-			}
-			std::cout << linearParam[i][j].C << "\t";
+			linearParam[i][j].L = 1 / (Types::speedLight * Types::speedLight * linearParam[i][j].CAir);
 		}
-		std::cout << "\n\n";
 	}
+	*/
 
-	std::cout << "\nLinear capacity matrix for air fill: " << "\n";
-	for (int i = 0; i < linearParam.getRows(); i++)
-	{
-		for (int j = 0; j < linearParam.getCols(); j++)
-		{
-			if (i == j)
-			{
-				std::cout << " ";
-			}
-			std::cout << linearParam[i][j].CAir << "\t";
-		}
-		std::cout << "\n\n";
-	}
+	auto end = std::chrono::steady_clock::now();
+	double time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
+	std::cout << "\n\n";
+	std::cout << "**********************************************************************************************************************************************************************\n";
+	std::cout << "* > Strip structure potential field for air fill" << "\n";
+	std::cout << "* > Total calculation time of the grid method: " << time / 1000 << " seconds\n";
+	std::cout << "**********************************************************************************************************************************************************************\n\n";
+
+	printResultInfo(
+		symmetryPoint,
+		symmetryConductors,
+		linearParam);
 
 	return linearParam;
 }
@@ -768,7 +598,7 @@ void GridSolver::computeRectPropagation(
 
 
 // Compute potential field
-void GridSolver::computeFieldPotential(
+int GridSolver::computeFieldPotential(
 	const Matrix2D<Types::CellInfo>& matrix, 
 	Matrix2D<double>& potentialField, 
 	const Vector<Point2D<int>>& initCells) const
@@ -881,6 +711,8 @@ void GridSolver::computeFieldPotential(
 		currentAccuracy = minTempAccuracy;
 		iteration++;
 	}
+
+	return iteration;
 }
 
 
@@ -912,6 +744,175 @@ double GridSolver::computeCapacity(const Matrix2D<Types::CellInfo>& matrix, cons
 	double capacity = 2 * Types::e0 * energy;
 
 	return capacity;
+}
+
+
+
+// Compute linear capacity matrix
+void GridSolver::computeLinearCapacityMatrix(
+	Matrix2D<Types::CellInfo>& matrix,
+	const Vector<Vector<Point2D<int>>>& condCells,
+	const Vector<Point2D<int>>& initCells,
+	const Vector<Point2D<int>>& symmetryConductors,
+	Matrix2D<Types::LinearParameters>& linearParam,
+	bool isAirFill) const
+{
+	if (isAirFill)
+	{
+		// set air fill
+		for (int y = 0; y < matrix.getRows(); y++)
+		{
+			for (int x = 0; x < matrix.getCols(); x++)
+			{
+				matrix[y][x].dielectricValue = 1.0;
+			}
+		}
+	}
+
+	// compute diagonal elements in linear capacity matrix for dielectric fill (full capacity for each signal conductor)
+	Vector<bool> conductorsConfig(condCells.getLength());
+
+	for (int i = 0; i < condCells.getLength(); i++)
+	{
+		bool computeTisConfig = true;
+
+		for (int j = 0; j < symmetryConductors.getLength(); j++)
+		{
+			if (symmetryConductors[j].y == i)
+			{
+				if (isAirFill)
+				{
+					linearParam[i][i].CAir = linearParam[symmetryConductors[j].x][j].CAir;
+				}
+				else
+				{
+					linearParam[i][i].C = linearParam[symmetryConductors[j].x][j].C;
+				}
+				computeTisConfig = false;
+				break;
+			}
+		}
+
+		if (computeTisConfig == true)
+		{
+			for (int j = 0; j < conductorsConfig.getLength(); j++)
+			{
+				conductorsConfig[j] = false;
+			}
+
+			conductorsConfig[i] = true;
+
+			auto start = std::chrono::steady_clock::now();
+			Matrix2D<double>potentialField = setupInitialPotential(matrix, condCells, conductorsConfig);
+			int iterations = computeFieldPotential(matrix, potentialField, initCells);
+			auto end = std::chrono::steady_clock::now();
+			double time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
+			if (isAirFill)
+			{
+				linearParam[i][i].CAir = computeCapacity(matrix, potentialField);
+
+				std::cout << "\n\n";
+				std::cout << "**********************************************************************************************************************************************************************\n";
+				std::cout << "* > Strip structure potential field for air fill" << "\n";
+				std::cout << "* > Conductors config: " << conductorsConfig << "\n";
+				std::cout << "* > The compute was done in " << iterations << " iterations\n";
+				std::cout << "* > The compute was done in " << time / 1000 << " seconds\n";
+				std::cout << "**********************************************************************************************************************************************************************\n";
+			}
+			else
+			{
+				linearParam[i][i].C = computeCapacity(matrix, potentialField);
+
+				std::cout << "\n\n\n";
+				std::cout << "**********************************************************************************************************************************************************************\n";
+				std::cout << "* > Strip structure potential field for dielectric fill" << "\n";
+				std::cout << "* > Conductors config: " << conductorsConfig << "\n";
+				std::cout << "* > The compute was done in " << iterations << " iterations\n";
+				std::cout << "* > The compute was done in " << time / 1000 << " seconds\n";
+				std::cout << "**********************************************************************************************************************************************************************\n";
+			}
+
+			drawField(potentialField);
+		}
+	}
+
+	// compute other elements in linear capacity matrix for dielectric fill 
+	for (int i = 0; i < condCells.getLength(); i++)
+	{
+		for (int j = 0; j < conductorsConfig.getLength(); j++)
+		{
+			conductorsConfig[j] = false;
+		}
+		conductorsConfig[i] = true;
+
+		for (int j = i + 1; j < conductorsConfig.getLength(); j++)
+		{
+			bool computeTisConfig = true;
+
+			for (int k = 0; k < symmetryConductors.getLength(); k++)
+			{
+				if (symmetryConductors[k].y == i)
+				{
+					if (isAirFill)
+					{
+						linearParam[i][j].CAir = linearParam[symmetryConductors[k].x][j].CAir;
+						linearParam[j][i].CAir = linearParam[i][j].CAir;
+					}
+					else
+					{
+						linearParam[i][j].C = linearParam[symmetryConductors[k].x][j].C;
+						linearParam[j][i].C = linearParam[i][j].C;
+					}
+					computeTisConfig = false;
+					break;
+				}
+			}
+
+			if (computeTisConfig == true)
+			{
+				conductorsConfig[j] = true;
+
+				Matrix2D<double>potentialField = setupInitialPotential(matrix, condCells, conductorsConfig);
+
+				auto start = std::chrono::steady_clock::now();
+				int iterations = computeFieldPotential(matrix, potentialField, initCells);
+				auto end = std::chrono::steady_clock::now();
+				double time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
+				if (isAirFill)
+				{
+					linearParam[i][j].CAir = (computeCapacity(matrix, potentialField) - linearParam[i][i].CAir - linearParam[j][j].CAir) / 2.0;
+					linearParam[j][i].CAir = linearParam[i][j].CAir;
+
+					std::cout << "\n\n";
+					std::cout << "**********************************************************************************************************************************************************************\n";
+					std::cout << "* > Strip structure potential field for air fill" << "\n";
+					std::cout << "* > Conductors config: " << conductorsConfig << "\n";
+					std::cout << "* > The compute was done in " << iterations << " iterations\n";
+					std::cout << "* > The compute was done in " << time / 1000 << " seconds\n";
+					std::cout << "**********************************************************************************************************************************************************************\n";
+				}
+				else
+				{
+					linearParam[i][j].C = (computeCapacity(matrix, potentialField) - linearParam[i][i].C - linearParam[j][j].C) / 2.0;
+					linearParam[j][i].C = linearParam[i][j].C;
+
+					std::cout << "\n\n\n";
+					std::cout << "**********************************************************************************************************************************************************************\n";
+					std::cout << "* > Strip structure potential field for dielectric fill" << "\n";
+					std::cout << "* > Conductors config: " << conductorsConfig << "\n";
+					std::cout << "* > The compute was done in " << iterations << " iterations\n";
+					std::cout << "* > The compute was done in " << time / 1000 << " seconds\n";
+					std::cout << "**********************************************************************************************************************************************************************\n";
+				}
+
+				drawField(potentialField);
+
+				conductorsConfig[j] = false;
+			}
+		}
+	}
 }
 
 
@@ -1033,6 +1034,37 @@ void GridSolver::drawField(const Matrix2D<double>& potentialField) const
 	std::cout << std::defaultfloat << std::setprecision(3);
 
 	std::cout << "\n\t";
+	for (int x = 0; x < potentialField.getCols(); x++)
+	{
+		if (x * 10 > potentialField.getCols())
+		{
+			break;
+		}
+
+		std::cout << ">" << x * 10;
+
+		int number = (x * 10);
+		int numberLength = 1;
+
+		while (number /= 10)
+		{
+			numberLength++;
+		}
+
+		for (int i = 0; i < 9; i++)
+		{
+			if (i < 9 - numberLength)
+			{
+				std::cout << " ";
+			}
+			else
+			{
+				break;
+			}
+		}
+	}
+
+	std::cout << "\n\t";
 	int xi = 0;
 	for (int x = 0; x < potentialField.getCols(); x++)
 	{
@@ -1085,6 +1117,108 @@ void GridSolver::drawField(const Matrix2D<double>& potentialField) const
 				}
 			}
 		}
-		std::cout << "\n";
+		if (y > 0)
+		{
+			std::cout << "\n";
+		}
+	}
+}
+
+
+
+// Print result info
+void GridSolver::printResultInfo(
+	const Point2D<int>& symmetryPoint,
+	const Vector<Point2D<int>>& symmetryConductors,
+	const Matrix2D<Types::LinearParameters>& linearParam) const
+{
+	if (symmetryPoint != Point2D(0, 0))
+	{
+		std::cout << "The strip structure was defined as symmetrical\n";
+		std::cout << "Symmetry point [leftX, rightX]: " << symmetryPoint << "\n";
+		std::cout << "Symmetrical conductors: " << symmetryConductors;
+	}
+	else
+	{
+		std::cout << "The strip structure was defined as non-symmetrical";
+	}
+
+	std::cout << "\n\n";
+	std::cout << "C -> Linear capacity for dielectric fill [F/m]: " << "\n";
+	for (int i = 0; i < linearParam.getRows(); i++)
+	{
+		for (int j = 0; j < linearParam.getCols(); j++)
+		{
+			if (i == j)
+			{
+				std::cout << " ";
+			}
+			std::cout << linearParam[i][j].C << "\t";
+		}
+		if (i < linearParam.getRows() - 1)
+		{
+			std::cout << "\n\n";
+		}
+	}
+
+	std::cout << "\n\n";
+	std::cout << "C0 -> Linear capacity for air fill [F/m]: " << "\n";
+	for (int i = 0; i < linearParam.getRows(); i++)
+	{
+		for (int j = 0; j < linearParam.getCols(); j++)
+		{
+			if (i == j)
+			{
+				std::cout << " ";
+			}
+			std::cout << linearParam[i][j].CAir << "\t";
+		}
+		if (i < linearParam.getRows() - 1)
+		{
+			std::cout << "\n\n";
+		}
+	}
+
+	std::cout << "\n\n";
+	std::cout << "L -> Linear inductance[H/m]: " << "\n";
+	for (int i = 0; i < linearParam.getRows(); i++)
+	{
+		for (int j = 0; j < linearParam.getCols(); j++)
+		{
+			std::cout << linearParam[i][j].L << "\t";
+		}
+		if (i < linearParam.getRows() - 1)
+		{
+			std::cout << "\n\n";
+		}
+	}
+
+
+	std::cout << "\n\n";
+	std::cout << "G -> Linear conductivity[Sm/m]: " << "\n";
+	for (int i = 0; i < linearParam.getRows(); i++)
+	{
+		for (int j = 0; j < linearParam.getCols(); j++)
+		{
+			std::cout << linearParam[i][j].G << "\t";
+		}
+		if (i < linearParam.getRows() - 1)
+		{
+			std::cout << "\n\n";
+		}
+	}
+
+	std::cout << "\n\n";
+	std::cout << "R -> Linear resistance [Ohms/m]: " << "\n";
+	for (int i = 0; i < linearParam.getRows(); i++)
+	{
+		for (int j = 0; j < linearParam.getCols(); j++)
+		{
+			std::cout << linearParam[i][j].R << "\t";
+		}
+		if (i < linearParam.getRows() - 1)
+		{
+			std::cout << "\n\n";
+		}
 	}
 }

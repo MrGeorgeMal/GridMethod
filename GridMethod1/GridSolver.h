@@ -3,12 +3,13 @@
 #define GRIDSOLVER_H
 
 #include <iostream>
+#include <chrono>
+
 #include "Vector.h"
 #include "Matrix2D.h"
 #include "Point2D.h"
 #include "Rect2D.h"
 #include "Types.h"
-#include <iomanip>
 
 
 class GridSolver
@@ -29,7 +30,7 @@ public:
 
 	// Compute linear parameters of strip structure
 	// matrix - matrix of rasterized strip structure
-	const Matrix2D<Types::LinearParameters>& computeLinearParameters(const Matrix2D<Types::CellInfo>& matrix) const;
+	Matrix2D<Types::LinearParameters> computeLinearParameters(const Matrix2D<Types::CellInfo>& matrix) const;
 
 #pragma endregion
 
@@ -79,7 +80,8 @@ private:
 		const Rect2D<int>& rect) const;
 
 	// Compute potential field
-	void computeFieldPotential(
+	// return iterations count
+	int computeFieldPotential(
 		const Matrix2D<Types::CellInfo>& matrix,
 		Matrix2D<double>& potentialField,
 		const Vector<Point2D<int>>& initCells) const;
@@ -89,14 +91,29 @@ private:
 		const Matrix2D<Types::CellInfo>& matrix,
 		const Matrix2D<double>& potentialField) const;
 
-	// Draw potential field
-	void drawField(const Matrix2D<double>& potentialField) const;
+	// Compute linear capacity matrix
+	void computeLinearCapacityMatrix(
+		Matrix2D<Types::CellInfo>& matrix,
+		const Vector<Vector<Point2D<int>>>& condCells,
+		const Vector<Point2D<int>>& initCells,
+		const Vector<Point2D<int>>& symmetryConductors,
+		Matrix2D<Types::LinearParameters>& linearParam,
+		bool isAirFill) const;
 
 	// Check structure on symmetry
 	// return symmetry point: left and right X coordinate - Point(leftX ; rightX)
 	// left and right coordinates may be equal
 	// return Point(0 ; 0) if structure has no symmetry
 	Point2D<int> defineVerticalSymmetryPoint(const Matrix2D<Types::CellInfo>& matrix) const;
+
+	// Print result info
+	void printResultInfo(
+		const Point2D<int>& symmetryPoint,
+		const Vector<Point2D<int>>& symmetryConductors,
+		const Matrix2D<Types::LinearParameters>& linearParam) const;
+
+	// Draw potential field
+	void drawField(const Matrix2D<double>& potentialField) const;
 
 #pragma endregion
 

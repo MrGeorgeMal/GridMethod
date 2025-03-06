@@ -3,7 +3,10 @@
 namespace Types {
 
 	// Absolute dielectric constant of vacuum [F/m]
-	const double e0 = 8.854187818814e-12;
+	const long double e0 = 8.854187818814e-12;
+
+	// The speed of light [m/s]
+	const long double speedLight = 2.999792458e8;
 
 	// Initial potential for signal conductor cells
 	const double initHightPotential = 1.0;
@@ -37,11 +40,11 @@ namespace Types {
 	// Linear parameters
 	struct LinearParameters
 	{
-		double C = 0.0;
-		double CAir = 0.0;
-		double L = 0.0;
-		double R = 0.0;
-		double G = 0.0;
+		long double C = 0.0;
+		long double CAir = 0.0;
+		long double L = 0.0;
+		long double R = 0.0;
+		long double G = 0.0;
 	};
 
 }
