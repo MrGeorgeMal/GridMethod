@@ -183,6 +183,99 @@ Vector<Vector<Point2D<int>>> GridSolver::defineAllConductorsCells(Matrix2D<Types
 
 
 
+// Check structure on symmetry
+// return symmetry point: left and right X coordinate - Point(leftX ; rightX)
+// left and right coordinates may be equal
+// return Point(0 ; 0) if structure has no symmetry
+Point2D<int> GridSolver::defineVerticalSymmetryPoint(const Matrix2D<Types::CellInfo>& matrix) const
+{
+	// check vertical symmetry
+	int rows = matrix.getRows();
+	int cols = matrix.getCols();
+
+	// Added an error counter.
+	// This is related to sampling and rasterization problems.
+	// If only one wrong column is encountered when defining symmetry - this structure is still considered symmetric
+	bool isSymmentry = true;
+	bool foundNonSymmetry = false;
+	int error = 0;
+	int center = cols / 2 - 1;
+
+	for (int x = center - 1; x >= 1; x--)
+	{
+		int offset = center - x;
+		for (int y = 1; y < matrix.getRows(); y++)
+		{
+			if (matrix[y][x] != matrix[y][center + offset])
+			{
+				error++;
+				foundNonSymmetry = true;
+				break;
+			}
+			else
+			{
+				foundNonSymmetry = false;
+			}
+		}
+		if (foundNonSymmetry == false)
+		{
+			error = 0;
+		}
+		else if (error > 1)
+		{
+			isSymmentry = false;
+			break;
+		}
+	}
+
+	if (isSymmentry == true)
+	{
+		return Point2D(center, center);
+	}
+
+	isSymmentry = true;
+	foundNonSymmetry = false;
+	error = 0;
+	int rightCenter = (double)cols / 2.0;
+	int leftCenter = rightCenter - 1;
+
+	for (int x = leftCenter - 1; x >= 1; x--)
+	{
+		int offset = leftCenter - x;
+		for (int y = 1; y < matrix.getRows(); y++)
+		{
+			if (matrix[y][x] != matrix[y][rightCenter + offset])
+			{
+				error++;
+				foundNonSymmetry = true;
+				break;
+			}
+			else
+			{
+				foundNonSymmetry = false;
+			}
+		}
+		if (foundNonSymmetry == false)
+		{
+			error = 0;
+		}
+		else if (error > 1)
+		{
+			isSymmentry = false;
+			break;
+		}
+	}
+
+	if (isSymmentry == true)
+	{
+		return Point2D(leftCenter, rightCenter);
+	}
+
+	return Point2D(0, 0);
+}
+
+
+
 // Define pair of symmetrycal conductors
 // return point: first and numbers - numbers of symmetrical conductors
 // return empty Vector if there is no symmetry
@@ -203,11 +296,23 @@ Vector<Point2D<int>> GridSolver::defineSymmetyConductors(
 		{
 			bool isSymmetry = true;
 
-			if (conductorsCells[i].getLength() == conductorsCells[j].getLength())
+			// A small margin of error has been added.
+			// One wire may be one cell longer than the other.
+			// If they are otherwise identical, they are counted symmetrically
+			int minCondLength = conductorsCells[i].getLength();
+			int maxCondLength = conductorsCells[j].getLength();
+			if (minCondLength > maxCondLength)
 			{
-				for (int k = 0; k < conductorsCells[i].getLength(); k++)
+				int bufferLength = maxCondLength;
+				maxCondLength = minCondLength;
+				minCondLength = bufferLength;
+			}
+
+			if (minCondLength == maxCondLength || minCondLength == maxCondLength - 1)
+			{
+				for (int k = 0; k < minCondLength; k++)
 				{
-					int leftPoint = conductorsCells[i].getLength() - 1 - k;
+					int leftPoint = minCondLength - 1 - k;
 					int rightPoint = k;
 					Point2D<int> firstCondPoint = conductorsCells[i][leftPoint];
 					Point2D<int> secondCondPoint = conductorsCells[j][rightPoint];
@@ -913,71 +1018,6 @@ void GridSolver::computeLinearCapacityMatrix(
 			}
 		}
 	}
-}
-
-
-
-// Check structure on symmetry
-// return symmetry point: left and right X coordinate - Point(leftX ; rightX)
-// left and right coordinates may be equal
-// return Point(0 ; 0) if structure has no symmetry
-Point2D<int> GridSolver::defineVerticalSymmetryPoint(const Matrix2D<Types::CellInfo>& matrix) const
-{
-	// check vertical symmetry
-	int rows = matrix.getRows();
-	int cols = matrix.getCols();
-	bool isSymmentry = true;
-	int center = cols / 2 - 1;
-
-	for (int x = center - 1; x >= 1; x--)
-	{
-		int offset = center - x;
-		for (int y = 1; y < matrix.getRows(); y++)
-		{
-			if (matrix[y][x] != matrix[y][center + offset])
-			{
-				isSymmentry = false;
-				break;
-			}
-		}
-		if (isSymmentry == false)
-		{
-			break;
-		}
-	}
-
-	if (isSymmentry == true)
-	{
-		return Point2D(center, center);
-	}
-
-	isSymmentry = true;
-	int rightCenter = (double)cols / 2.0;
-	int leftCenter = rightCenter - 1;
-
-	for (int x = leftCenter - 1; x >= 1; x--)
-	{
-		int offset = leftCenter - x;
-		for (int y = 1; y < matrix.getRows(); y++)
-		{
-			if (matrix[y][x] != matrix[y][rightCenter + offset])
-			{
-				isSymmentry = false;
-				break;
-			}
-		}
-		if (isSymmentry == false)
-		{
-			break;
-		}
-	}
-
-	if (isSymmentry == true)
-	{
-		return Point2D(leftCenter, rightCenter);
-	}
-
-	return Point2D(0, 0);
 }
 
 
