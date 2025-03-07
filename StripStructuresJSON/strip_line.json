@@ -13,7 +13,7 @@
         {
             "type": "dielectric",
             "name": "d4.5",
-            "value": "4.5"
+            "value": 4.5
         }
     ],
 

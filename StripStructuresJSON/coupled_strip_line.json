@@ -1,0 +1,46 @@
+{
+    "materials":[
+        {
+            "type": "conductor",
+            "name": "signal",
+            "mode": true
+        },
+        {
+            "type": "conductor",
+            "name": "ground",
+            "mode": false
+        },
+        {
+            "type": "dielectric",
+            "name": "d4.5",
+            "value": 4.5
+        }
+    ],
+
+    "shapes":[
+        {
+            "type": "rectangle",
+            "point": [0.0, 0.0],
+            "size": [10.0, 1.5],
+            "material": "d4.5"
+        },
+        {
+            "type": "line",
+            "p1": [3.5, 1.5],
+            "p2": [4.5, 1.5],
+            "material": "signal"
+        },
+        {
+            "type": "line",
+            "p1": [5.5, 1.5],
+            "p2": [6.5, 1.5],
+            "material": "signal"
+        },
+        {
+            "type": "line",
+            "p1": [0.0, 0.0],
+            "p2": [10.0, 0.0],
+            "material": "ground"
+        }
+    ]
+}
