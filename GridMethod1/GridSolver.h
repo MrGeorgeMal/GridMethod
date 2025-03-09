@@ -10,6 +10,7 @@
 #include "Point2D.h"
 #include "Rect2D.h"
 #include "Types.h"
+#include "MatrixTool.h"
 
 
 class GridSolver

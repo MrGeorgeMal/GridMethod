@@ -83,6 +83,7 @@ public:
 		return os;
 	}
 
+
 private:
 
 	// Method delete 2D matrix
@@ -104,5 +105,6 @@ private:
 	// Matrix
 	T* _matrix = nullptr;
 };
+
 
 #endif // !MATRIX2D_H

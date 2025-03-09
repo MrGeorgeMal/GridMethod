@@ -48,15 +48,24 @@ Matrix2D<Types::LinearParameters> GridSolver::computeLinearParameters(const Matr
 		linearParam,
 		true);
 
-	/*
+	Matrix2D<double> CAirMatrix(linearParam.getRows(), linearParam.getCols());
+	for (int i = 0; i < CAirMatrix.getRows(); i++)
+	{
+		for (int j = 0; j < CAirMatrix.getCols(); j++)
+		{
+			CAirMatrix[i][j] = linearParam[i][j].CAir;
+		}
+	}
+	
+	Matrix2D<double> reverseCAirMatrix = MatrixTool::getReverseMatrix(CAirMatrix);
 	for (int i = 0; i < linearParam.getRows(); i++)
 	{
 		for (int j = 0; j < linearParam.getCols(); j++)
 		{
-			linearParam[i][j].L = 1 / (Types::speedLight * Types::speedLight * linearParam[i][j].CAir);
+			linearParam[i][j].L = 1 / (Types::speedLight * Types::speedLight * reverseCAirMatrix[i][j]);
 		}
 	}
-	*/
+	
 
 	auto end = std::chrono::steady_clock::now();
 	double time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();

@@ -144,4 +144,4 @@ namespace StructureCreator
 	}
 }
 
-#endif STRUCTURECREATOR_H
+#endif // !STRUCTURECREATOR_H
