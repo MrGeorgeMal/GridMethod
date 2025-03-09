@@ -95,12 +95,14 @@ namespace StructureCreator
 				{
 					Point2D<double> point;
 					Size2D<double> size;
+					bool isScreen = jshape["screen"];
 					point.x = jshape["point"][0];
 					point.y = jshape["point"][1];
 					size.width = jshape["size"][0];
 					size.height = jshape["size"][1];
 
 					Rectangle2D* newRectangle = new Rectangle2D(point, size);
+					newRectangle->makeAsScreen(isScreen);
 					newRectangle->setMaterial(material);
 					shapes.add(newRectangle);
 				}
@@ -108,12 +110,19 @@ namespace StructureCreator
 				{
 					Point2D<double> p1;
 					Point2D<double> p2;
+					Line2D::EAlign align = Line2D::EAlign::LEFT;
+
 					p1.x = jshape["p1"][0];
 					p1.y = jshape["p1"][1];
 					p2.x = jshape["p2"][0];
 					p2.y = jshape["p2"][1];
+					if (jshape["align"] == "right")
+					{
+						align = Line2D::EAlign::RIGHT;
+					}
 
 					Line2D* newLine = new Line2D(p1, p2);
+					newLine->setAlign(align);
 					newLine->setMaterial(material);
 					shapes.add(newLine);
 				}

@@ -86,6 +86,20 @@ protected:
 class Line2D : public Shape2D
 {
 
+#pragma region Public Enums
+
+public:
+
+	// Line alignment
+	enum EAlign
+	{
+		LEFT,
+		RIGHT
+	};
+
+#pragma endregion
+
+
 #pragma region Constructors
 
 public:
@@ -131,6 +145,7 @@ public:
 		line->_material = _material;
 		line->_p1 = _p1;
 		line->_p2 = _p2;
+		line->_align = _align;
 		return line;
 	}
 
@@ -166,9 +181,17 @@ public:
 	// Get line first point
 	Point2D<double> getP2() const { return _p2; }
 
+	// Get line alignment
+	Line2D::EAlign getAlign() const { return _align; }
+
+	// Set line first point
 	void setP1(Point2D<double> point) { _p1 = point; }
 
+	// Set line first point
 	void setP2(Point2D<double> point) { _p2 = point; }
+
+	// Set line alignment
+	void setAlign(Line2D::EAlign align) { _align = align; }
 
 #pragma endregion
 
@@ -179,6 +202,8 @@ private:
 
 	// Line2D points
 	Point2D<double> _p1, _p2;
+
+	EAlign _align = LEFT;
 
 #pragma endregion
 

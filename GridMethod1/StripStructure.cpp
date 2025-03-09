@@ -78,15 +78,50 @@ Rectangle2D* StripStructure::findScreenRectangle() const
 // Create new screen if could not find it
 Rectangle2D* StripStructure::createScreenRectangle()
 {
-	Rect2D<double> bound = getRectBound();
+	Vector<Shape2D*> signalConductorShapes;
+	for (size_t i = 0; i < _shapes.getLength(); i++)
+	{
+		if (_shapes[i]->getMaterial()->getType() == "Conductor")
+		{
+			Conductor* condMaterial = dynamic_cast<Conductor*>(_shapes[i]->getMaterial());
 
-	Point2D<double> point;
-	point.x = bound.left - _screenDistance;
-	point.y = bound.bottom - _screenDistance;
+			if (condMaterial->isSignal() == true)
+			{
+				signalConductorShapes.add(_shapes[i]->getCopy());
+			}
+		}
+	}
 
+	Rect2D<double> generalBound = getRectBound(_shapes);
+	Rect2D<double> conductorBound = getRectBound(signalConductorShapes);
+	Rect2D<double> screenBound;
+
+	screenBound.left = conductorBound.left - _screenDistance;
+	screenBound.top = conductorBound.top + _screenDistance;
+	screenBound.right = conductorBound.right + _screenDistance;
+	screenBound.bottom = conductorBound.bottom - _screenDistance;
+
+	if (screenBound.left > generalBound.left)
+	{
+		screenBound.left = generalBound.left;
+	}
+	if (screenBound.top < generalBound.top)
+	{
+		screenBound.top = generalBound.top;
+	}
+	if (screenBound.right < generalBound.right)
+	{
+		screenBound.right = generalBound.right;
+	}
+	if (screenBound.bottom > generalBound.bottom)
+	{
+		screenBound.bottom = generalBound.bottom;
+	}
+
+	Point2D<double> point(screenBound.left, screenBound.bottom);
 	Size2D<double> size;
-	size.width = bound.right - bound.left + _screenDistance * 2;
-	size.height = bound.top - bound.bottom + _screenDistance * 2;
+	size.width = screenBound.right - screenBound.left;
+	size.height = screenBound.top - screenBound.bottom;
 
 	Rectangle2D* screen = new Rectangle2D(point, size);
 	Dielectric* material = new Dielectric(1.0);
@@ -100,7 +135,8 @@ Rectangle2D* StripStructure::createScreenRectangle()
 
 
 // Get strip structure rect bound
-Rect2D<double> StripStructure::getRectBound() const
+// shapes - shapes around which the rect bound will be taken 
+Rect2D<double> StripStructure::getRectBound(const Vector<Shape2D*>& shapes) const
 {
 	// left, top, right, bootom coordinates
 	double l = 0.0;
@@ -109,26 +145,26 @@ Rect2D<double> StripStructure::getRectBound() const
 	double b = 0.0;
 
 	// Init left and bottom values
-	if (_shapes[0]->getType() == "Line2D")
+	if (shapes[0]->getType() == "Line2D")
 	{
-		Line2D* line = dynamic_cast<Line2D*>(_shapes[0]);
+		Line2D* line = dynamic_cast<Line2D*>(shapes[0]);
 		l = line->getP1().x;
 		b = line->getP1().y;
 	}
 
-	if (_shapes[0]->getType() == "Polygon2D" || _shapes[0]->getType() == "Rectangle2D")
+	if (shapes[0]->getType() == "Polygon2D" || shapes[0]->getType() == "Rectangle2D")
 	{
-		Polygon2D* polygon = dynamic_cast<Polygon2D*>(_shapes[0]);
+		Polygon2D* polygon = dynamic_cast<Polygon2D*>(shapes[0]);
 		l = polygon->getPoints()[0].x;
 		b = polygon->getPoints()[0].y;
 	}
 
 	// Define left, top, right and bottom coordinates
-	for (int i = 0; i < _shapes.getLength(); i++)
+	for (int i = 0; i < shapes.getLength(); i++)
 	{
-		if (_shapes[i]->getType() == "Line2D")
+		if (shapes[i]->getType() == "Line2D")
 		{
-			Line2D* line = dynamic_cast<Line2D*>(_shapes[i]);
+			Line2D* line = dynamic_cast<Line2D*>(shapes[i]);
 			double x1 = line->getP1().x;
 			double y1 = line->getP1().y;
 			double x2 = line->getP2().x;
@@ -144,9 +180,9 @@ Rect2D<double> StripStructure::getRectBound() const
 			b = std::min(b, y2);
 		}
 
-		if (_shapes[i]->getType() == "Polygon2D" || _shapes[i]->getType() == "Rectangle2D")
+		if (shapes[i]->getType() == "Polygon2D" || shapes[i]->getType() == "Rectangle2D")
 		{
-			Polygon2D* polygon = dynamic_cast<Polygon2D*>(_shapes[i]);
+			Polygon2D* polygon = dynamic_cast<Polygon2D*>(shapes[i]);
 			for (int j = 0; j < polygon->getPoints().getLength(); j++)
 			{
 				double x = polygon->getPoints()[j].x;

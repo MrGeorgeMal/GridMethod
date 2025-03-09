@@ -28,18 +28,21 @@
             "type": "line",
             "p1": [3.5, 1.5],
             "p2": [4.5, 1.5],
+            "align": "left",
             "material": "signal"
         },
         {
             "type": "line",
             "p1": [5.5, 1.5],
             "p2": [6.5, 1.5],
+            "align": "left",
             "material": "signal"
         },
         {
             "type": "line",
             "p1": [0.0, 0.0],
             "p2": [10.0, 0.0],
+            "align": "right",
             "material": "ground"
         }
     ]

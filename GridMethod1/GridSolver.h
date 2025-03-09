@@ -48,13 +48,6 @@ private:
 	// Locate the position all of the conductors cells
 	Vector<Vector<Point2D<int>>> defineAllConductorsCells(Matrix2D<Types::CellInfo>& matrix) const;
 
-	// Define pair of symmetrycal conductors
-	// return point: first and numbers - numbers of symmetrical conductors
-	// return Point2D(-1 ; -1) if there is no symmetry
-	Vector<Point2D<int>> defineSymmetyConductors(
-		const Vector<Vector<Point2D<int>>>& conductorsCells,
-		const Point2D<int>& symmetryPoint) const;
-
 	// Locate the initial points of field propagation
 	Vector<Point2D<int>> defineInitialCellsForFieldPropagation(
 		const Matrix2D<Types::CellInfo>& matrix,
@@ -69,12 +62,14 @@ private:
 	// Compute potential cell
 	void computeCellPotential(
 		const Matrix2D<Types::CellInfo>& matrix,
+		Matrix2D<double>& bufferPotentialField,
 		Matrix2D<double>& potentialField,
 		const Point2D<int>& computedPoint) const;
 
 	// Compute all cells around the edges of rect propagation
 	void computeRectPropagation(
 		const Matrix2D<Types::CellInfo>& matrix,
+		Matrix2D<double>& bufferPotentialField,
 		Matrix2D<double>& potentialField,
 		const Point2D<int>& initPoint,
 		const Rect2D<int>& rect) const;
@@ -106,9 +101,32 @@ private:
 	// return Point(0 ; 0) if structure has no symmetry
 	Point2D<int> defineVerticalSymmetryPoint(const Matrix2D<Types::CellInfo>& matrix) const;
 
+	// Check structure on symmetry
+	// return symmetry point: bottom and top Y coordinate - Point(bottomX ; topY)
+	// bottom and top coordinates may be equal
+	// return Point(0 ; 0) if structure has no symmetry
+	Point2D<int> defineHorizontalSymmetryPoint(const Matrix2D<Types::CellInfo>& matrix) const;
+
+	// Define pair of symmetrycal conductors
+	// return point: first and numbers - numbers of symmetrical conductors
+	// return Point2D(-1 ; -1) if there is no symmetry
+	Vector<Point2D<int>> defineSymmetyConductors(
+		const Vector<Vector<Point2D<int>>>& conductorsCells,
+		const Point2D<int>& symmetryPoint) const;
+
+	// Define pair of symmetrycal conductors
+	// return point: first and numbers - numbers of symmetrical conductors
+	// return Point2D(-1 ; -1) if there is no symmetry
+	Vector<Point2D<int>> defineHorizontalSymmetyConductors(
+		const Vector<Vector<Point2D<int>>>& conductorsCells,
+		const Point2D<int>& symmetryPoint) const;
+
 	// Print result info
 	void printResultInfo(
-		const Point2D<int>& symmetryPoint,
+		const Point2D<int>& verticalSymmetryPoint,
+		const Point2D<int>& horizontalSymmetryPoint,
+		const Vector<Point2D<int>>& verticalSymmetryConductors,
+		const Vector<Point2D<int>>& horizontalSymmetryConductors,
 		const Vector<Point2D<int>>& symmetryConductors,
 		const Matrix2D<Types::LinearParameters>& linearParam) const;
 

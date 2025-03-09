@@ -56,7 +56,7 @@ private:
 	Rectangle2D* createScreenRectangle();
 
 	// Get strip structure rect bound
-	Rect2D<double> getRectBound() const;
+	Rect2D<double> getRectBound(const Vector<Shape2D*>& shapes) const;
 
 	// Define min structure size
 	Size2D<double> defineMinSize() const;
@@ -106,7 +106,7 @@ private:
 	bool _isRegularGrid = true;
 
 	// Optimal grid size, ONLY EVEN numbers
-	Size2D<int> _optimalGridSize = Size2D<int>(200, 200);
+	Size2D<int> _optimalGridSize = Size2D<int>(100, 100);
 
 	// Gap between shapes and screen
 	double _screenDistance = 10.0;

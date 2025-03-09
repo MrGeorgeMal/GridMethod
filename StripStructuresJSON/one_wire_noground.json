@@ -6,11 +6,6 @@
             "mode": true
         },
         {
-            "type": "conductor",
-            "name": "ground",
-            "mode": false
-        },
-        {
             "type": "dielectric",
             "name": "d4.5",
             "value": 4.5
@@ -28,13 +23,8 @@
             "type": "line",
             "p1": [4.0, 1.5],
             "p2": [6.0, 1.5],
+            "align": "left",
             "material": "signal"
-        },
-        {
-            "type": "line",
-            "p1": [0.0, 0.0],
-            "p2": [10.0, 0.0],
-            "material": "ground"
         }
     ]
 }

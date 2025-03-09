@@ -13,9 +13,21 @@ Matrix2D<Types::LinearParameters> GridSolver::computeLinearParameters(const Matr
 
 	// defines
 	Vector<Vector<Point2D<int>>> condCells = defineAllConductorsCells(matrix);
-	Point2D<int> symmetryPoint = defineVerticalSymmetryPoint(matrix);
-	Vector<Point2D<int>> symmetryConductors = defineSymmetyConductors(condCells, symmetryPoint);
 	Vector<Point2D<int>> initCells = defineInitialCellsForFieldPropagation(matrix, condCells);
+
+	Point2D<int> verticalSymmetryPoint = defineVerticalSymmetryPoint(matrix);
+	Point2D<int> horizontalSymmetryPoint = defineHorizontalSymmetryPoint(matrix);
+	Vector<Point2D<int>> verticalSymmetryConductors = defineSymmetyConductors(condCells, verticalSymmetryPoint);
+	Vector<Point2D<int>> horizontalSymmetryConductors = defineHorizontalSymmetyConductors(condCells, horizontalSymmetryPoint);
+	Vector<Point2D<int>> symmetryConductors;
+	for (int i = 0; i < verticalSymmetryConductors.getLength(); i++)
+	{
+		symmetryConductors.add(verticalSymmetryConductors[i]);
+	}
+	for (int i = 0; i < horizontalSymmetryConductors.getLength(); i++)
+	{
+		symmetryConductors.add(horizontalSymmetryConductors[i]);
+	}
 
 	// compute linear capacity matrix for dielectric and air fill
 	Matrix2D<Types::LinearParameters> linearParam(condCells.getLength(), condCells.getLength());
@@ -56,7 +68,10 @@ Matrix2D<Types::LinearParameters> GridSolver::computeLinearParameters(const Matr
 	std::cout << "**********************************************************************************************************************************************************************\n\n";
 
 	printResultInfo(
-		symmetryPoint,
+		verticalSymmetryPoint,
+		horizontalSymmetryPoint,
+		verticalSymmetryConductors,
+		horizontalSymmetryConductors,
 		symmetryConductors,
 		linearParam);
 
@@ -276,6 +291,99 @@ Point2D<int> GridSolver::defineVerticalSymmetryPoint(const Matrix2D<Types::CellI
 
 
 
+// Check structure on symmetry
+// return symmetry point: bottom and top Y coordinate - Point(bottomX ; topY)
+// bottom and top coordinates may be equal
+// return Point(0 ; 0) if structure has no symmetry
+Point2D<int> GridSolver::defineHorizontalSymmetryPoint(const Matrix2D<Types::CellInfo>& matrix) const
+{
+	// check vertical symmetry
+	int rows = matrix.getRows();
+	int cols = matrix.getCols();
+
+	// Added an error counter.
+	// This is related to sampling and rasterization problems.
+	// If only one wrong column is encountered when defining symmetry - this structure is still considered symmetric
+	bool isSymmentry = true;
+	bool foundNonSymmetry = false;
+	int error = 0;
+	int center = rows / 2 - 1;
+
+	for (int y = center - 1; y >= 1; y--)
+	{
+		int offset = center - y;
+		for (int x = 1; x < matrix.getCols(); x++)
+		{
+			if (matrix[y][x] != matrix[center + offset][x])
+			{
+				error++;
+				foundNonSymmetry = true;
+				break;
+			}
+			else
+			{
+				foundNonSymmetry = false;
+			}
+		}
+		if (foundNonSymmetry == false)
+		{
+			error = 0;
+		}
+		else if (error > 1)
+		{
+			isSymmentry = false;
+			break;
+		}
+	}
+
+	if (isSymmentry == true)
+	{
+		return Point2D(center, center);
+	}
+
+	isSymmentry = true;
+	foundNonSymmetry = false;
+	error = 0;
+	int topCenter = (double)rows / 2.0;
+	int bottomCenter = topCenter - 1;
+
+	for (int y = bottomCenter - 1; y >= 1; y--)
+	{
+		int offset = bottomCenter - y;
+		for (int x = 1; x < matrix.getCols(); x++)
+		{
+			if (matrix[y][x] != matrix[topCenter + offset][x])
+			{
+				error++;
+				foundNonSymmetry = true;
+				break;
+			}
+			else
+			{
+				foundNonSymmetry = false;
+			}
+		}
+		if (foundNonSymmetry == false)
+		{
+			error = 0;
+		}
+		else if (error > 1)
+		{
+			isSymmentry = false;
+			break;
+		}
+	}
+
+	if (isSymmentry == true)
+	{
+		return Point2D(bottomCenter, topCenter);
+	}
+
+	return Point2D(0, 0);
+}
+
+
+
 // Define pair of symmetrycal conductors
 // return point: first and numbers - numbers of symmetrical conductors
 // return empty Vector if there is no symmetry
@@ -318,6 +426,72 @@ Vector<Point2D<int>> GridSolver::defineSymmetyConductors(
 					Point2D<int> secondCondPoint = conductorsCells[j][rightPoint];
 					firstCondPoint.x = abs(symmetryPoint.x - firstCondPoint.x);
 					secondCondPoint.x = abs(symmetryPoint.y - secondCondPoint.x);
+					if (firstCondPoint != secondCondPoint)
+					{
+						isSymmetry = false;
+						break;
+					}
+				}
+			}
+			else
+			{
+				isSymmetry = false;
+			}
+
+			if (isSymmetry == true)
+			{
+				symmetryConductrors.add(Point2D<int>(i, j));
+			}
+		}
+	}
+
+	return symmetryConductrors;
+}
+
+
+
+// Define pair of symmetrycal conductors
+// return point: first and numbers - numbers of symmetrical conductors
+// return Point2D(-1 ; -1) if there is no symmetry
+Vector<Point2D<int>> GridSolver::defineHorizontalSymmetyConductors(
+	const Vector<Vector<Point2D<int>>>& conductorsCells,
+	const Point2D<int>& symmetryPoint) const
+{
+	Vector<Point2D<int>> symmetryConductrors;
+
+	if (symmetryPoint == Point2D<int>(0, 0))
+	{
+		return symmetryConductrors;
+	}
+
+	for (int i = 0; i < conductorsCells.getLength() - 1; i++)
+	{
+		for (int j = i + 1; j < conductorsCells.getLength(); j++)
+		{
+			bool isSymmetry = true;
+
+			// A small margin of error has been added.
+			// One wire may be one cell longer than the other.
+			// If they are otherwise identical, they are counted symmetrically
+			int minCondLength = conductorsCells[i].getLength();
+			int maxCondLength = conductorsCells[j].getLength();
+			if (minCondLength > maxCondLength)
+			{
+				int bufferLength = maxCondLength;
+				maxCondLength = minCondLength;
+				minCondLength = bufferLength;
+			}
+
+			if (minCondLength == maxCondLength || minCondLength == maxCondLength - 1)
+			{
+				for (int k = 0; k < minCondLength; k++)
+				{
+					int bottomPoint = k;
+					int topPoint = k;
+					Point2D<int> firstCondPoint = conductorsCells[i][bottomPoint];
+					Point2D<int> secondCondPoint = conductorsCells[j][topPoint];
+					firstCondPoint.y = abs(symmetryPoint.x - firstCondPoint.y);
+					secondCondPoint.y = abs(symmetryPoint.y - secondCondPoint.y);
 					if (firstCondPoint != secondCondPoint)
 					{
 						isSymmetry = false;
@@ -515,10 +689,10 @@ Matrix2D<double> GridSolver::setupInitialPotential(
 
 
 
-
 // Compute potential cell
 void GridSolver::computeCellPotential(
 	const Matrix2D<Types::CellInfo>& matrix,
+	Matrix2D<double>& bufferPotentialField,
 	Matrix2D<double>& potentialField,
 	const Point2D<int>& computedPoint) const
 {
@@ -528,7 +702,8 @@ void GridSolver::computeCellPotential(
 	int y = computedPoint.y;
 
 	if (x > 0 && x < cols &&
-		y > 0 && y < rows)
+		y > 0 && y < rows &&
+		potentialField[y][x] == bufferPotentialField[y][x])
 	{
 		if (matrix[y][x].isConductor == false)
 		{
@@ -557,6 +732,7 @@ void GridSolver::computeCellPotential(
 // Compute all cells around the edges of rect propagation
 void GridSolver::computeRectPropagation(
 	const Matrix2D<Types::CellInfo>& matrix,
+	Matrix2D<double>& bufferPotentialField,
 	Matrix2D<double>& potentialField,
 	const Point2D<int>& initPoint,
 	const Rect2D<int>& rect) const
@@ -596,21 +772,25 @@ void GridSolver::computeRectPropagation(
 	// compute central points on edges
 	computeCellPotential(
 		matrix,
+		bufferPotentialField,
 		potentialField,
 		lcenter);
 
 	computeCellPotential(
 		matrix,
+		bufferPotentialField,
 		potentialField,
 		tcenter);
 
 	computeCellPotential(
 		matrix,
+		bufferPotentialField,
 		potentialField,
 		rcenter);
 
 	computeCellPotential(
 		matrix,
+		bufferPotentialField,
 		potentialField,
 		bcenter);
 	
@@ -619,6 +799,7 @@ void GridSolver::computeRectPropagation(
 	{
 		computeCellPotential(
 			matrix,
+			bufferPotentialField,
 			potentialField,
 			Point2D<int>(lcenter.x, y));
 	}
@@ -626,6 +807,7 @@ void GridSolver::computeRectPropagation(
 	{
 		computeCellPotential(
 			matrix,
+			bufferPotentialField,
 			potentialField,
 			Point2D<int>(lcenter.x, y));
 	}
@@ -635,6 +817,7 @@ void GridSolver::computeRectPropagation(
 	{
 		computeCellPotential(
 			matrix,
+			bufferPotentialField,
 			potentialField,
 			Point2D<int>(x, tcenter.y));
 	}
@@ -642,6 +825,7 @@ void GridSolver::computeRectPropagation(
 	{
 		computeCellPotential(
 			matrix,
+			bufferPotentialField,
 			potentialField,
 			Point2D<int>(x, tcenter.y));
 	}
@@ -651,6 +835,7 @@ void GridSolver::computeRectPropagation(
 	{
 		computeCellPotential(
 			matrix,
+			bufferPotentialField,
 			potentialField,
 			Point2D<int>(rcenter.x, y));
 	}
@@ -658,6 +843,7 @@ void GridSolver::computeRectPropagation(
 	{
 		computeCellPotential(
 			matrix,
+			bufferPotentialField,
 			potentialField,
 			Point2D<int>(rcenter.x, y));
 	}
@@ -667,6 +853,7 @@ void GridSolver::computeRectPropagation(
 	{
 		computeCellPotential(
 			matrix,
+			bufferPotentialField,
 			potentialField,
 			Point2D<int>(x, bcenter.y));
 	}
@@ -674,6 +861,7 @@ void GridSolver::computeRectPropagation(
 	{
 		computeCellPotential(
 			matrix,
+			bufferPotentialField,
 			potentialField,
 			Point2D<int>(x, bcenter.y));
 	}
@@ -681,21 +869,25 @@ void GridSolver::computeRectPropagation(
 	// compute corner points on edges
 	computeCellPotential(
 		matrix,
+		bufferPotentialField,
 		potentialField,
 		leftTop);
 
 	computeCellPotential(
 		matrix,
+		bufferPotentialField,
 		potentialField,
 		rightTop);
 
 	computeCellPotential(
 		matrix,
+		bufferPotentialField,
 		potentialField,
 		rightBottom);
 
 	computeCellPotential(
 		matrix,
+		bufferPotentialField,
 		potentialField,
 		leftBottom);
 }
@@ -721,6 +913,10 @@ int GridSolver::computeFieldPotential(
 	while (currentAccuracy <= accuracy)
 	{
 		int offsetPropagationRect = 0;
+		int leftPropagation = 0;
+		int topPropagation = 0;
+		int rightPropagation = 0;
+		int bottomPropagation = 0;
 
 		bool isAllPropagationComplited = false;
 
@@ -775,6 +971,7 @@ int GridSolver::computeFieldPotential(
 					{
 						computeRectPropagation(
 							matrix,
+							bufferPotentialField,
 							potentialField,
 							Point2D<int>(initCells[i].x, initCells[i].y),
 							Rect2D<int>(l, t, r, b));
@@ -1168,14 +1365,32 @@ void GridSolver::drawField(const Matrix2D<double>& potentialField) const
 
 // Print result info
 void GridSolver::printResultInfo(
-	const Point2D<int>& symmetryPoint,
+	const Point2D<int>& verticalSymmetryPoint,
+	const Point2D<int>& horizontalSymmetryPoint,
+	const Vector<Point2D<int>>& verticalSymmetryConductors,
+	const Vector<Point2D<int>>& horizontalSymmetryConductors,
 	const Vector<Point2D<int>>& symmetryConductors,
 	const Matrix2D<Types::LinearParameters>& linearParam) const
 {
-	if (symmetryPoint != Point2D(0, 0))
+	if (verticalSymmetryPoint != Point2D(0, 0) && horizontalSymmetryPoint != Point2D(0, 0) &&
+		verticalSymmetryConductors.getLength() > 0 && horizontalSymmetryConductors.getLength() > 0)
 	{
-		std::cout << "The strip structure was defined as symmetrical\n";
-		std::cout << "Symmetry point [leftX, rightX]: " << symmetryPoint << "\n";
+		std::cout << "The strip structure was defined as vertically and horizontally symmetrical\n";
+		std::cout << "Vetrical symmetry point [leftX, rightX]: " << verticalSymmetryPoint << "\n";
+		std::cout << "Horizontal symmetry point [bottomY, topY]: " << horizontalSymmetryConductors << "\n";
+		std::cout << "Vertically symmetrical conductors: " << verticalSymmetryConductors;
+		std::cout << "Horizontally symmetrical conductors: " << horizontalSymmetryConductors;
+	}
+	else if (verticalSymmetryPoint != Point2D(0, 0) && verticalSymmetryConductors.getLength() > 0)
+	{
+		std::cout << "The strip structure was defined as vertically symmetrical\n";
+		std::cout << "Vetrical symmetry point [leftX, rightX]: " << verticalSymmetryPoint << "\n";
+		std::cout << "Symmetrical conductors: " << symmetryConductors;
+	}
+	else if (horizontalSymmetryPoint != Point2D(0, 0) && horizontalSymmetryConductors.getLength() > 0)
+	{
+		std::cout << "The strip structure was defined as horizontal symmetrical\n";
+		std::cout << "Horizontal symmetry point [bottomY, topY]: " << horizontalSymmetryConductors << "\n";
 		std::cout << "Symmetrical conductors: " << symmetryConductors;
 	}
 	else

@@ -228,6 +228,17 @@ void Rasterizer::drawLineBresenham(const Line2D* line2d, Matrix2D<Types::CellInf
 	int x2 = p2.x;
 	int y2 = p2.y;
 
+	if (x1 == x2 && line2d->getAlign() == Line2D::EAlign::LEFT)
+	{
+		x1--;
+		x2--;
+	}
+	if (y1 == y2 && line2d->getAlign() == Line2D::EAlign::RIGHT)
+	{
+		y1--;
+		y2--;
+	}
+
 	int dx = abs(x2 - x1);
 	int dy = abs(y2 - y1);
 	int dirx = x1 < x2 ? 1 : -1;
