@@ -57,12 +57,19 @@ Matrix2D<Types::LinearParameters> GridSolver::computeLinearParameters(const Matr
 		}
 	}
 	
-	Matrix2D<double> reverseCAirMatrix = MatrixTool::getReverseMatrix(CAirMatrix);
-	for (int i = 0; i < linearParam.getRows(); i++)
+	if (CAirMatrix.getRows() == 1)
 	{
-		for (int j = 0; j < linearParam.getCols(); j++)
+		linearParam[0][0].L = Types::mu0 * Types::e0 * 1 / CAirMatrix[0][0];
+	}
+	else
+	{
+		Matrix2D<double> reverseCAirMatrix = MatrixTool::getReverseMatrix(CAirMatrix);
+		for (int i = 0; i < linearParam.getRows(); i++)
 		{
-			linearParam[i][j].L = Types::mu0 * Types::e0 * reverseCAirMatrix[i][j];
+			for (int j = 0; j < linearParam.getCols(); j++)
+			{
+				linearParam[i][j].L = Types::mu0 * Types::e0 * reverseCAirMatrix[i][j];
+			}
 		}
 	}
 	
@@ -72,7 +79,7 @@ Matrix2D<Types::LinearParameters> GridSolver::computeLinearParameters(const Matr
 
 	std::cout << "\n\n";
 	std::cout << "**********************************************************************************************************************************************************************\n";
-	std::cout << "* > Strip structure potential field for air fill" << "\n";
+	std::cout << "* > RESULTS" << "\n";
 	std::cout << "* > Total calculation time of the grid method: " << time / 1000 << " seconds\n";
 	std::cout << "**********************************************************************************************************************************************************************\n\n";
 
@@ -1424,10 +1431,6 @@ void GridSolver::printResultInfo(
 	{
 		for (int j = 0; j < linearParam.getCols(); j++)
 		{
-			if (i == j)
-			{
-				std::cout << " ";
-			}
 			std::cout << linearParam[i][j].C << "   ";
 		}
 		if (i < linearParam.getRows() - 1)
@@ -1442,10 +1445,6 @@ void GridSolver::printResultInfo(
 	{
 		for (int j = 0; j < linearParam.getCols(); j++)
 		{
-			if (i == j)
-			{
-				std::cout << " ";
-			}
 			std::cout << linearParam[i][j].CAir << "   ";
 		}
 		if (i < linearParam.getRows() - 1)

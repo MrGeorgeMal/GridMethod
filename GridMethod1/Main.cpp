@@ -25,6 +25,7 @@ int main()
 	}
 	catch (const char* errorMsg)
 	{
+		std::cout << "\n";
 		std::cout << errorMsg;
 	}
 

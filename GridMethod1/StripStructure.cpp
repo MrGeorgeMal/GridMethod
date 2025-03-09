@@ -124,7 +124,7 @@ Rectangle2D* StripStructure::createScreenRectangle()
 	size.height = screenBound.top - screenBound.bottom;
 
 	Rectangle2D* screen = new Rectangle2D(point, size);
-	Dielectric* material = new Dielectric(1.0, 1e-12);
+	Dielectric* material = new Dielectric(1.0, 0.0);
 
 	screen->setMaterial(material);
 	screen->makeAsScreen(true);
