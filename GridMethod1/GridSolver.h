@@ -81,13 +81,14 @@ private:
 		Matrix2D<double>& potentialField,
 		const Vector<Point2D<int>>& initCells) const;
 
-	// Compute capacity for potentialField
-	double computeCapacity(
+	// Compute capacity and conductance for potential field
+	// return point from to value: [capacity ; conductance]
+	Point2D<double> computeCapacityAndConductance(
 		const Matrix2D<Types::CellInfo>& matrix,
 		const Matrix2D<double>& potentialField) const;
 
 	// Compute linear capacity matrix
-	void computeLinearCapacityMatrix(
+	void computeLinearCapacityAndConductanceMatrix(
 		Matrix2D<Types::CellInfo>& matrix,
 		const Vector<Vector<Point2D<int>>>& condCells,
 		const Vector<Point2D<int>>& initCells,

@@ -40,6 +40,7 @@ Types::CellInfo Rasterizer::getUpdatedCellInfo(Types::CellInfo oldCellInfo, Mate
 	{
 		Dielectric* dielectric = dynamic_cast<Dielectric*>(material);
 		updatedCellInfo.dielectricValue = dielectric->getDielectricValue();
+		updatedCellInfo.tgValue = dielectric->getTgValue();
 		updatedCellInfo.isConductor = false;
 	}
 	else if (material->getType() == "Conductor")

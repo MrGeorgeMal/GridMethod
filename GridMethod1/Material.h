@@ -54,14 +54,21 @@ protected:
 class Dielectric : public Material
 {
 public:
-	// Base constructor. Set permittivity 1.0
-	Dielectric() : Material(EType::DIELECTRIC), _dielectricValue(1.0) {}
+	// Base constructor. Set permittivity 1.0, loss tangent 0.0
+	Dielectric() : Material(EType::DIELECTRIC), _dielectricValue(1.0), _tgValue(0.0) {}
 
 	// Constructor
 	// _dielectricValue - dielectric permittivity value
-	Dielectric(double dielectricValue) : Material(EType::DIELECTRIC), _dielectricValue(dielectricValue) {}
+	Dielectric(double dielectricValue) : Material(EType::DIELECTRIC), _dielectricValue(dielectricValue), _tgValue(0.0) {}
+
+	// Constructor
+	// _dielectricValue - dielectric permittivity value
+	// _tgValue - loss tangent
+	Dielectric(double dielectricValue, double tgValue) : Material(EType::DIELECTRIC), _dielectricValue(dielectricValue), _tgValue(tgValue) {}
 
 	double getDielectricValue() { return _dielectricValue; }
+
+	double getTgValue() { return _tgValue; }
 
 	const char* getType() const override { return "Dielectric"; }
 	
@@ -70,13 +77,15 @@ public:
 		os << "[";
 		os << "Dielectric ; ";
 		os << _name << " ; ";
-		os << _dielectricValue << "]";
+		os << _dielectricValue << " ; ";
+		os << _tgValue << "]";
 		return os;
 	}
 
 private:
 	// Permittivity value
 	double _dielectricValue;
+	double _tgValue;
 };
 
 

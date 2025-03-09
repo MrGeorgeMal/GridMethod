@@ -62,8 +62,9 @@ namespace StructureCreator
 				}
 				if (type == "dielectric")
 				{
-					double value = jmaterial["value"];
-					Dielectric* newDielectric = new Dielectric(value);
+					double dk = jmaterial["dk"];
+					double df = jmaterial["df"];
+					Dielectric* newDielectric = new Dielectric(dk, df);
 					newDielectric->setName(name);
 
 					materials.add(newDielectric);

@@ -19,12 +19,14 @@
         {
             "type": "dielectric",
             "name": "dielectric_9.8",
-            "value": 9.8
+            "dk": 9.8,
+            "df": 0.002
         },
         {
             "type": "dielectric",
-            "name": "dielectric_6.5",
-            "value": 6.5
+            "name": "dielectric_6.15",
+            "dk": 6.15,
+            "df": 0.002
         }
     ],
 
@@ -48,7 +50,7 @@
             "point": [4.65, 1.0],
             "size": [0.7, 0.2],
             "screen": false,
-            "material": "dielectric_6.5"
+            "material": "dielectric_6.15"
         },
         {
             "type": "line",

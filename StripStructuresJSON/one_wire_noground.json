@@ -8,7 +8,8 @@
         {
             "type": "dielectric",
             "name": "d4.5",
-            "value": 4.5
+            "dk": 4.5,
+            "df": 0.003
         }
     ],
 
@@ -17,6 +18,7 @@
             "type": "rectangle",
             "point": [0.0, 0.0],
             "size": [10.0, 1.5],
+            "screen": false,
             "material": "d4.5"
         },
         {

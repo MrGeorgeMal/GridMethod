@@ -5,6 +5,8 @@ namespace Types {
 	// Absolute dielectric constant of vacuum [F/m]
 	const long double e0 = 8.854187818814e-12;
 
+	const long double pi = 3.1415926535;
+
 	// The speed of light [m/s]
 	const long double speedLight = 2.999792458e8;
 
@@ -18,6 +20,7 @@ namespace Types {
 	struct CellInfo
 	{
 		double dielectricValue = 1.0;
+		double tgValue = 0.0;
 		bool isConductor = false;
 		bool isSignalConductor = false;
 

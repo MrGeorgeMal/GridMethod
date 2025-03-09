@@ -32,7 +32,7 @@ Matrix2D<Types::LinearParameters> GridSolver::computeLinearParameters(const Matr
 	// compute linear capacity matrix for dielectric and air fill
 	Matrix2D<Types::LinearParameters> linearParam(condCells.getLength(), condCells.getLength());
 
-	computeLinearCapacityMatrix(
+	computeLinearCapacityAndConductanceMatrix(
 		matrix,
 		condCells,
 		initCells,
@@ -40,7 +40,7 @@ Matrix2D<Types::LinearParameters> GridSolver::computeLinearParameters(const Matr
 		linearParam,
 		false);
 
-	computeLinearCapacityMatrix(
+	computeLinearCapacityAndConductanceMatrix(
 		matrix,
 		condCells,
 		initCells,
@@ -1020,12 +1020,13 @@ int GridSolver::computeFieldPotential(
 
 
 // Compute capacity for potentialField
-double GridSolver::computeCapacity(const Matrix2D<Types::CellInfo>& matrix, const Matrix2D<double>& potentialField) const
+Point2D<double> GridSolver::computeCapacityAndConductance(const Matrix2D<Types::CellInfo>&matrix, const Matrix2D<double>&potentialField) const
 {
 	int rows = matrix.getRows() - 1;
 	int cols = matrix.getCols() - 1;
 
-	double energy = 0.0;
+	double dkEnergy = 0.0;
+	double dfEnergy = 0.0;
 
 	for (int y = 1; y < rows; y++)
 	{
@@ -1038,20 +1039,22 @@ double GridSolver::computeCapacity(const Matrix2D<Types::CellInfo>& matrix, cons
 				first = first * first;
 				second = second * second;
 
-				energy += (matrix[y][x].dielectricValue / 4) * (first + second);
+				dkEnergy += (matrix[y][x].dielectricValue / 4) * (first + second);
+				dfEnergy += (matrix[y][x].dielectricValue * matrix[y][x].tgValue / 4) * (first + second);
 			}
 		}
 	}
 
-	double capacity = 2 * Types::e0 * energy;
+	double capacity = 2 * Types::e0 * dkEnergy;
+	double conductance = 2 * Types::e0 * dfEnergy * 1e10;
 
-	return capacity;
+	return Point2D<double>(capacity, conductance);
 }
 
 
 
 // Compute linear capacity matrix
-void GridSolver::computeLinearCapacityMatrix(
+void GridSolver::computeLinearCapacityAndConductanceMatrix(
 	Matrix2D<Types::CellInfo>& matrix,
 	const Vector<Vector<Point2D<int>>>& condCells,
 	const Vector<Point2D<int>>& initCells,
@@ -1089,6 +1092,7 @@ void GridSolver::computeLinearCapacityMatrix(
 				else
 				{
 					linearParam[i][i].C = linearParam[symmetryConductors[j].x][j].C;
+					linearParam[i][i].G = linearParam[symmetryConductors[j].x][j].G;
 				}
 				computeTisConfig = false;
 				break;
@@ -1112,7 +1116,7 @@ void GridSolver::computeLinearCapacityMatrix(
 
 			if (isAirFill)
 			{
-				linearParam[i][i].CAir = computeCapacity(matrix, potentialField);
+				linearParam[i][i].CAir = computeCapacityAndConductance(matrix, potentialField).x;
 
 				std::cout << "\n\n";
 				std::cout << "**********************************************************************************************************************************************************************\n";
@@ -1124,7 +1128,8 @@ void GridSolver::computeLinearCapacityMatrix(
 			}
 			else
 			{
-				linearParam[i][i].C = computeCapacity(matrix, potentialField);
+				linearParam[i][i].C = computeCapacityAndConductance(matrix, potentialField).x;
+				linearParam[i][i].G = computeCapacityAndConductance(matrix, potentialField).y;
 
 				std::cout << "\n\n\n";
 				std::cout << "**********************************************************************************************************************************************************************\n";
@@ -1165,6 +1170,9 @@ void GridSolver::computeLinearCapacityMatrix(
 					{
 						linearParam[i][j].C = linearParam[symmetryConductors[k].x][j].C;
 						linearParam[j][i].C = linearParam[i][j].C;
+
+						linearParam[i][j].G = linearParam[symmetryConductors[k].x][j].G;
+						linearParam[j][i].G = linearParam[i][j].G;
 					}
 					computeTisConfig = false;
 					break;
@@ -1184,7 +1192,7 @@ void GridSolver::computeLinearCapacityMatrix(
 
 				if (isAirFill)
 				{
-					linearParam[i][j].CAir = (computeCapacity(matrix, potentialField) - linearParam[i][i].CAir - linearParam[j][j].CAir) / 2.0;
+					linearParam[i][j].CAir = (computeCapacityAndConductance(matrix, potentialField).x - linearParam[i][i].CAir - linearParam[j][j].CAir) / 2.0;
 					linearParam[j][i].CAir = linearParam[i][j].CAir;
 
 					std::cout << "\n\n";
@@ -1197,8 +1205,11 @@ void GridSolver::computeLinearCapacityMatrix(
 				}
 				else
 				{
-					linearParam[i][j].C = (computeCapacity(matrix, potentialField) - linearParam[i][i].C - linearParam[j][j].C) / 2.0;
+					linearParam[i][j].C = (computeCapacityAndConductance(matrix, potentialField).x - linearParam[i][i].C - linearParam[j][j].C) / 2.0;
 					linearParam[j][i].C = linearParam[i][j].C;
+
+					linearParam[i][j].G = (computeCapacityAndConductance(matrix, potentialField).y - linearParam[i][i].G - linearParam[j][j].G) / 2.0;
+					linearParam[j][i].G = linearParam[i][j].G;
 
 					std::cout << "\n\n\n";
 					std::cout << "**********************************************************************************************************************************************************************\n";
@@ -1408,7 +1419,7 @@ void GridSolver::printResultInfo(
 			{
 				std::cout << " ";
 			}
-			std::cout << linearParam[i][j].C << "\t";
+			std::cout << linearParam[i][j].C << "   ";
 		}
 		if (i < linearParam.getRows() - 1)
 		{
@@ -1426,7 +1437,7 @@ void GridSolver::printResultInfo(
 			{
 				std::cout << " ";
 			}
-			std::cout << linearParam[i][j].CAir << "\t";
+			std::cout << linearParam[i][j].CAir << "   ";
 		}
 		if (i < linearParam.getRows() - 1)
 		{
@@ -1455,7 +1466,7 @@ void GridSolver::printResultInfo(
 	{
 		for (int j = 0; j < linearParam.getCols(); j++)
 		{
-			std::cout << linearParam[i][j].G << "\t";
+			std::cout << linearParam[i][j].G << "   ";
 		}
 		if (i < linearParam.getRows() - 1)
 		{
@@ -1469,7 +1480,7 @@ void GridSolver::printResultInfo(
 	{
 		for (int j = 0; j < linearParam.getCols(); j++)
 		{
-			std::cout << linearParam[i][j].R << "\t";
+			std::cout << linearParam[i][j].R << "   ";
 		}
 		if (i < linearParam.getRows() - 1)
 		{
