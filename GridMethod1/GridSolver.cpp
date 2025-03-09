@@ -62,7 +62,7 @@ Matrix2D<Types::LinearParameters> GridSolver::computeLinearParameters(const Matr
 	{
 		for (int j = 0; j < linearParam.getCols(); j++)
 		{
-			linearParam[i][j].L = 1 / (Types::speedLight * Types::speedLight * reverseCAirMatrix[i][j]);
+			linearParam[i][j].L = Types::mu0 * Types::e0 * reverseCAirMatrix[i][j];
 		}
 	}
 	
@@ -1455,7 +1455,7 @@ void GridSolver::printResultInfo(
 	}
 
 	std::cout << "\n\n";
-	std::cout << "L -> Linear inductance[H/m]: " << "\n";
+	std::cout << "L -> Linear inductance [H/m]: " << "\n";
 	for (int i = 0; i < linearParam.getRows(); i++)
 	{
 		for (int j = 0; j < linearParam.getCols(); j++)
@@ -1470,7 +1470,7 @@ void GridSolver::printResultInfo(
 
 
 	std::cout << "\n\n";
-	std::cout << "G -> Linear conductivity[Sm/m]: " << "\n";
+	std::cout << "G -> Linear conductivity [Sm/m]: " << "\n";
 	for (int i = 0; i < linearParam.getRows(); i++)
 	{
 		for (int j = 0; j < linearParam.getCols(); j++)

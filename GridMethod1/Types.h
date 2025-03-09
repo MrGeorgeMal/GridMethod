@@ -2,8 +2,11 @@
 
 namespace Types {
 
-	// Absolute dielectric constant of vacuum [F/m]
+	// Absolute vacuum dielectric constant [F/m]
 	const long double e0 = 8.854187818814e-12;
+
+	// Absolute vacuum magnetic [N/A^2]
+	const long double mu0 = 1.2566370612720e-6;
 
 	const long double pi = 3.1415926535;
 

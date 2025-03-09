@@ -84,7 +84,7 @@ public:
 		}
 		if (m == 2)
 		{
-			determinant = matrix[0][0] * matrix[1][1] - (matrix[1][0] * matrix[0][1]);
+			determinant = (matrix[0][0] * matrix[1][1]) - (matrix[1][0] * matrix[0][1]);
 			return determinant;
 		}
 		if (m > 2)
