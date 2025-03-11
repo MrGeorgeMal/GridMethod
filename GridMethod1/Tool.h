@@ -71,13 +71,54 @@ public:
 	//Round double number
 	static double roundToDouble(double a, int round = roundOrder)
 	{
-		return std::round(a * roundOrder) / round;
+		return std::round(a * pow(10, round)) / pow(10, round);
 	}
+
+
+	// Define digits count after dot
+	static int defineDigitsCountAfterDot(double number)
+	{
+		std::string numstr = std::to_string(number);
+
+		int digitsAfterDot = 0;
+		int zeroCount = 0;
+		int nineCount = 0;
+		int maxError = roundOrder;
+		for (int j = numstr.find('.') + 1; j < numstr.length(); j++)
+		{
+			digitsAfterDot++;
+			if (numstr[j] == '0')
+			{
+				zeroCount++;
+			}
+			else
+			{
+				zeroCount = 0;
+			}
+			if (numstr[j] == '9')
+			{
+				nineCount++;
+			}
+			else
+			{
+				nineCount = 0;
+			}
+
+			if (zeroCount >= maxError || nineCount >= maxError)
+			{
+				digitsAfterDot -= zeroCount;
+				break;
+			}
+		}
+
+		return digitsAfterDot;
+	}
+
 
 private:
 
 	// Number of significant digits in rounding
-	static const int roundOrder = 1e6;
+	static const int roundOrder = 3;
 
 };
 

@@ -259,10 +259,20 @@ Size2D<double> StripStructure::defineMinSize() const
 	Tool::sort(x);
 	Tool::sort(y);
 
+	// Compute all length two points (for x and y coordinates)
+	Vector<double> lengthx;
+	Vector<double> lengthy;
+
 	// Find minimum length between two points
 	double mindx = abs(x[x.getLength() - 1] - x[0]);
 	for (int i = 1; i < x.getLength() - 1; i++)
 	{
+		double temp = Tool::roundToDouble(x[i + 1] - x[i]);
+		if (temp != 0.0)
+		{
+			lengthx.add(temp);
+		}
+
 		if (mindx > x[i + 1] - x[i] && Tool::roundToDouble(x[i + 1] - x[i]) != 0.0)
 		{
 			mindx = abs(x[i + 1] - x[i]);
@@ -272,11 +282,74 @@ Size2D<double> StripStructure::defineMinSize() const
 	double mindy = abs(y[y.getLength() - 1] - y[0]);
 	for (int i = 1; i < y.getLength() - 1; i++)
 	{
+		if (Tool::roundToDouble(y[i + 1] - y[i]) != 0.0)
+		{
+			lengthy.add(abs(y[i + 1] - y[i]));
+		}
+
 		if (mindy > y[i + 1] - y[i] && Tool::roundToDouble(y[i + 1] - y[i]) != 0.0)
 		{
 			mindy = abs(y[i + 1] - y[i]);
 		}
 	}
+
+	double minx = Tool::roundToDouble(x[x.getLength() - 1] - x[0]);
+	double miny = Tool::roundToDouble(y[y.getLength() - 1] - y[0]);
+
+	for (int i = 1; i < x.getLength() - 1; i++)
+	{
+		double length = Tool::roundToDouble(x[i + 1] - x[i]);
+		if (length != 0.0)
+		{
+			int digitsAfterDot = Tool::defineDigitsCountAfterDot(length);
+
+			if (digitsAfterDot == 0)
+			{
+				if (minx > length)
+				{
+					minx = length;
+				}
+			}
+			else
+			{
+				double temp = length * pow(10, digitsAfterDot - 1);
+
+				if (minx > temp - floor(temp) && temp - floor(temp) != 0.0)
+				{
+					minx = temp - floor(temp);
+					minx /= pow(10, digitsAfterDot - 1);
+				}
+			}
+		}
+	}
+	for (int i = 1; i < y.getLength() - 1; i++)
+	{
+		double length = Tool::roundToDouble(y[i + 1] - y[i]);
+		if (length != 0.0)
+		{
+			int digitsAfterDot = Tool::defineDigitsCountAfterDot(length);
+
+			if (digitsAfterDot == 0)
+			{
+				if (miny > length)
+				{
+					miny = length;
+				}
+			}
+			else
+			{
+				double temp = length * pow(10, digitsAfterDot - 1);
+
+				if (miny > temp - floor(temp) && temp - floor(temp) != 0.0)
+				{
+					miny = temp - floor(temp);
+					miny /= pow(10, digitsAfterDot - 1);
+				}
+			}
+		}
+	}
+
+	std::cout << "\n\n" << minx << " ; " << miny << "\n\n";
 
 	return Size2D<double>(mindx, mindy);
 }
