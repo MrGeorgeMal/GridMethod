@@ -17,7 +17,7 @@ Matrix2D<Types::LinearParameters> GridSolver::computeLinearParameters(const Matr
 
 	Point2D<int> verticalSymmetryPoint = defineVerticalSymmetryPoint(matrix);
 	Point2D<int> horizontalSymmetryPoint = defineHorizontalSymmetryPoint(matrix);
-	Vector<Point2D<int>> verticalSymmetryConductors = defineSymmetyConductors(condCells, verticalSymmetryPoint);
+	Vector<Point2D<int>> verticalSymmetryConductors = defineVerticalSymmetyConductors(condCells, verticalSymmetryPoint);
 	Vector<Point2D<int>> horizontalSymmetryConductors = defineHorizontalSymmetyConductors(condCells, horizontalSymmetryPoint);
 	Vector<Point2D<int>> symmetryConductors;
 	for (int i = 0; i < verticalSymmetryConductors.getLength(); i++)
@@ -230,7 +230,7 @@ Point2D<int> GridSolver::defineVerticalSymmetryPoint(const Matrix2D<Types::CellI
 	bool isSymmentry = true;
 	bool foundNonSymmetry = false;
 	int error = 0;
-	int center = cols / 2 - 1;
+	int center = cols / 2;
 
 	for (int x = center - 1; x >= 1; x--)
 	{
@@ -267,8 +267,8 @@ Point2D<int> GridSolver::defineVerticalSymmetryPoint(const Matrix2D<Types::CellI
 	isSymmentry = true;
 	foundNonSymmetry = false;
 	error = 0;
-	int rightCenter = (double)cols / 2.0;
-	int leftCenter = rightCenter - 1;
+	int rightCenter = (double)cols / 2.0 + 1.0;
+	int leftCenter = rightCenter - 2;
 
 	for (int x = leftCenter - 1; x >= 1; x--)
 	{
@@ -403,7 +403,7 @@ Point2D<int> GridSolver::defineHorizontalSymmetryPoint(const Matrix2D<Types::Cel
 // Define pair of symmetrycal conductors
 // return point: first and numbers - numbers of symmetrical conductors
 // return empty Vector if there is no symmetry
-Vector<Point2D<int>> GridSolver::defineSymmetyConductors(
+Vector<Point2D<int>> GridSolver::defineVerticalSymmetyConductors(
 	const Vector<Vector<Point2D<int>>>& conductorsCells,
 	const Point2D<int>& symmetryPoint) const
 {

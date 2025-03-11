@@ -34,14 +34,14 @@
         },
         {
             "type": "rectangle",
-            "point": [4.7, 1.0],
-            "size": [0.6, 0.2],
+            "point": [4.65, 1.0],
+            "size": [0.7, 0.2],
             "screen": false,
             "material": "dielectric_6.5"
         },
         {
             "type": "line",
-            "p1": [4.7, 1.0],
+            "p1": [4.65, 1.0],
             "p2": [4.9, 1.0],
             "align": "left",
             "material": "signal"
@@ -49,14 +49,14 @@
         {
             "type": "line",
             "p1": [5.1, 1.0],
-            "p2": [5.3, 1.0],
+            "p2": [5.35, 1.0],
             "align": "left",
             "material": "signal"
         },
         {
             "type": "line",
-            "p1": [4.7, 1.2],
-            "p2": [5.3, 1.2],
+            "p1": [4.65, 1.2],
+            "p2": [5.35, 1.2],
             "align": "left",
             "material": "signal"
         },

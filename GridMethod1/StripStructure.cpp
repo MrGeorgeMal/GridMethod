@@ -244,7 +244,7 @@ Size2D<double> StripStructure::defineMinSize() const
 			y.add(line->getP2().y);
 		}
 
-		if (_shapes[i]->getType() == "Polygon2D" || _shapes[i]->getType() == "Rectangle2D")
+		if (_shapes[i]->getType() == "Polygon2D")
 		{
 			Polygon2D* polygon = dynamic_cast<Polygon2D*>(_shapes[i]);
 			for (int i = 0; i < polygon->getPoints().getLength(); i++)
@@ -253,49 +253,33 @@ Size2D<double> StripStructure::defineMinSize() const
 				y.add(polygon->getPoints()[i].y);
 			}
 		}
+
+		if (_shapes[i]->getType() == "Rectangle2D")
+		{
+			Rectangle2D* rectangle = dynamic_cast<Rectangle2D*>(_shapes[i]);
+			if (rectangle->isScreen() == false)
+			{
+				for (int i = 0; i < rectangle->getPoints().getLength(); i++)
+				{
+					x.add(rectangle->getPoints()[i].x);
+					y.add(rectangle->getPoints()[i].y);
+				}
+			}
+		}
 	}
 
 	// Sort points in increasing order
 	Tool::sort(x);
 	Tool::sort(y);
 
-	// Compute all length two points (for x and y coordinates)
-	Vector<double> lengthx;
-	Vector<double> lengthy;
+	std::cout << x << "\n\n";
 
-	// Find minimum length between two points
-	double mindx = abs(x[x.getLength() - 1] - x[0]);
-	for (int i = 1; i < x.getLength() - 1; i++)
-	{
-		double temp = Tool::roundToDouble(x[i + 1] - x[i]);
-		if (temp != 0.0)
-		{
-			lengthx.add(temp);
-		}
+	// define min dx and dy
+	// the minimum size is determined by the smallest significant digit of the number
+	double mindx = Tool::roundToDouble(x[x.getLength() - 1] - x[0]);
+	double mindy = Tool::roundToDouble(y[y.getLength() - 1] - y[0]);
 
-		if (mindx > x[i + 1] - x[i] && Tool::roundToDouble(x[i + 1] - x[i]) != 0.0)
-		{
-			mindx = abs(x[i + 1] - x[i]);
-		}
-	}
-
-	double mindy = abs(y[y.getLength() - 1] - y[0]);
-	for (int i = 1; i < y.getLength() - 1; i++)
-	{
-		if (Tool::roundToDouble(y[i + 1] - y[i]) != 0.0)
-		{
-			lengthy.add(abs(y[i + 1] - y[i]));
-		}
-
-		if (mindy > y[i + 1] - y[i] && Tool::roundToDouble(y[i + 1] - y[i]) != 0.0)
-		{
-			mindy = abs(y[i + 1] - y[i]);
-		}
-	}
-
-	double minx = Tool::roundToDouble(x[x.getLength() - 1] - x[0]);
-	double miny = Tool::roundToDouble(y[y.getLength() - 1] - y[0]);
-
+	/*
 	for (int i = 1; i < x.getLength() - 1; i++)
 	{
 		double length = Tool::roundToDouble(x[i + 1] - x[i]);
@@ -305,19 +289,19 @@ Size2D<double> StripStructure::defineMinSize() const
 
 			if (digitsAfterDot == 0)
 			{
-				if (minx > length)
+				if (mindx > length)
 				{
-					minx = length;
+					mindx = length;
 				}
 			}
 			else
 			{
 				double temp = length * pow(10, digitsAfterDot - 1);
 
-				if (minx > temp - floor(temp) && temp - floor(temp) != 0.0)
+				if (mindx > temp - floor(temp) && temp - floor(temp) != 0.0)
 				{
-					minx = temp - floor(temp);
-					minx /= pow(10, digitsAfterDot - 1);
+					mindx = temp - floor(temp);
+					mindx /= pow(10, digitsAfterDot - 1);
 				}
 			}
 		}
@@ -331,25 +315,40 @@ Size2D<double> StripStructure::defineMinSize() const
 
 			if (digitsAfterDot == 0)
 			{
-				if (miny > length)
+				if (mindy > length)
 				{
-					miny = length;
+					mindy = length;
 				}
 			}
 			else
 			{
 				double temp = length * pow(10, digitsAfterDot - 1);
 
-				if (miny > temp - floor(temp) && temp - floor(temp) != 0.0)
+				if (mindy > temp - floor(temp) && temp - floor(temp) != 0.0)
 				{
-					miny = temp - floor(temp);
-					miny /= pow(10, digitsAfterDot - 1);
+					mindy = temp - floor(temp);
+					mindy /= pow(10, digitsAfterDot - 1);
 				}
 			}
 		}
 	}
-
-	std::cout << "\n\n" << minx << " ; " << miny << "\n\n";
+	*/
+	for (int i = 1; i < x.getLength() - 1; i++)
+	{
+		double length = Tool::roundToDouble(x[i + 1] - x[i]);
+		if (mindx > length && length != 0.0)
+		{
+			mindx = length;
+		}
+	}
+	for (int i = 1; i < y.getLength() - 1; i++)
+	{
+		double length = Tool::roundToDouble(y[i + 1] - y[i]);
+		if (mindy > length && length != 0.0)
+		{
+			mindy = length;
+		}
+	}
 
 	return Size2D<double>(mindx, mindy);
 }
@@ -361,39 +360,17 @@ Size2D<double> StripStructure::defineOptimalCellSize() const
 {
 	// compute optimal cell size
 	Size2D<double> optimalCellSize;
-	optimalCellSize.width = _screen->getWidth() / (double)_optimalGridSize.width;
-	optimalCellSize.height = _screen->getHeight() / (double)_optimalGridSize.height;
-
-	// if the calculated cell size is larger than the minimum structure size,
-	// so compute it based on the minimum structure size.
-	// division by 2 is necessary to improve accuracy (especially if the minimum size is a gap between two figures)
 	Size2D<double> minSize = defineMinSize();
-	bool isTooBigSize = false;
-	if (minSize.width / 2 < optimalCellSize.width)
-	{
-		optimalCellSize.width = minSize.width / 2;
-		isTooBigSize = true;
-	}
-	if (minSize.height / 2 < optimalCellSize.height)
-	{
-		optimalCellSize.height = minSize.height / 2;
-		isTooBigSize = true;
-	}
+
+	optimalCellSize.width = minSize.width / 4;
+	optimalCellSize.height = minSize.height / 4;
 
 	// if the cells are to be the same size, then equate the width and height.
 	// if there were no problems with the size of the initially computed cell size,
 	// it is better to choose the largest size, otherwise, the smallest
 	if (_isRegularGrid)
 	{
-		double size = 1.0;
-		if (isTooBigSize)
-		{
-			size = std::min(optimalCellSize.width, optimalCellSize.height);
-		}
-		else
-		{
-			size = std::max(optimalCellSize.width, optimalCellSize.height);
-		}
+		double size = std::min(optimalCellSize.width, optimalCellSize.height);
 		optimalCellSize.width = size;
 		optimalCellSize.height = size;
 	}
