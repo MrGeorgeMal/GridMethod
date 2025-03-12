@@ -79,6 +79,7 @@ Rectangle2D* StripStructure::findScreenRectangle() const
 Rectangle2D* StripStructure::createScreenRectangle()
 {
 	Vector<Shape2D*> signalConductorShapes;
+	double maxConductorSize = 0.0;
 	for (size_t i = 0; i < _shapes.getLength(); i++)
 	{
 		if (_shapes[i]->getMaterial()->getType() == "Conductor")
@@ -88,6 +89,22 @@ Rectangle2D* StripStructure::createScreenRectangle()
 			if (condMaterial->isSignal() == true)
 			{
 				signalConductorShapes.add(_shapes[i]->getCopy());
+
+				if (_shapes[i]->getType() == "Line2D")
+				{
+					Line2D* line = dynamic_cast<Line2D*>(_shapes[i]);
+					double dx = abs(line->getP2().x - line->getP1().x);
+					double dy = abs(line->getP2().y - line->getP1().y);
+
+					if (maxConductorSize < dx)
+					{
+						maxConductorSize = dx;
+					}
+					if (maxConductorSize < dy)
+					{
+						maxConductorSize = dy;
+					}
+				}
 			}
 		}
 	}
@@ -96,10 +113,16 @@ Rectangle2D* StripStructure::createScreenRectangle()
 	Rect2D<double> conductorBound = getRectBound(signalConductorShapes);
 	Rect2D<double> screenBound;
 
-	screenBound.left = conductorBound.left - _screenDistance;
-	screenBound.top = conductorBound.top + _screenDistance;
-	screenBound.right = conductorBound.right + _screenDistance;
-	screenBound.bottom = conductorBound.bottom - _screenDistance;
+	// define optimal screen distance
+	_screenDistance.width = maxConductorSize;
+	_screenDistance.height = maxConductorSize;
+	_screenDistance.width *= 10.0;
+	_screenDistance.height *= 10.0;
+
+	screenBound.left = conductorBound.left - _screenDistance.width;
+	screenBound.top = conductorBound.top + _screenDistance.height;
+	screenBound.right = conductorBound.right + _screenDistance.width;
+	screenBound.bottom = conductorBound.bottom - _screenDistance.height;
 
 	if (screenBound.left > generalBound.left)
 	{
@@ -272,67 +295,11 @@ Size2D<double> StripStructure::defineMinSize() const
 	Tool::sort(x);
 	Tool::sort(y);
 
-	std::cout << x << "\n\n";
-
 	// define min dx and dy
 	// the minimum size is determined by the smallest significant digit of the number
 	double mindx = Tool::roundToDouble(x[x.getLength() - 1] - x[0]);
 	double mindy = Tool::roundToDouble(y[y.getLength() - 1] - y[0]);
 
-	/*
-	for (int i = 1; i < x.getLength() - 1; i++)
-	{
-		double length = Tool::roundToDouble(x[i + 1] - x[i]);
-		if (length != 0.0)
-		{
-			int digitsAfterDot = Tool::defineDigitsCountAfterDot(length);
-
-			if (digitsAfterDot == 0)
-			{
-				if (mindx > length)
-				{
-					mindx = length;
-				}
-			}
-			else
-			{
-				double temp = length * pow(10, digitsAfterDot - 1);
-
-				if (mindx > temp - floor(temp) && temp - floor(temp) != 0.0)
-				{
-					mindx = temp - floor(temp);
-					mindx /= pow(10, digitsAfterDot - 1);
-				}
-			}
-		}
-	}
-	for (int i = 1; i < y.getLength() - 1; i++)
-	{
-		double length = Tool::roundToDouble(y[i + 1] - y[i]);
-		if (length != 0.0)
-		{
-			int digitsAfterDot = Tool::defineDigitsCountAfterDot(length);
-
-			if (digitsAfterDot == 0)
-			{
-				if (mindy > length)
-				{
-					mindy = length;
-				}
-			}
-			else
-			{
-				double temp = length * pow(10, digitsAfterDot - 1);
-
-				if (mindy > temp - floor(temp) && temp - floor(temp) != 0.0)
-				{
-					mindy = temp - floor(temp);
-					mindy /= pow(10, digitsAfterDot - 1);
-				}
-			}
-		}
-	}
-	*/
 	for (int i = 1; i < x.getLength() - 1; i++)
 	{
 		double length = Tool::roundToDouble(x[i + 1] - x[i]);
@@ -349,7 +316,7 @@ Size2D<double> StripStructure::defineMinSize() const
 			mindy = length;
 		}
 	}
-
+	
 	return Size2D<double>(mindx, mindy);
 }
 
@@ -362,8 +329,11 @@ Size2D<double> StripStructure::defineOptimalCellSize() const
 	Size2D<double> optimalCellSize;
 	Size2D<double> minSize = defineMinSize();
 
-	optimalCellSize.width = minSize.width / 4;
-	optimalCellSize.height = minSize.height / 4;
+	optimalCellSize.width = minSize.width / 20;
+	optimalCellSize.height = minSize.height / 20;
+
+	//optimalCellSize.width = 0.035;
+	//optimalCellSize.height = 0.035;
 
 	// if the cells are to be the same size, then equate the width and height.
 	// if there were no problems with the size of the initially computed cell size,

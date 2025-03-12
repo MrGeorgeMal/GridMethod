@@ -22,11 +22,14 @@ namespace Types {
 	// Cell info type
 	struct CellInfo
 	{
+		double dx = 1.0;
+		double dy = 1.0;
 		double dielectricValue = 1.0;
 		double tgValue = 0.0;
 		bool isConductor = false;
 		bool isSignalConductor = false;
-
+		bool isHorizontalDielectricBound = false;
+		bool isVerticalDielectricBound = false;
 
 		bool operator == (CellInfo cellInfo)
 		{
@@ -51,6 +54,7 @@ namespace Types {
 		long double L = 0.0;
 		long double R = 0.0;
 		long double G = 0.0;
+		long double epsEff = 0.0;
+		long double Z = 0.0;
 	};
-
 }

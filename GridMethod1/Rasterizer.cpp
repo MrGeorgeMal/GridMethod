@@ -75,6 +75,8 @@ const Matrix2D<Types::CellInfo> Rasterizer::rasterize(const Vector<Shape2D*>& sh
 		for (int x = 0; x < matrix.getCols(); x++)
 		{
 			Types::CellInfo cellInfo = getUpdatedCellInfo(matrix[y][x], screen->getMaterial());
+			cellInfo.dx = _cell.width;
+			cellInfo.dy = _cell.height;
 			matrix[y][x] = cellInfo;
 		}
 	}
@@ -92,10 +94,18 @@ const Matrix2D<Types::CellInfo> Rasterizer::rasterize(const Vector<Shape2D*>& sh
 				rasterizeLine(line, matrix);
 			}
 
-			if (shapes[i]->getType() == "Polygon2D" || shapes[i]->getType() == "Rectangle2D")
+			if (shapes[i]->getType() == "Polygon2D")
 			{
 				Polygon2D* polygon = dynamic_cast<Polygon2D*>(shapes[i]);
 				rasterizePolygon(polygon, matrix);
+			}
+
+			if (shapes[i]->getType() == "Rectangle2D")
+			{
+				Rectangle2D* rectangle = dynamic_cast<Rectangle2D*>(shapes[i]);
+				rectangle->setWidth(rectangle->getWidth());
+				rectangle->setHeight(rectangle->getHeight());
+				rasterizePolygon(rectangle, matrix);
 			}
 		}
 	}
@@ -150,6 +160,7 @@ bool Rasterizer::isInsidePolygon(int x, int y, const Vector<Point2D<double>>& po
 	double cy = (double)y + 0.5;
 	
 	int j = polygonPoints.getLength() - 1;
+
 	for (int i = 0; i < polygonPoints.getLength(); i++)
 	{
 		Point2D<int> pi = Tool::discretizePoint(polygonPoints[i], _cell);

@@ -13,7 +13,6 @@ Matrix2D<Types::LinearParameters> GridSolver::computeLinearParameters(const Matr
 
 	// defines
 	Vector<Vector<Point2D<int>>> condCells = defineAllConductorsCells(matrix);
-	Vector<Point2D<int>> initCells = defineInitialCellsForFieldPropagation(matrix, condCells);
 
 	Point2D<int> verticalSymmetryPoint = defineVerticalSymmetryPoint(matrix);
 	Point2D<int> horizontalSymmetryPoint = defineHorizontalSymmetryPoint(matrix);
@@ -28,6 +27,7 @@ Matrix2D<Types::LinearParameters> GridSolver::computeLinearParameters(const Matr
 	{
 		symmetryConductors.add(horizontalSymmetryConductors[i]);
 	}
+	Vector<Point2D<int>> initCells = defineInitialCellsForFieldPropagation(matrix, condCells);
 
 	// compute linear capacity matrix for dielectric and air fill
 	Matrix2D<Types::LinearParameters> linearParam(condCells.getLength(), condCells.getLength());
@@ -48,6 +48,7 @@ Matrix2D<Types::LinearParameters> GridSolver::computeLinearParameters(const Matr
 		linearParam,
 		true);
 
+	// compute linear inductance
 	Matrix2D<double> CAirMatrix(linearParam.getRows(), linearParam.getCols());
 	for (int i = 0; i < CAirMatrix.getRows(); i++)
 	{
@@ -73,6 +74,14 @@ Matrix2D<Types::LinearParameters> GridSolver::computeLinearParameters(const Matr
 		}
 	}
 	
+	// coumpute effective dielectric constant
+	for (int i = 0; i < linearParam.getRows(); i++)
+	{
+		for (int j = 0; j < linearParam.getCols(); j++)
+		{
+			linearParam[i][j].epsEff = linearParam[i][j].C / linearParam[i][j].CAir;
+		}
+	}
 
 	auto end = std::chrono::steady_clock::now();
 	double time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
@@ -224,12 +233,15 @@ Point2D<int> GridSolver::defineVerticalSymmetryPoint(const Matrix2D<Types::CellI
 	int rows = matrix.getRows();
 	int cols = matrix.getCols();
 
+	Point2D<int> centerPoint = Point2D<int>(0, 0);
+
 	// Added an error counter.
 	// This is related to sampling and rasterization problems.
 	// If only one wrong column is encountered when defining symmetry - this structure is still considered symmetric
 	bool isSymmentry = true;
 	bool foundNonSymmetry = false;
-	int error = 0;
+	int error1 = 0;
+	int globalError1 = 0;
 	int center = cols / 2;
 
 	for (int x = center - 1; x >= 1; x--)
@@ -239,7 +251,8 @@ Point2D<int> GridSolver::defineVerticalSymmetryPoint(const Matrix2D<Types::CellI
 		{
 			if (matrix[y][x] != matrix[y][center + offset])
 			{
-				error++;
+				error1++;
+				globalError1++;
 				foundNonSymmetry = true;
 				break;
 			}
@@ -250,25 +263,63 @@ Point2D<int> GridSolver::defineVerticalSymmetryPoint(const Matrix2D<Types::CellI
 		}
 		if (foundNonSymmetry == false)
 		{
-			error = 0;
+			error1 = 0;
 		}
-		else if (error > 1)
+		else if (error1 > 1)
 		{
 			isSymmentry = false;
 			break;
 		}
 	}
-
 	if (isSymmentry == true)
 	{
-		return Point2D(center, center);
+		centerPoint = Point2D(center, center);
 	}
 
 	isSymmentry = true;
 	foundNonSymmetry = false;
-	error = 0;
-	int rightCenter = (double)cols / 2.0 + 1.0;
-	int leftCenter = rightCenter - 2;
+	int error2 = 0;
+	int globalError2 = 0;
+	center = cols / 2 - 1;
+
+	for (int x = center - 1; x >= 1; x--)
+	{
+		int offset = center - x;
+		for (int y = 1; y < matrix.getRows(); y++)
+		{
+			if (matrix[y][x] != matrix[y][center + offset])
+			{
+				error2++;
+				globalError2++;
+				foundNonSymmetry = true;
+				break;
+			}
+			else
+			{
+				foundNonSymmetry = false;
+			}
+		}
+		if (foundNonSymmetry == false)
+		{
+			error2 = 0;
+		}
+		else if (error2 > 1)
+		{
+			isSymmentry = false;
+			break;
+		}
+	}
+	if (isSymmentry == true && globalError2 < globalError1)
+	{
+		centerPoint = Point2D(center, center);
+	}
+
+	isSymmentry = true;
+	foundNonSymmetry = false;
+	int error3 = 0;
+	int globalError3 = 0;
+	int rightCenter = (double)cols / 2.0;
+	int leftCenter = rightCenter - 1;
 
 	for (int x = leftCenter - 1; x >= 1; x--)
 	{
@@ -277,7 +328,8 @@ Point2D<int> GridSolver::defineVerticalSymmetryPoint(const Matrix2D<Types::CellI
 		{
 			if (matrix[y][x] != matrix[y][rightCenter + offset])
 			{
-				error++;
+				error3++;
+				globalError3++;
 				foundNonSymmetry = true;
 				break;
 			}
@@ -288,21 +340,61 @@ Point2D<int> GridSolver::defineVerticalSymmetryPoint(const Matrix2D<Types::CellI
 		}
 		if (foundNonSymmetry == false)
 		{
-			error = 0;
+			error3 = 0;
 		}
-		else if (error > 1)
+		else if (error3 > 1)
 		{
 			isSymmentry = false;
 			break;
 		}
 	}
 
-	if (isSymmentry == true)
+	if (isSymmentry == true && globalError3 < globalError2)
 	{
-		return Point2D(leftCenter, rightCenter);
+		centerPoint = Point2D(leftCenter, rightCenter);
 	}
 
-	return Point2D(0, 0);
+	isSymmentry = true;
+	foundNonSymmetry = false;
+	int error4 = 0;
+	int globalError4 = 0;
+	rightCenter = (double)cols / 2.0 + 1.0;
+	leftCenter = rightCenter - 1;
+
+	for (int x = leftCenter - 1; x >= 1; x--)
+	{
+		int offset = leftCenter - x;
+		for (int y = 1; y < matrix.getRows(); y++)
+		{
+			if (matrix[y][x] != matrix[y][rightCenter + offset])
+			{
+				error4++;
+				globalError4++;
+				foundNonSymmetry = true;
+				break;
+			}
+			else
+			{
+				foundNonSymmetry = false;
+			}
+		}
+		if (foundNonSymmetry == false)
+		{
+			error4 = 0;
+		}
+		else if (error4 > 1)
+		{
+			isSymmentry = false;
+			break;
+		}
+	}
+
+	if (isSymmentry == true && globalError4 < globalError3)
+	{
+		centerPoint = Point2D(leftCenter, rightCenter);
+	}
+
+	return centerPoint;
 }
 
 
@@ -717,9 +809,14 @@ void GridSolver::computeCellPotential(
 	int x = computedPoint.x;
 	int y = computedPoint.y;
 
+
+	//if (x > 0 && x < cols &&
+	//	y > 0 && y < rows &&
+	//	potentialField[y][x] == bufferPotentialField[y][x])
+
+
 	if (x > 0 && x < cols &&
-		y > 0 && y < rows &&
-		potentialField[y][x] == bufferPotentialField[y][x])
+		y > 0 && y < rows)
 	{
 		if (matrix[y][x].isConductor == false)
 		{
@@ -727,17 +824,50 @@ void GridSolver::computeCellPotential(
 			double tu = potentialField[y + 1][x];
 			double ru = potentialField[y][x + 1];
 			double bu = potentialField[y - 1][x];
+
+			double e = matrix[y][x].dielectricValue;
 			double le = matrix[y][x - 1].dielectricValue;
 			double te = matrix[y + 1][x].dielectricValue;
 			double re = matrix[y][x + 1].dielectricValue;
 			double be = matrix[y - 1][x].dielectricValue;
 
-			lu = (2 * le * lu) / (le + re);
-			tu = (2 * te * tu) / (be + te);
-			ru = (2 * re * ru) / (le + re);
-			bu = (2 * be * bu) / (be + te);
+			lu = (matrix[y][x - 1].dy * lu);
+			tu = (matrix[y + 1][x].dx * tu);
+			ru = (matrix[y][x + 1].dy * ru);
+			bu = (matrix[y - 1][x].dx * bu);
 
-			double u = 0.25 * (tu + bu + lu + ru);
+
+			double u = tu + bu + lu + ru;
+			u = u / (2 * matrix[y][x].dx + 2 * matrix[y][x].dy);
+
+			if (le == re && (e != be || e != te))
+			{
+				if (matrix[y - 1][x].isHorizontalDielectricBound == false &&
+					matrix[y + 1][x].isHorizontalDielectricBound == false &&
+					matrix[y - 1][x].isConductor == false &&
+					matrix[y + 1][x].isConductor == false)
+				{
+					double sumE = (be + te) / 2;
+					u = (te * tu) + (be * bu) + sumE * (lu + ru);
+					u = u / ((2 * matrix[y][x].dx + 2 * matrix[y][x].dy) * sumE);
+					matrix[y][x].isHorizontalDielectricBound = true;
+				}
+			}
+			
+			else if (te == be && (e != le || e != re))
+			{
+				if (matrix[y][x - 1].isVerticalDielectricBound == false &&
+					matrix[y][x + 1].isVerticalDielectricBound == false &&
+					matrix[y][x - 1].isConductor == false &&
+					matrix[y][x + 1].isConductor == false)
+				{
+					double sumE = (re + le) / 2;
+					u = sumE * (tu + bu) + (le * lu) + (re * ru);
+					u = u / ((2 * matrix[y][x].dx + 2 * matrix[y][x].dy) * sumE);
+					matrix[y][x].isVerticalDielectricBound = true;
+				}
+			}
+			
 			potentialField[y][x] = relaxationCoeff * u + (1 - relaxationCoeff) * potentialField[y][x];
 		}
 	}
@@ -925,6 +1055,15 @@ int GridSolver::computeFieldPotential(
 
 	double currentAccuracy = 0.0;
 	int iteration = 0;
+
+	for (int y = 1; y < rows; y++)
+	{
+		for (int x = 1; x < cols; x++)
+		{
+			matrix[y][x].isHorizontalDielectricBound = false;
+			matrix[y][x].isVerticalDielectricBound = false;
+		}
+	}
 
 	while (currentAccuracy <= accuracy)
 	{
@@ -1489,6 +1628,20 @@ void GridSolver::printResultInfo(
 		for (int j = 0; j < linearParam.getCols(); j++)
 		{
 			std::cout << linearParam[i][j].R << "   ";
+		}
+		if (i < linearParam.getRows() - 1)
+		{
+			std::cout << "\n\n";
+		}
+	}
+
+	std::cout << "\n\n";
+	std::cout << "epsEff -> effective dielectric constant: " << "\n";
+	for (int i = 0; i < linearParam.getRows(); i++)
+	{
+		for (int j = 0; j < linearParam.getCols(); j++)
+		{
+			std::cout << linearParam[i][j].epsEff << "   ";
 		}
 		if (i < linearParam.getRows() - 1)
 		{

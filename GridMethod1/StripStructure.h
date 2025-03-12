@@ -109,7 +109,7 @@ private:
 	//Size2D<int> _optimalGridSize = Size2D<int>(300, 300);
 
 	// Gap between shapes and screen
-	double _screenDistance = 2.0;
+	Size2D<double> _screenDistance = Size2D<double>(10.0, 10.0);
 
 #pragma endregion
 

@@ -148,7 +148,7 @@ private:
 
 	// Cumpute accuracy
 	// must be 0.0 < value < 1.0
-	double accuracy = 0.99;
+	double accuracy = 0.9;
 
 #pragma endregion
 

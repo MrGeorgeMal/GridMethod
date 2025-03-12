@@ -12,8 +12,14 @@
         },
         {
             "type": "dielectric",
-            "name": "d4.5",
-            "dk": 4.5,
+            "name": "d1",
+            "dk": 15,
+            "df": 0.003
+        },
+        {
+            "type": "dielectric",
+            "name": "d2",
+            "dk": 3.55,
             "df": 0.003
         }
     ],
@@ -22,28 +28,28 @@
         {
             "type": "rectangle",
             "point": [0.0, 0.0],
-            "size": [40.0, 1.5],
+            "size": [25.0, 1.0],
             "screen": false,
-            "material": "d4.5"
+            "material": "d1"
+        },
+        {
+            "type": "rectangle",
+            "point": [0.0, 1.0],
+            "size": [25.0, 1.52],
+            "screen": false,
+            "material": "d2"
         },
         {
             "type": "line",
-            "p1": [18.5, 1.5],
-            "p2": [19.5, 1.5],
-            "align": "left",
-            "material": "signal"
-        },
-        {
-            "type": "line",
-            "p1": [20.5, 1.5],
-            "p2": [21.5, 1.5],
+            "p1": [10.7, 2.52],
+            "p2": [14.3, 2.52],
             "align": "left",
             "material": "signal"
         },
         {
             "type": "line",
             "p1": [0.0, 0.0],
-            "p2": [40.0, 0.0],
+            "p2": [25.0, 0.0],
             "align": "right",
             "material": "ground"
         }
