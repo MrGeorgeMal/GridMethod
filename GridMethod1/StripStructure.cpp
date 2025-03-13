@@ -79,6 +79,8 @@ Rectangle2D* StripStructure::findScreenRectangle() const
 Rectangle2D* StripStructure::createScreenRectangle()
 {
 	Vector<Shape2D*> signalConductorShapes;
+
+	// find conductor with max length
 	double maxConductorSize = 0.0;
 	for (size_t i = 0; i < _shapes.getLength(); i++)
 	{
@@ -116,8 +118,8 @@ Rectangle2D* StripStructure::createScreenRectangle()
 	// define optimal screen distance
 	_screenDistance.width = maxConductorSize;
 	_screenDistance.height = maxConductorSize;
-	_screenDistance.width *= 10.0;
-	_screenDistance.height *= 10.0;
+	_screenDistance.width *= 5.0;
+	_screenDistance.height *= 5.0;
 
 	screenBound.left = conductorBound.left - _screenDistance.width;
 	screenBound.top = conductorBound.top + _screenDistance.height;
@@ -141,6 +143,69 @@ Rectangle2D* StripStructure::createScreenRectangle()
 		screenBound.bottom = generalBound.bottom;
 	}
 
+	// cutting off unnecessary dimensions due to the grounding conductors
+	Vector<Line2D*> groundConductors;
+	for (int i = 0; i < _shapes.getLength(); i++)
+	{
+		if (_shapes[i]->getType() == "Line2D" &&
+			_shapes[i]->getMaterial()->getType() == "Conductor")
+		{
+			Conductor* conductor = dynamic_cast<Conductor*>(_shapes[i]->getMaterial());
+			
+			if (conductor->isSignal() == false)
+			{
+				Line2D* line = dynamic_cast<Line2D*>(_shapes[i]);
+				groundConductors.add(line);
+			}
+		}
+	}
+
+	for (int i = 0; i < groundConductors.getLength(); i++)
+	{
+		double x1 = groundConductors[i]->getP1().x;
+		double y1 = groundConductors[i]->getP1().y;
+		double x2 = groundConductors[i]->getP2().x;
+		double y2 = groundConductors[i]->getP2().y;
+
+		if (x1 > x2)
+		{
+			Tool::swap(x1, x2);
+		}
+		if (y1 > y2)
+		{
+			Tool::swap(y1, y2);
+		}
+
+		if (x1 == generalBound.left && x2 == generalBound.right)
+		{
+			if (conductorBound.bottom > y1 &&
+				conductorBound.bottom > y2)
+			{
+				screenBound.bottom = y2;
+			}
+			if (conductorBound.top < y1 &&
+				conductorBound.top < y2)
+			{
+				screenBound.top = y1;
+			}
+		}
+
+		if (y1 == generalBound.bottom && y2 == generalBound.top)
+		{
+			if (conductorBound.left > x1 &&
+				conductorBound.left > x2)
+			{
+				screenBound.left = x2;
+			}
+			if (conductorBound.right < x1 &&
+				conductorBound.right < x2)
+			{
+				screenBound.right = x1;
+			}
+		}
+	}
+
+	// set screen info
 	Point2D<double> point(screenBound.left, screenBound.bottom);
 	Size2D<double> size;
 	size.width = screenBound.right - screenBound.left;
@@ -325,35 +390,62 @@ Size2D<double> StripStructure::defineMinSize() const
 // Define optimal cell size
 Size2D<double> StripStructure::defineOptimalCellSize() const
 {
-	// compute optimal cell size
-	Size2D<double> optimalCellSize;
+	Size2D<double> cellSize = Size2D<double>(1.0, 1.0);
 	Size2D<double> minSize = defineMinSize();
+	if (_isRegularGrid)
+	{
+		double size = std::min(minSize.width, minSize.height);
+		minSize.width = size;
+		minSize.height = size;
+	}
 
 	if (_accuracy != 0.0)
 	{
-		optimalCellSize.width = (1 / _accuracy) / 10;
-		optimalCellSize.height = (1 / _accuracy) / 10;
+		cellSize.width = (1 / _accuracy) / 10;
+		cellSize.height = (1 / _accuracy) / 10;
 	}
 	else
 	{
-		optimalCellSize.width = minSize.width / 10;
-		optimalCellSize.height = minSize.height / 10;
+		cellSize.width = minSize.width / 10;
+		cellSize.height = minSize.height / 10;
+
+		Size2D<int> gridSize = Tool::discretizeSize(_screen->getSize(), cellSize);
+
+		int currentCellsCount = gridSize.width * gridSize.height;
+
+		int k = 1;
+		if (currentCellsCount < _maxCellsCount)
+		{
+			while (currentCellsCount < _maxCellsCount)
+			{
+				cellSize.width = minSize.width / (10 + k);
+				cellSize.height = minSize.height / (10 + k);
+				gridSize = Tool::discretizeSize(_screen->getSize(), cellSize);
+				currentCellsCount = gridSize.width * gridSize.height;
+				k++;
+			}
+			k--;
+
+		}
+		else if (currentCellsCount > _maxCellsCount)
+		{
+			k = -1;
+			while (currentCellsCount > _maxCellsCount)
+			{
+				cellSize.width = minSize.width / (10 + k);
+				cellSize.height = minSize.height / (10 + k);
+				gridSize = Tool::discretizeSize(_screen->getSize(), cellSize);
+				currentCellsCount = gridSize.width * gridSize.height;
+				k--;
+			}
+			k++;
+		}
+
+		cellSize.width = minSize.width / (10 + k);
+		cellSize.height = minSize.height / (10 + k);
 	}
 
-	//optimalCellSize.width = 0.035;
-	//optimalCellSize.height = 0.035;
-
-	// if the cells are to be the same size, then equate the width and height.
-	// if there were no problems with the size of the initially computed cell size,
-	// it is better to choose the largest size, otherwise, the smallest
-	if (_isRegularGrid)
-	{
-		double size = std::min(optimalCellSize.width, optimalCellSize.height);
-		optimalCellSize.width = size;
-		optimalCellSize.height = size;
-	}
-
-	return optimalCellSize;
+	return cellSize;
 }
 
 

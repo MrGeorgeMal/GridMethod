@@ -138,8 +138,18 @@ namespace StructureCreator
 		}
 		catch (const json::parse_error& e)
 		{
-			std::cout << "JSON parse error\n" << e.what() << std::endl;
+			std::cout << "\nJSON parse error\n" << e.what() << "\n";
 			throw "StructureCreator::createStripStructureFromJson::Parse failed";
+		}
+		catch (const json::type_error& e)
+		{
+			std::cout << "\nJSON type error\n" << e.what() << "\n";
+			throw "StructureCreator::createStripStructureFromJson::Parse failed [type error]";
+		}
+		catch (const std::exception& e)
+		{
+			std::cout << "\nJSON general error\n" << e.what() << "\n";
+			throw "StructureCreator::createStripStructureFromJson::Parse failed [general error]";
 		}
 		
 		return stripStructure;

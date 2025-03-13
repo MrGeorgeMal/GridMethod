@@ -138,7 +138,7 @@ const Matrix2D<Types::CellInfo> Rasterizer::rasterize(const Vector<Shape2D*>& sh
 void Rasterizer::plot(Matrix2D<Types::CellInfo>& matrix, int x, int y, Material* material) const
 {
 	x += _screenBorder;
-	y += _screenBorder;
+	y += _screenBorder + 1;
 
 	if (x >= _screenBorder && x < matrix.getCols() - _screenBorder &&
 		y >= _screenBorder && y < matrix.getRows() - _screenBorder)
