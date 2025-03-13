@@ -329,8 +329,16 @@ Size2D<double> StripStructure::defineOptimalCellSize() const
 	Size2D<double> optimalCellSize;
 	Size2D<double> minSize = defineMinSize();
 
-	optimalCellSize.width = minSize.width / 20;
-	optimalCellSize.height = minSize.height / 20;
+	if (_accuracy != 0.0)
+	{
+		optimalCellSize.width = (1 / _accuracy) / 10;
+		optimalCellSize.height = (1 / _accuracy) / 10;
+	}
+	else
+	{
+		optimalCellSize.width = minSize.width / 10;
+		optimalCellSize.height = minSize.height / 10;
+	}
 
 	//optimalCellSize.width = 0.035;
 	//optimalCellSize.height = 0.035;

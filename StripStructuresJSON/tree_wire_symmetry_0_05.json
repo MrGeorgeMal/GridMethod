@@ -1,4 +1,6 @@
 {
+    "accuracy": 4.0,
+
     "materials": [
         {
             "type": "conductor",

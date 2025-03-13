@@ -836,10 +836,48 @@ void GridSolver::computeCellPotential(
 			ru = (matrix[y][x + 1].dy * ru);
 			bu = (matrix[y - 1][x].dx * bu);
 
-
+			
 			double u = tu + bu + lu + ru;
 			u = u / (2 * matrix[y][x].dx + 2 * matrix[y][x].dy);
 
+			if ((e != be || e != te) &&
+				matrix[y - 1][x].isConductor == false &&
+				matrix[y + 1][x].isConductor == false)
+			{
+				double sumE = (be + te) / 2;
+				u = (te * tu) + (be * bu) + sumE * (lu + ru);
+				u = u / ((2 * matrix[y][x].dx + 2 * matrix[y][x].dy) * sumE);
+			}
+
+			if ((e != le || e != re) &&
+				matrix[y][x - 1].isConductor == false &&
+				matrix[y][x + 1].isConductor == false)
+			{
+				double sumE = (re + le) / 2;
+				u = sumE * (tu + bu) + (le * lu) + (re * ru);
+				u = u / ((2 * matrix[y][x].dx + 2 * matrix[y][x].dy) * sumE);
+			}
+
+			/*
+			if ((e != be || e != te) &&
+				matrix[y - 1][x].isConductor == false &&
+				matrix[y + 1][x].isConductor == false)
+			{
+				u = (2 * te * tu) / (te + be) + (2 * be * bu) / (te + be) + lu + ru;
+				u = u / (2 * matrix[y][x].dx + 2 * matrix[y][x].dy);
+				matrix[y][x].isHorizontalDielectricBound = true;
+			}
+
+			if ((e != le || e != re) &&
+				matrix[y][x - 1].isConductor == false &&
+				matrix[y][x + 1].isConductor == false)
+			{
+				u = tu + bu + (2 * le * lu) / (le + re) + (2 * re * ru) / (le + re);
+				u = u / (2 * matrix[y][x].dx + 2 * matrix[y][x].dy);
+				matrix[y][x].isVerticalDielectricBound = true;
+			}
+			*/
+			/*
 			if (le == re && (e != be || e != te))
 			{
 				if (matrix[y - 1][x].isHorizontalDielectricBound == false &&
@@ -867,7 +905,8 @@ void GridSolver::computeCellPotential(
 					matrix[y][x].isVerticalDielectricBound = true;
 				}
 			}
-			
+			*/
+
 			potentialField[y][x] = relaxationCoeff * u + (1 - relaxationCoeff) * potentialField[y][x];
 		}
 	}

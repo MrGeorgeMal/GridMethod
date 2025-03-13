@@ -83,6 +83,8 @@ public:
 	// Get shapes
 	const Vector<Shape2D*> getShapes() const { return _shapes; }
 
+	void setAccuracy(double accuracy) { _accuracy = accuracy; }
+
 #pragma endregion
 
 
@@ -107,6 +109,8 @@ private:
 
 	// Optimal grid size, ONLY EVEN numbers
 	//Size2D<int> _optimalGridSize = Size2D<int>(300, 300);
+
+	double _accuracy = 0.0;
 
 	// Gap between shapes and screen
 	Size2D<double> _screenDistance = Size2D<double>(10.0, 10.0);

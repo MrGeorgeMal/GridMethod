@@ -47,6 +47,8 @@ namespace StructureCreator
 			
 			Vector<Material*> materials;
 
+			stripStructure.setAccuracy(config["accuracy"]);
+
 			for (auto& jmaterial: config["materials"])
 			{
 				std::string type = jmaterial["type"];

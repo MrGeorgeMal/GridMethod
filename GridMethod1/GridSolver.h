@@ -144,11 +144,12 @@ private:
 
 	// relaxationCoeff used for the relaxation method to calculate the potential in the cell
 	// must be 1.0 < value < 2.0
-	double relaxationCoeff = 1.8;
+	double relaxationCoeff = 1.7;
 
 	// Cumpute accuracy
 	// must be 0.0 < value < 1.0
-	double accuracy = 0.9;
+	double accuracy = 0.99;
+	//double accuracy = 0.9;
 
 #pragma endregion
 
