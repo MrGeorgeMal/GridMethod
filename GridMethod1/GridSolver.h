@@ -130,7 +130,8 @@ private:
 		const Vector<Point2D<int>>& verticalSymmetryConductors,
 		const Vector<Point2D<int>>& horizontalSymmetryConductors,
 		const Vector<Point2D<int>>& symmetryConductors,
-		const Matrix2D<Types::LinearParameters>& linearParam) const;
+		const Matrix2D<Types::LinearParameters>& linearParam,
+		Matrix2D<Types::PrimaryParameters> primaryParameters) const;
 
 	// Draw potential field
 	void drawField(const Matrix2D<double>& potentialField) const;

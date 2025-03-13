@@ -109,7 +109,7 @@ private:
 
 	// Optimal grid size, ONLY EVEN numbers
 	//Size2D<int> _optimalGridSize = Size2D<int>(300, 300);
-	int _maxCellsCount = 3e5;
+	int _maxCellsCount = 2e5;
 
 	double _accuracy = 0.0;
 

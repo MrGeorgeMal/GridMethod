@@ -73,7 +73,96 @@ Matrix2D<Types::LinearParameters> GridSolver::computeLinearParameters(const Matr
 			}
 		}
 	}
-	
+
+	// primary parameters
+	Matrix2D<Types::PrimaryParameters> primaryParameters(condCells.getLength(), condCells.getLength());
+
+	Vector<long double> tempC(primaryParameters.getRows());
+	Vector<long double> tempCAir(primaryParameters.getRows());
+	for (int i = 0; i < linearParam.getRows(); i++)
+	{
+		tempC[i] = 0.0;
+		tempCAir[i] = 0.0;
+		for (int j = i + 1; j < linearParam.getCols(); j++)
+		{
+			tempC[i] += linearParam[i][j].C;
+			tempCAir[i] += linearParam[i][j].CAir;
+		}
+		for (int j = i - 1; j >= 0; j--)
+		{
+			tempC[i] += linearParam[i][j].C;
+			tempCAir[i] += linearParam[i][j].CAir;
+		}
+	}
+	for (int i = 0; i < primaryParameters.getRows(); i++)
+	{
+		primaryParameters[i][i].C1 = linearParam[i][i].C + tempC[i];
+		primaryParameters[i][i].C1Air = linearParam[i][i].CAir + tempCAir[i];
+
+		for (int j = i + 1; j < primaryParameters.getCols(); j++)
+		{
+			primaryParameters[i][j].C1 = -linearParam[i][j].C;
+			primaryParameters[i][j].C1Air = -linearParam[i][j].CAir;
+			primaryParameters[j][i].C1 = -linearParam[i][j].C;
+			primaryParameters[j][i].C1Air = -linearParam[i][j].CAir;
+		}
+	}
+
+	if (primaryParameters.getRows() == 1)
+	{
+		primaryParameters[0][0].epsEff = linearParam[0][0].C / linearParam[0][0].CAir;
+		primaryParameters[0][0].Z1 = sqrt(linearParam[0][0].L / linearParam[0][0].C);
+		primaryParameters[0][0].Z0 = primaryParameters[0][0].Z1;
+	}
+	else if (primaryParameters.getRows() == 2)
+	{
+		for (int i = 0; i < primaryParameters.getRows(); i++)
+		{
+			for (int j = i + 1; j < primaryParameters.getCols(); j++)
+			{
+				primaryParameters[i][i].epsEff = Types::speedLight * Types::speedLight * (linearParam[i][i].C + linearParam[i][j].C) * (linearParam[i][i].L + linearParam[i][j].L);
+				primaryParameters[i][j].epsEff = Types::speedLight * Types::speedLight * (linearParam[i][i].C - linearParam[i][j].C) * (linearParam[i][i].L - linearParam[i][j].L);
+			}
+			for (int j = i - 1; j >= 0; j--)
+			{
+				primaryParameters[i][i].epsEff = Types::speedLight * Types::speedLight * (linearParam[i][i].C + linearParam[i][j].C) * (linearParam[i][i].L + linearParam[i][j].L);
+				primaryParameters[i][j].epsEff = Types::speedLight * Types::speedLight * (linearParam[i][i].C - linearParam[i][j].C) * (linearParam[i][i].L - linearParam[i][j].L);
+			}
+		}
+
+		for (int i = 0; i < primaryParameters.getRows(); i++)
+		{
+			for (int j = i + 1; j < primaryParameters.getCols(); j++)
+			{
+				primaryParameters[i][i].Z1 = sqrt((linearParam[i][i].L + linearParam[i][j].L) / (linearParam[i][i].C + linearParam[i][j].C));
+				primaryParameters[i][j].Z1 = sqrt((linearParam[i][i].L - linearParam[i][j].L) / (linearParam[i][i].C - linearParam[i][j].C));
+			}
+			for (int j = i - 1; j >= 0; j--)
+			{
+				primaryParameters[i][i].Z1 = sqrt((linearParam[i][i].L + linearParam[i][j].L) / (linearParam[i][i].C + linearParam[i][j].C));
+				primaryParameters[i][j].Z1 = sqrt((linearParam[i][i].L - linearParam[i][j].L) / (linearParam[i][i].C - linearParam[i][j].C));
+			}
+		}
+
+		Vector<long double> tempZ(primaryParameters.getRows());
+		for (int i = 0; i < primaryParameters.getRows(); i++)
+		{
+			tempZ[i] = 1.0;
+			for (int j = 0; j < primaryParameters.getCols(); j++)
+			{
+				tempZ[i] *= primaryParameters[i][j].Z1;
+			}
+		}
+		for (int i = 0; i < tempZ.getLength(); i++)
+		{
+			primaryParameters[0][0].Z0 += tempZ[i];
+		}
+		primaryParameters[0][0].Z0 /= tempZ.getLength();
+		primaryParameters[0][0].Z0 = sqrt(primaryParameters[0][0].Z0);
+	}
+
+
+	/*
 	// coumpute effective dielectric constant
 	for (int i = 0; i < linearParam.getRows(); i++)
 	{
@@ -82,6 +171,21 @@ Matrix2D<Types::LinearParameters> GridSolver::computeLinearParameters(const Matr
 			linearParam[i][j].epsEff = linearParam[i][j].C / linearParam[i][j].CAir;
 		}
 	}
+
+	// compute characteristic impedance
+	for (int i = 0; i < linearParam.getRows(); i++)
+	{
+		for (int j = 0; j < linearParam.getCols(); j++)
+		{
+			linearParam[i][j].Z0 = sqrt(linearParam[i][j].L / abs(linearParam[i][j].C));
+		}
+	}
+	// compute characteristic impedance
+	for (int i = 0; i < linearParam.getRows(); i++)
+	{
+		linearParam[i][i].Z0 = sqrt(linearParam[i][i].L / abs(linearParam[i][i].C));
+	}
+	*/
 
 	auto end = std::chrono::steady_clock::now();
 	double time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
@@ -98,7 +202,8 @@ Matrix2D<Types::LinearParameters> GridSolver::computeLinearParameters(const Matr
 		verticalSymmetryConductors,
 		horizontalSymmetryConductors,
 		symmetryConductors,
-		linearParam);
+		linearParam,
+		primaryParameters);
 
 	return linearParam;
 }
@@ -1575,7 +1680,8 @@ void GridSolver::printResultInfo(
 	const Vector<Point2D<int>>& verticalSymmetryConductors,
 	const Vector<Point2D<int>>& horizontalSymmetryConductors,
 	const Vector<Point2D<int>>& symmetryConductors,
-	const Matrix2D<Types::LinearParameters>& linearParam) const
+	const Matrix2D<Types::LinearParameters>& linearParam,
+	Matrix2D<Types::PrimaryParameters> primaryParameters) const
 {
 	if (verticalSymmetryPoint != Point2D(0, 0) && horizontalSymmetryPoint != Point2D(0, 0) &&
 		verticalSymmetryConductors.getLength() > 0 && horizontalSymmetryConductors.getLength() > 0)
@@ -1637,7 +1743,7 @@ void GridSolver::printResultInfo(
 	{
 		for (int j = 0; j < linearParam.getCols(); j++)
 		{
-			std::cout << linearParam[i][j].L << "\t";
+			std::cout << linearParam[i][j].L << "   ";
 		}
 		if (i < linearParam.getRows() - 1)
 		{
@@ -1675,14 +1781,70 @@ void GridSolver::printResultInfo(
 	}
 
 	std::cout << "\n\n";
-	std::cout << "epsEff -> effective dielectric constant: " << "\n";
-	for (int i = 0; i < linearParam.getRows(); i++)
+	std::cout << "C1: " << "\n";
+	for (int i = 0; i < primaryParameters.getRows(); i++)
 	{
-		for (int j = 0; j < linearParam.getCols(); j++)
+		for (int j = 0; j < primaryParameters.getCols(); j++)
 		{
-			std::cout << linearParam[i][j].epsEff << "   ";
+			std::cout << primaryParameters[i][j].C1 << "   ";
 		}
-		if (i < linearParam.getRows() - 1)
+		if (i < primaryParameters.getRows() - 1)
+		{
+			std::cout << "\n\n";
+		}
+	}
+
+	std::cout << "\n\n";
+	std::cout << "C1Air: " << "\n";
+	for (int i = 0; i < primaryParameters.getRows(); i++)
+	{
+		for (int j = 0; j < primaryParameters.getCols(); j++)
+		{
+			std::cout << primaryParameters[i][j].C1Air << "   ";
+		}
+		if (i < primaryParameters.getRows() - 1)
+		{
+			std::cout << "\n\n";
+		}
+	}
+
+	std::cout << "\n\n";
+	std::cout << "epsEff -> effective dielectric constant: " << "\n";
+	for (int i = 0; i < primaryParameters.getRows(); i++)
+	{
+		for (int j = 0; j < primaryParameters.getCols(); j++)
+		{
+			std::cout << primaryParameters[i][j].epsEff << "   ";
+		}
+		if (i < primaryParameters.getRows() - 1)
+		{
+			std::cout << "\n\n";
+		}
+	}
+
+	std::cout << "\n\n";
+	std::cout << "Z1: " << "\n";
+	for (int i = 0; i < primaryParameters.getRows(); i++)
+	{
+		for (int j = 0; j < primaryParameters.getCols(); j++)
+		{
+			std::cout << primaryParameters[i][j].Z1 << "   ";
+		}
+		if (i < primaryParameters.getRows() - 1)
+		{
+			std::cout << "\n\n";
+		}
+	}
+
+	std::cout << "\n\n";
+	std::cout << "Z0: " << "\n";
+	for (int i = 0; i < primaryParameters.getRows(); i++)
+	{
+		for (int j = 0; j < primaryParameters.getCols(); j++)
+		{
+			std::cout << primaryParameters[i][j].Z0 << "   ";
+		}
+		if (i < primaryParameters.getRows() - 1)
 		{
 			std::cout << "\n\n";
 		}

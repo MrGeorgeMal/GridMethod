@@ -54,7 +54,14 @@ namespace Types {
 		long double L = 0.0;
 		long double R = 0.0;
 		long double G = 0.0;
+	};
+
+	struct PrimaryParameters
+	{
+		long double C1 = 0.0;
+		long double C1Air = 0.0;
 		long double epsEff = 0.0;
-		long double Z = 0.0;
+		long double Z0 = 0.0;
+		long double Z1 = 0.0;
 	};
 }
