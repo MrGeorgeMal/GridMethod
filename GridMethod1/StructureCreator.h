@@ -50,6 +50,7 @@ namespace StructureCreator
 
 			auto jsettings = config["settings"];
 			stripStructure.setAccuracy(jsettings["accuracy"]);
+			Tool::printShapesInfo = jsettings["print_shape_info"];
 			Tool::drawField = jsettings["draw_field"];
 			Tool::drawStructure = jsettings["draw_structure"];
 			Tool::outputDigitsCount = jsettings["output_digits"];
@@ -63,8 +64,12 @@ namespace StructureCreator
 				if (type == "conductor")
 				{
 					bool isSignal = jmaterial["mode"];
+					double mu = jmaterial["mu"];
+					double ro = jmaterial["ro"];
 					Conductor* newConductor = new Conductor(isSignal);
 					newConductor->setName(name);
+					newConductor->setMu(mu);
+					newConductor->setRo(ro);
 
 					materials.add(newConductor);
 				}

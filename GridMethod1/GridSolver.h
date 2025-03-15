@@ -98,6 +98,14 @@ private:
 		Matrix2D<Types::LinearParameters>& linearParam,
 		bool isAirFill) const;
 
+	// Compute conductor loss matrix
+	void computeConductorLossMatrix(
+		Matrix2D<Types::CellInfo>& matrix,
+		const Vector<Vector<Point2D<int>>>& condCells,
+		const Vector<Point2D<int>>& initCells,
+		const Vector<Point2D<int>>& symmetryConductors,
+		Matrix2D<Types::LinearParameters>& linearParam) const;
+
 	// Check structure on symmetry
 	// return symmetry point: left and right X coordinate - Point(leftX ; rightX)
 	// left and right coordinates may be equal

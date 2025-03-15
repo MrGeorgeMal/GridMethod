@@ -48,6 +48,8 @@ Types::CellInfo Rasterizer::getUpdatedCellInfo(Types::CellInfo oldCellInfo, Mate
 		Conductor* conductor = dynamic_cast<Conductor*>(material);
 		updatedCellInfo.isSignalConductor = conductor->isSignal();
 		updatedCellInfo.isConductor = true;
+		updatedCellInfo.mu = conductor->getMu();
+		updatedCellInfo.ro = conductor->getRo();
 	}
 	else
 	{

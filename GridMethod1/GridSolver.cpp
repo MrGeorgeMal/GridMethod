@@ -48,31 +48,13 @@ Matrix2D<Types::LinearParameters> GridSolver::computeLinearParameters(const Matr
 		linearParam,
 		true);
 
-	// compute linear inductance
-	Matrix2D<double> CAirMatrix(linearParam.getRows(), linearParam.getCols());
-	for (int i = 0; i < CAirMatrix.getRows(); i++)
-	{
-		for (int j = 0; j < CAirMatrix.getCols(); j++)
-		{
-			CAirMatrix[i][j] = linearParam[i][j].CAir;
-		}
-	}
-	
-	if (CAirMatrix.getRows() == 1)
-	{
-		linearParam[0][0].L = Types::mu0 * Types::e0 * 1 / CAirMatrix[0][0];
-	}
-	else
-	{
-		Matrix2D<double> reverseCAirMatrix = MatrixTool::getReverseMatrix(CAirMatrix);
-		for (int i = 0; i < linearParam.getRows(); i++)
-		{
-			for (int j = 0; j < linearParam.getCols(); j++)
-			{
-				linearParam[i][j].L = Types::mu0 * Types::e0 * reverseCAirMatrix[i][j];
-			}
-		}
-	}
+	computeConductorLossMatrix(
+		matrix,
+		condCells,
+		initCells,
+		symmetryConductors,
+		linearParam);
+
 
 	// primary parameters
 	Matrix2D<Types::PrimaryParameters> primaryParameters(condCells.getLength(), condCells.getLength());
@@ -107,6 +89,7 @@ Matrix2D<Types::LinearParameters> GridSolver::computeLinearParameters(const Matr
 			primaryParameters[j][i].C1Air = -linearParam[i][j].CAir;
 		}
 	}
+
 
 	if (primaryParameters.getRows() == 1)
 	{
@@ -170,32 +153,6 @@ Matrix2D<Types::LinearParameters> GridSolver::computeLinearParameters(const Matr
 			}
 		}
 	}
-
-
-	/*
-	// coumpute effective dielectric constant
-	for (int i = 0; i < linearParam.getRows(); i++)
-	{
-		for (int j = 0; j < linearParam.getCols(); j++)
-		{
-			linearParam[i][j].epsEff = linearParam[i][j].C / linearParam[i][j].CAir;
-		}
-	}
-
-	// compute characteristic impedance
-	for (int i = 0; i < linearParam.getRows(); i++)
-	{
-		for (int j = 0; j < linearParam.getCols(); j++)
-		{
-			linearParam[i][j].Z0 = sqrt(linearParam[i][j].L / abs(linearParam[i][j].C));
-		}
-	}
-	// compute characteristic impedance
-	for (int i = 0; i < linearParam.getRows(); i++)
-	{
-		linearParam[i][i].Z0 = sqrt(linearParam[i][i].L / abs(linearParam[i][i].C));
-	}
-	*/
 
 	auto end = std::chrono::steady_clock::now();
 	double time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
@@ -1362,7 +1319,8 @@ Point2D<double> GridSolver::computeCapacityAndConductance(const Matrix2D<Types::
 
 
 
-// Compute linear capacity matrix
+// Compute capacity and conductance for potential field
+// return point from to value: [capacity ; conductance]
 void GridSolver::computeLinearCapacityAndConductanceMatrix(
 	Matrix2D<Types::CellInfo>& matrix,
 	const Vector<Vector<Point2D<int>>>& condCells,
@@ -1539,6 +1497,254 @@ void GridSolver::computeLinearCapacityAndConductanceMatrix(
 
 				conductorsConfig[j] = false;
 			}
+		}
+	}
+
+	if (isAirFill == true)
+	{
+		// compute linear inductance
+		Matrix2D<double> CAirMatrix(linearParam.getRows(), linearParam.getCols());
+		for (int i = 0; i < CAirMatrix.getRows(); i++)
+		{
+			for (int j = 0; j < CAirMatrix.getCols(); j++)
+			{
+				CAirMatrix[i][j] = linearParam[i][j].CAir;
+			}
+		}
+
+		if (CAirMatrix.getRows() == 1)
+		{
+			linearParam[0][0].L = Types::mu0 * Types::e0 * 1 / CAirMatrix[0][0];
+		}
+		else
+		{
+			Matrix2D<double> reverseCAirMatrix = MatrixTool::getReverseMatrix(CAirMatrix);
+			for (int i = 0; i < linearParam.getRows(); i++)
+			{
+				for (int j = 0; j < linearParam.getCols(); j++)
+				{
+					linearParam[i][j].L = Types::mu0 * Types::e0 * reverseCAirMatrix[i][j];
+				}
+			}
+		}
+	}
+}
+
+
+
+// Compute conductor loss matrix
+void GridSolver::computeConductorLossMatrix(
+	Matrix2D<Types::CellInfo>& matrix,
+	const Vector<Vector<Point2D<int>>>& condCells,
+	const Vector<Point2D<int>>& initCells,
+	const Vector<Point2D<int>>& symmetryConductors,
+	Matrix2D<Types::LinearParameters>& linearParam) const
+{
+	// conductors extension
+	Vector<Vector<Point2D<int>>> condCellsExtension(condCells);
+
+	for (int i = 0; i < condCells.getLength(); i++)
+	{
+		for (int j = 0; j < condCells[i].getLength(); j++)
+		{
+			int x = condCells[i][j].x;
+			int y = condCells[i][j].y;
+
+			matrix[y + 1][x].isConductor = true;
+			matrix[y + 1][x].isSignalConductor = true;
+
+			matrix[y - 1][x].isConductor = true;
+			matrix[y - 1][x].isSignalConductor = true;
+
+			matrix[y][x + 1].isConductor = true;
+			matrix[y][x + 1].isSignalConductor = true;
+
+			matrix[y][x - 1].isConductor = true;
+			matrix[y][x - 1].isSignalConductor = true;
+
+			matrix[y + 1][x + 1].isConductor = true;
+			matrix[y + 1][x + 1].isSignalConductor = true;
+
+			matrix[y - 1][x - 1].isConductor = true;
+			matrix[y - 1][x - 1].isSignalConductor = true;
+
+			matrix[y - 1][x + 1].isConductor = true;
+			matrix[y - 1][x + 1].isSignalConductor = true;
+
+			matrix[y + 1][x - 1].isConductor = true;
+			matrix[y + 1][x - 1].isSignalConductor = true;
+
+			condCellsExtension[i].add(Point2D(x + 1, y));
+			condCellsExtension[i].add(Point2D(x - 1, y));
+			condCellsExtension[i].add(Point2D(x, y + 1));
+			condCellsExtension[i].add(Point2D(x, y - 1));
+			condCellsExtension[i].add(Point2D(x + 1, y + 1));
+			condCellsExtension[i].add(Point2D(x - 1, y - 1));
+			condCellsExtension[i].add(Point2D(x - 1, y + 1));
+			condCellsExtension[i].add(Point2D(x + 1, y - 1));
+		}
+	}
+
+	// set air fill
+	for (int y = 0; y < matrix.getRows(); y++)
+	{
+		for (int x = 0; x < matrix.getCols(); x++)
+		{
+			matrix[y][x].dielectricValue = 1.0;
+		}
+	}
+
+	// compute diagonal elements in linear capacity matrix for dielectric fill (full capacity for each signal conductor)
+	Vector<bool> conductorsConfig(condCells.getLength());
+
+	for (int i = 0; i < condCells.getLength(); i++)
+	{
+		bool computeTisConfig = true;
+
+		for (int j = 0; j < symmetryConductors.getLength(); j++)
+		{
+			if (symmetryConductors[j].y == i)
+			{
+				linearParam[i][i].CAirExtension = linearParam[symmetryConductors[j].x][j].CAirExtension;
+				computeTisConfig = false;
+				break;
+			}
+		}
+
+		if (computeTisConfig == true)
+		{
+			for (int j = 0; j < conductorsConfig.getLength(); j++)
+			{
+				conductorsConfig[j] = false;
+			}
+
+			conductorsConfig[i] = true;
+
+			auto start = std::chrono::steady_clock::now();
+			Matrix2D<double>potentialField = setupInitialPotential(matrix, condCellsExtension, conductorsConfig);
+			int iterations = computeFieldPotential(matrix, potentialField, initCells);
+			auto end = std::chrono::steady_clock::now();
+			double time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
+			linearParam[i][i].CAirExtension = computeCapacityAndConductance(matrix, potentialField).x;
+
+			std::cout << "\n\n";
+			std::cout << "**********************************************************************************************************************************************************************\n";
+			std::cout << "* > Potential field computation for air fill has been completed [conductor extension]" << "\n";
+			std::cout << "* > Conductors config: " << conductorsConfig << "\n";
+			std::cout << "* > The compute was done in " << iterations << " iterations\n";
+			std::cout << "* > The compute was done in " << time / 1000 << " seconds\n";
+			std::cout << "**********************************************************************************************************************************************************************\n";
+
+			if (Tool::drawField == true)
+			{
+				drawField(potentialField);
+			}
+		}
+	}
+
+	// compute other elements in linear capacity matrix for dielectric fill 
+	for (int i = 0; i < condCells.getLength(); i++)
+	{
+		for (int j = 0; j < conductorsConfig.getLength(); j++)
+		{
+			conductorsConfig[j] = false;
+		}
+		conductorsConfig[i] = true;
+
+		for (int j = i + 1; j < conductorsConfig.getLength(); j++)
+		{
+			bool computeTisConfig = true;
+
+			for (int k = 0; k < symmetryConductors.getLength(); k++)
+			{
+				if (symmetryConductors[k].y == i)
+				{
+					linearParam[i][j].CAirExtension = linearParam[symmetryConductors[k].x][j].CAirExtension;
+					linearParam[j][i].CAirExtension = linearParam[i][j].CAirExtension;
+					computeTisConfig = false;
+					break;
+				}
+			}
+
+			if (computeTisConfig == true)
+			{
+				conductorsConfig[j] = true;
+
+				Matrix2D<double>potentialField = setupInitialPotential(matrix, condCellsExtension, conductorsConfig);
+
+				auto start = std::chrono::steady_clock::now();
+				int iterations = computeFieldPotential(matrix, potentialField, initCells);
+				auto end = std::chrono::steady_clock::now();
+				double time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
+				linearParam[i][j].CAirExtension = (computeCapacityAndConductance(matrix, potentialField).x - linearParam[i][i].CAirExtension - linearParam[j][j].CAirExtension) / 2.0;
+				linearParam[j][i].CAirExtension = linearParam[i][j].CAirExtension;
+
+				std::cout << "\n\n";
+				std::cout << "**********************************************************************************************************************************************************************\n";
+				std::cout << "* > Potential field computation for air fill has been completed [conductor extension]" << "\n";
+				std::cout << "* > Conductors config: " << conductorsConfig << "\n";
+				std::cout << "* > The compute was done in " << iterations << " iterations\n";
+				std::cout << "* > The compute was done in " << time / 1000 << " seconds\n";
+				std::cout << "**********************************************************************************************************************************************************************\n";
+
+				if (Tool::drawField == true)
+				{
+					drawField(potentialField);
+				}
+
+				conductorsConfig[j] = false;
+			}
+		}
+	}
+
+	// compute extension linear inductance
+	Matrix2D<double> CAirExtensionMatrix(linearParam.getRows(), linearParam.getCols());
+	for (int i = 0; i < CAirExtensionMatrix.getRows(); i++)
+	{
+		for (int j = 0; j < CAirExtensionMatrix.getCols(); j++)
+		{
+			CAirExtensionMatrix[i][j] = linearParam[i][j].CAirExtension;
+		}
+	}
+
+	if (CAirExtensionMatrix.getRows() == 1)
+	{
+		linearParam[0][0].LExtension = Types::mu0 * Types::e0 * 1 / CAirExtensionMatrix[0][0];
+	}
+	else
+	{
+		Matrix2D<double> reverseCAirMatrix = MatrixTool::getReverseMatrix(CAirExtensionMatrix);
+		for (int i = 0; i < linearParam.getRows(); i++)
+		{
+			for (int j = 0; j < linearParam.getCols(); j++)
+			{
+				linearParam[i][j].LExtension = Types::mu0 * Types::e0 * reverseCAirMatrix[i][j];
+			}
+		}
+	}
+
+	Matrix2D<double> Rs(linearParam.getRows(), linearParam.getCols());
+	for (int i = 0; i < Rs.getRows(); i++)
+	{
+		double mu = matrix[initCells[i].y][initCells[i].x].mu;
+		double ro = matrix[initCells[i].y][initCells[i].x].ro;
+		double dx = matrix[initCells[i].y][initCells[i].x].dx * 10.0e-3;
+		double dL = linearParam[i][i].L - linearParam[i][i].LExtension;
+		Rs[i][i] = sqrt(Types::pi * 1.0e9 * mu * ro);
+		linearParam[i][i].R = (Rs[i][i] / Types::mu0) * (dL / dx);
+		linearParam[i][i].R = abs(linearParam[i][i].R) * 10.0e-6;
+
+		for (int j = i + 1; j < Rs.getCols(); j++)
+		{
+			mu = (matrix[initCells[i].y][initCells[i].x].mu + matrix[initCells[j].y][initCells[j].x].mu) / 2.0;
+			ro = (matrix[initCells[i].y][initCells[i].x].ro + matrix[initCells[j].y][initCells[j].x].ro) / 2.0;
+			dL = linearParam[i][j].L - linearParam[i][j].LExtension;
+			Rs[i][j] = sqrt(Types::pi * 1.0e9 * mu * ro);
+			linearParam[i][j].R = (Rs[i][j] / Types::mu0) * (dL / dx);
+			linearParam[i][j].R = abs(linearParam[i][j].R) * 10.0e-6;
+			linearParam[j][i].R = linearParam[i][j].R;
 		}
 	}
 }
@@ -1795,6 +2001,37 @@ void GridSolver::printResultInfo(
 		for (int j = 0; j < linearParam.getCols(); j++)
 		{
 			std::cout << Tool::doubleToString(linearParam[i][j].R) << gapStr;
+		}
+		if (i < linearParam.getRows() - 1)
+		{
+			std::cout << "\n\n";
+		}
+	}
+
+	std::cout << "\n\n\n";
+	std::cout << "- Extensions parameters -------------------------------------------------------------------------------------------------------------------------------------------------";
+
+	std::cout << "\n\n";
+	std::cout << "C0_Extension -> Linear capacity for air fill [F/m]: " << "\n";
+	for (int i = 0; i < linearParam.getRows(); i++)
+	{
+		for (int j = 0; j < linearParam.getCols(); j++)
+		{
+			std::cout << Tool::doubleToString(linearParam[i][j].CAirExtension) << gapStr;
+		}
+		if (i < linearParam.getRows() - 1)
+		{
+			std::cout << "\n\n";
+		}
+	}
+
+	std::cout << "\n\n";
+	std::cout << "L_Extension -> Linear inductance [H/m]: " << "\n";
+	for (int i = 0; i < linearParam.getRows(); i++)
+	{
+		for (int j = 0; j < linearParam.getCols(); j++)
+		{
+			std::cout << Tool::doubleToString(linearParam[i][j].LExtension) << gapStr;
 		}
 		if (i < linearParam.getRows() - 1)
 		{

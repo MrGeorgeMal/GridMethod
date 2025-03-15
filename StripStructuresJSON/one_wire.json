@@ -2,9 +2,10 @@
     "settings":
     {
         "accuracy": 0.0,
+        "print_shape_info": true,
         "draw_structure": true,
-        "draw_field": false,
-        "output_digits": 3,
+        "draw_field": true,
+        "output_digits": 6,
         "min_digits_for_exponent": 3
     },
 
@@ -12,12 +13,16 @@
         {
             "type": "conductor",
             "name": "signal",
-            "mode": true
+            "mode": true,
+            "mu": 1.0,
+            "ro": 0.0175
         },
         {
             "type": "conductor",
             "name": "ground",
-            "mode": false
+            "mode": false,
+            "mu": 1.0,
+            "ro": 0.0175
         },
         {
             "type": "dielectric",

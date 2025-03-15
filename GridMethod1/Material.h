@@ -110,14 +110,24 @@ public:
 		os << "[";
 		os << "Conductor ; ";
 		os << _name << " ; ";
+		os << _mu << " ; ";
+		os << _ro << " ; ";
 		const char* str = (_isSignal == true) ? "signal mode" : "ground mode";
 		os << str;
 		os << "]";
 		return os;
 	}
 
+	void setMu(double mu) { _mu = mu; }
+	double getMu() { return _mu; }
+
+	void setRo(double ro) { _ro = ro; }
+	double getRo() { return _ro; }
+
 private:
 	bool _isSignal;
+	double _mu = 1.0;
+	double _ro = 0.0175;
 };
 
 

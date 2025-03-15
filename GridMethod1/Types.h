@@ -26,6 +26,8 @@ namespace Types {
 		double dy = 1.0;
 		double dielectricValue = 1.0;
 		double tgValue = 0.0;
+		double mu = 0.0;
+		double ro = 0.0;
 		bool isConductor = false;
 		bool isSignalConductor = false;
 		bool isHorizontalDielectricBound = false;
@@ -52,8 +54,11 @@ namespace Types {
 		long double C = 0.0;
 		long double CAir = 0.0;
 		long double L = 0.0;
-		long double R = 0.0;
 		long double G = 0.0;
+
+		long double CAirExtension = 0.0;
+		long double LExtension = 0.0;
+		long double R = 0.0;
 	};
 
 	struct PrimaryParameters
