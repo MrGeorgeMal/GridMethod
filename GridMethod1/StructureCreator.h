@@ -50,6 +50,7 @@ namespace StructureCreator
 
 			auto jsettings = config["settings"];
 			stripStructure.setAccuracy(jsettings["accuracy"]);
+			Tool::lossless = jsettings["lossless"];
 			Tool::printShapesInfo = jsettings["print_shape_info"];
 			Tool::drawField = jsettings["draw_field"];
 			Tool::drawStructure = jsettings["draw_structure"];

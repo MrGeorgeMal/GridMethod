@@ -48,13 +48,15 @@ Matrix2D<Types::LinearParameters> GridSolver::computeLinearParameters(const Matr
 		linearParam,
 		true);
 
-	computeConductorLossMatrix(
-		matrix,
-		condCells,
-		initCells,
-		symmetryConductors,
-		linearParam);
-
+	if (Tool::lossless == false)
+	{
+		computeConductorLossMatrix(
+			matrix,
+			condCells,
+			initCells,
+			symmetryConductors,
+			linearParam);
+	}
 
 	// primary parameters
 	Matrix2D<Types::PrimaryParameters> primaryParameters(condCells.getLength(), condCells.getLength());
@@ -1285,7 +1287,8 @@ int GridSolver::computeFieldPotential(
 
 
 
-// Compute capacity for potentialField
+// Compute capacity and conductance for potential field
+// return point from to value: [capacity ; conductance]
 Point2D<double> GridSolver::computeCapacityAndConductance(const Matrix2D<Types::CellInfo>&matrix, const Matrix2D<double>&potentialField) const
 {
 	int rows = matrix.getRows() - 1;
@@ -1319,8 +1322,7 @@ Point2D<double> GridSolver::computeCapacityAndConductance(const Matrix2D<Types::
 
 
 
-// Compute capacity and conductance for potential field
-// return point from to value: [capacity ; conductance]
+// Compute linear capacity matrix
 void GridSolver::computeLinearCapacityAndConductanceMatrix(
 	Matrix2D<Types::CellInfo>& matrix,
 	const Vector<Vector<Point2D<int>>>& condCells,
@@ -1341,7 +1343,7 @@ void GridSolver::computeLinearCapacityAndConductanceMatrix(
 		}
 	}
 
-	// compute diagonal elements in linear capacity matrix for dielectric fill (full capacity for each signal conductor)
+	// compute diagonal elements in linear capacity matrix (full capacity for each signal conductor)
 	Vector<bool> conductorsConfig(condCells.getLength());
 
 	for (int i = 0; i < condCells.getLength(); i++)
@@ -1414,7 +1416,7 @@ void GridSolver::computeLinearCapacityAndConductanceMatrix(
 		}
 	}
 
-	// compute other elements in linear capacity matrix for dielectric fill 
+	// compute other elements in linear capacity matrix
 	for (int i = 0; i < condCells.getLength(); i++)
 	{
 		for (int j = 0; j < conductorsConfig.getLength(); j++)
@@ -1594,7 +1596,7 @@ void GridSolver::computeConductorLossMatrix(
 		}
 	}
 
-	// compute diagonal elements in linear capacity matrix for dielectric fill (full capacity for each signal conductor)
+	// compute diagonal elements in extension linear capacity matrix for air fill (full capacity for each signal conductor)
 	Vector<bool> conductorsConfig(condCells.getLength());
 
 	for (int i = 0; i < condCells.getLength(); i++)
@@ -1643,7 +1645,7 @@ void GridSolver::computeConductorLossMatrix(
 		}
 	}
 
-	// compute other elements in linear capacity matrix for dielectric fill 
+	// compute other elements in extension linear capacity matrix for air fill 
 	for (int i = 0; i < condCells.getLength(); i++)
 	{
 		for (int j = 0; j < conductorsConfig.getLength(); j++)
@@ -1725,6 +1727,7 @@ void GridSolver::computeConductorLossMatrix(
 		}
 	}
 
+	// compute conductor loss matrix
 	Matrix2D<double> Rs(linearParam.getRows(), linearParam.getCols());
 	for (int i = 0; i < Rs.getRows(); i++)
 	{
@@ -1981,7 +1984,7 @@ void GridSolver::printResultInfo(
 
 
 	std::cout << "\n\n";
-	std::cout << "G -> Linear conductivity [Sm/m]: " << "\n";
+	std::cout << "G -> Dielectric losses [Sm/m]: " << "\n";
 	for (int i = 0; i < linearParam.getRows(); i++)
 	{
 		for (int j = 0; j < linearParam.getCols(); j++)
@@ -1995,7 +1998,7 @@ void GridSolver::printResultInfo(
 	}
 
 	std::cout << "\n\n";
-	std::cout << "R -> Linear resistance [Ohms/m]: " << "\n";
+	std::cout << "R -> Conductor losses for 1 GHz [Ohms/m]: " << "\n";
 	for (int i = 0; i < linearParam.getRows(); i++)
 	{
 		for (int j = 0; j < linearParam.getCols(); j++)
@@ -2008,34 +2011,37 @@ void GridSolver::printResultInfo(
 		}
 	}
 
-	std::cout << "\n\n\n";
-	std::cout << "- Extensions parameters -------------------------------------------------------------------------------------------------------------------------------------------------";
-
-	std::cout << "\n\n";
-	std::cout << "C0_Extension -> Linear capacity for air fill [F/m]: " << "\n";
-	for (int i = 0; i < linearParam.getRows(); i++)
+	if (Tool::lossless == false)
 	{
-		for (int j = 0; j < linearParam.getCols(); j++)
-		{
-			std::cout << Tool::doubleToString(linearParam[i][j].CAirExtension) << gapStr;
-		}
-		if (i < linearParam.getRows() - 1)
-		{
-			std::cout << "\n\n";
-		}
-	}
+		std::cout << "\n\n\n";
+		std::cout << "- Linear parameters for stip structure with extension conductors -----------------------------------------------------------------------------------------------------";
 
-	std::cout << "\n\n";
-	std::cout << "L_Extension -> Linear inductance [H/m]: " << "\n";
-	for (int i = 0; i < linearParam.getRows(); i++)
-	{
-		for (int j = 0; j < linearParam.getCols(); j++)
+		std::cout << "\n\n";
+		std::cout << "C0_Extension -> Linear capacity for air fill [F/m]: " << "\n";
+		for (int i = 0; i < linearParam.getRows(); i++)
 		{
-			std::cout << Tool::doubleToString(linearParam[i][j].LExtension) << gapStr;
+			for (int j = 0; j < linearParam.getCols(); j++)
+			{
+				std::cout << Tool::doubleToString(linearParam[i][j].CAirExtension) << gapStr;
+			}
+			if (i < linearParam.getRows() - 1)
+			{
+				std::cout << "\n\n";
+			}
 		}
-		if (i < linearParam.getRows() - 1)
+
+		std::cout << "\n\n";
+		std::cout << "L_Extension -> Linear inductance [H/m]: " << "\n";
+		for (int i = 0; i < linearParam.getRows(); i++)
 		{
-			std::cout << "\n\n";
+			for (int j = 0; j < linearParam.getCols(); j++)
+			{
+				std::cout << Tool::doubleToString(linearParam[i][j].LExtension) << gapStr;
+			}
+			if (i < linearParam.getRows() - 1)
+			{
+				std::cout << "\n\n";
+			}
 		}
 	}
 

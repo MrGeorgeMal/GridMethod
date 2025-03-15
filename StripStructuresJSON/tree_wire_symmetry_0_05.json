@@ -2,6 +2,7 @@
     "settings":
     {
         "accuracy": 0.0,
+        "lossless": false,
         "print_shape_info": true,
         "draw_structure": false,
         "draw_field": false,

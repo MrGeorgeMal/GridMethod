@@ -225,6 +225,9 @@ public:
 
 	// Print shapes info
 	inline static bool printShapesInfo = false;
+
+	// Compute conductors loss matrix or not
+	inline static bool lossless = false;
 };
 
 #endif TOOL_H
