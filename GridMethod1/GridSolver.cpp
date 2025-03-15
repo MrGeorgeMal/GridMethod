@@ -160,6 +160,16 @@ Matrix2D<Types::LinearParameters> GridSolver::computeLinearParameters(const Matr
 		primaryParameters[0][0].Z0 /= tempZ.getLength();
 		primaryParameters[0][0].Z0 = sqrt(primaryParameters[0][0].Z0);
 	}
+	else
+	{
+		for (int i = 0; i < primaryParameters.getRows(); i++)
+		{
+			for (int j = 0; j < primaryParameters.getCols(); j++)
+			{
+				primaryParameters[i][j].epsEff = primaryParameters[i][j].C1 / primaryParameters[i][j].C1Air;
+			}
+		}
+	}
 
 
 	/*
@@ -1419,7 +1429,7 @@ void GridSolver::computeLinearCapacityAndConductanceMatrix(
 
 				std::cout << "\n\n";
 				std::cout << "**********************************************************************************************************************************************************************\n";
-				std::cout << "* > Strip structure potential field for air fill" << "\n";
+				std::cout << "* > Potential field computation for air fill has been completed" << "\n";
 				std::cout << "* > Conductors config: " << conductorsConfig << "\n";
 				std::cout << "* > The compute was done in " << iterations << " iterations\n";
 				std::cout << "* > The compute was done in " << time / 1000 << " seconds\n";
@@ -1432,14 +1442,17 @@ void GridSolver::computeLinearCapacityAndConductanceMatrix(
 
 				std::cout << "\n\n\n";
 				std::cout << "**********************************************************************************************************************************************************************\n";
-				std::cout << "* > Strip structure potential field for dielectric fill" << "\n";
+				std::cout << "* > Potential field computation for dielectric fill has been completed" << "\n";
 				std::cout << "* > Conductors config: " << conductorsConfig << "\n";
 				std::cout << "* > The compute was done in " << iterations << " iterations\n";
 				std::cout << "* > The compute was done in " << time / 1000 << " seconds\n";
 				std::cout << "**********************************************************************************************************************************************************************\n";
 			}
 
-			drawField(potentialField);
+			if (Tool::drawField == true)
+			{
+				drawField(potentialField);
+			}
 		}
 	}
 
@@ -1496,7 +1509,7 @@ void GridSolver::computeLinearCapacityAndConductanceMatrix(
 
 					std::cout << "\n\n";
 					std::cout << "**********************************************************************************************************************************************************************\n";
-					std::cout << "* > Strip structure potential field for air fill" << "\n";
+					std::cout << "* > Potential field computation for air fill has been completed" << "\n";
 					std::cout << "* > Conductors config: " << conductorsConfig << "\n";
 					std::cout << "* > The compute was done in " << iterations << " iterations\n";
 					std::cout << "* > The compute was done in " << time / 1000 << " seconds\n";
@@ -1512,14 +1525,17 @@ void GridSolver::computeLinearCapacityAndConductanceMatrix(
 
 					std::cout << "\n\n\n";
 					std::cout << "**********************************************************************************************************************************************************************\n";
-					std::cout << "* > Strip structure potential field for dielectric fill" << "\n";
+					std::cout << "* > Potential field computation for dielectric fill has been completed" << "\n";
 					std::cout << "* > Conductors config: " << conductorsConfig << "\n";
 					std::cout << "* > The compute was done in " << iterations << " iterations\n";
 					std::cout << "* > The compute was done in " << time / 1000 << " seconds\n";
 					std::cout << "**********************************************************************************************************************************************************************\n";
 				}
 
-				drawField(potentialField);
+				if (Tool::drawField == true)
+				{
+					drawField(potentialField);
+				}
 
 				conductorsConfig[j] = false;
 			}
@@ -1709,13 +1725,19 @@ void GridSolver::printResultInfo(
 		std::cout << "The strip structure was defined as non-symmetrical";
 	}
 
+
+	std::string gapStr = "     ";
+
+	std::cout << "\n\n\n";
+	std::cout << "- Linear parameters --------------------------------------------------------------------------------------------------------------------------------------------------";
+
 	std::cout << "\n\n";
 	std::cout << "C -> Linear capacity for dielectric fill [F/m]: " << "\n";
 	for (int i = 0; i < linearParam.getRows(); i++)
 	{
 		for (int j = 0; j < linearParam.getCols(); j++)
 		{
-			std::cout << linearParam[i][j].C << "   ";
+			std::cout << Tool::doubleToString(linearParam[i][j].C) << gapStr;
 		}
 		if (i < linearParam.getRows() - 1)
 		{
@@ -1729,7 +1751,7 @@ void GridSolver::printResultInfo(
 	{
 		for (int j = 0; j < linearParam.getCols(); j++)
 		{
-			std::cout << linearParam[i][j].CAir << "   ";
+			std::cout << Tool::doubleToString(linearParam[i][j].CAir) << gapStr;
 		}
 		if (i < linearParam.getRows() - 1)
 		{
@@ -1743,7 +1765,7 @@ void GridSolver::printResultInfo(
 	{
 		for (int j = 0; j < linearParam.getCols(); j++)
 		{
-			std::cout << linearParam[i][j].L << "   ";
+			std::cout << Tool::doubleToString(linearParam[i][j].L) << gapStr;
 		}
 		if (i < linearParam.getRows() - 1)
 		{
@@ -1758,7 +1780,7 @@ void GridSolver::printResultInfo(
 	{
 		for (int j = 0; j < linearParam.getCols(); j++)
 		{
-			std::cout << linearParam[i][j].G << "   ";
+			std::cout << Tool::doubleToString(linearParam[i][j].G) << gapStr;
 		}
 		if (i < linearParam.getRows() - 1)
 		{
@@ -1772,7 +1794,7 @@ void GridSolver::printResultInfo(
 	{
 		for (int j = 0; j < linearParam.getCols(); j++)
 		{
-			std::cout << linearParam[i][j].R << "   ";
+			std::cout << Tool::doubleToString(linearParam[i][j].R) << gapStr;
 		}
 		if (i < linearParam.getRows() - 1)
 		{
@@ -1780,13 +1802,49 @@ void GridSolver::printResultInfo(
 		}
 	}
 
+	std::cout << "\n\n\n";
+	std::cout << "- Primary parameters -------------------------------------------------------------------------------------------------------------------------------------------------";
+
+
+	if (linearParam.getRows() > 1)
+	{
+		std::cout << "\n\n";
+		std::cout << "C1 -> Partial capacities for dielectric fill [F/m]: " << "\n";
+		for (int i = 0; i < primaryParameters.getRows(); i++)
+		{
+			for (int j = 0; j < primaryParameters.getCols(); j++)
+			{
+				std::cout << Tool::doubleToString(primaryParameters[i][j].C1) << gapStr;
+			}
+			if (i < primaryParameters.getRows() - 1)
+			{
+				std::cout << "\n\n";
+			}
+		}
+
+		std::cout << "\n\n";
+		std::cout << "C1Air -> Partial capacities for air fill [F/m]: " << "\n";
+		for (int i = 0; i < primaryParameters.getRows(); i++)
+		{
+			for (int j = 0; j < primaryParameters.getCols(); j++)
+			{
+				std::cout << Tool::doubleToString(primaryParameters[i][j].C1Air) << gapStr;
+			}
+			if (i < primaryParameters.getRows() - 1)
+			{
+				std::cout << "\n\n";
+			}
+		}
+	}
+
 	std::cout << "\n\n";
-	std::cout << "C1: " << "\n";
+	std::cout << "epsEff -> Effective permittivity: " << "\n";
+	long double epsEff = primaryParameters[0][0].epsEff;
 	for (int i = 0; i < primaryParameters.getRows(); i++)
 	{
 		for (int j = 0; j < primaryParameters.getCols(); j++)
 		{
-			std::cout << primaryParameters[i][j].C1 << "   ";
+			std::cout << Tool::doubleToString(primaryParameters[i][j].epsEff) << gapStr;
 		}
 		if (i < primaryParameters.getRows() - 1)
 		{
@@ -1794,59 +1852,24 @@ void GridSolver::printResultInfo(
 		}
 	}
 
-	std::cout << "\n\n";
-	std::cout << "C1Air: " << "\n";
-	for (int i = 0; i < primaryParameters.getRows(); i++)
+	if (linearParam.getRows() > 1)
 	{
-		for (int j = 0; j < primaryParameters.getCols(); j++)
+		std::cout << "\n\n";
+		std::cout << "Z1 -> Wave impedance [Ohms]: " << "\n";
+		for (int i = 0; i < primaryParameters.getRows(); i++)
 		{
-			std::cout << primaryParameters[i][j].C1Air << "   ";
-		}
-		if (i < primaryParameters.getRows() - 1)
-		{
-			std::cout << "\n\n";
+			for (int j = 0; j < primaryParameters.getCols(); j++)
+			{
+				std::cout << Tool::doubleToString(primaryParameters[i][j].Z1) << gapStr;
+			}
+			if (i < primaryParameters.getRows() - 1)
+			{
+				std::cout << "\n\n";
+			}
 		}
 	}
 
 	std::cout << "\n\n";
-	std::cout << "epsEff -> effective dielectric constant: " << "\n";
-	for (int i = 0; i < primaryParameters.getRows(); i++)
-	{
-		for (int j = 0; j < primaryParameters.getCols(); j++)
-		{
-			std::cout << primaryParameters[i][j].epsEff << "   ";
-		}
-		if (i < primaryParameters.getRows() - 1)
-		{
-			std::cout << "\n\n";
-		}
-	}
-
-	std::cout << "\n\n";
-	std::cout << "Z1: " << "\n";
-	for (int i = 0; i < primaryParameters.getRows(); i++)
-	{
-		for (int j = 0; j < primaryParameters.getCols(); j++)
-		{
-			std::cout << primaryParameters[i][j].Z1 << "   ";
-		}
-		if (i < primaryParameters.getRows() - 1)
-		{
-			std::cout << "\n\n";
-		}
-	}
-
-	std::cout << "\n\n";
-	std::cout << "Z0: " << "\n";
-	for (int i = 0; i < primaryParameters.getRows(); i++)
-	{
-		for (int j = 0; j < primaryParameters.getCols(); j++)
-		{
-			std::cout << primaryParameters[i][j].Z0 << "   ";
-		}
-		if (i < primaryParameters.getRows() - 1)
-		{
-			std::cout << "\n\n";
-		}
-	}
+	std::cout << "Z0 -> Characteristic impedance [Ohms]: " << "\n";
+	std::cout << Tool::doubleToString(primaryParameters[0][0].Z0);
 }

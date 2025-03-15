@@ -13,6 +13,7 @@
 #include "Point2D.h"
 #include "Size2D.h"
 #include "Vector"
+#include "Tool.h"
 
 using json = nlohmann::json;
 
@@ -47,7 +48,12 @@ namespace StructureCreator
 			
 			Vector<Material*> materials;
 
-			stripStructure.setAccuracy(config["accuracy"]);
+			auto jsettings = config["settings"];
+			stripStructure.setAccuracy(jsettings["accuracy"]);
+			Tool::drawField = jsettings["draw_field"];
+			Tool::drawStructure = jsettings["draw_structure"];
+			Tool::outputDigitsCount = jsettings["output_digits"];
+			Tool::minDigitsForExponent = jsettings["min_digits_for_exponent"];
 
 			for (auto& jmaterial: config["materials"])
 			{

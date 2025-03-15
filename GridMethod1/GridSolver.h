@@ -11,6 +11,7 @@
 #include "Rect2D.h"
 #include "Types.h"
 #include "MatrixTool.h"
+#include "Tool.h"
 
 
 class GridSolver

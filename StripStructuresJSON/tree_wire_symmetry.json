@@ -1,5 +1,12 @@
 {
-    "accuracy": 1.5,
+    "settings":
+    {
+        "accuracy": 0.0,
+        "draw_structure": true,
+        "draw_field": false,
+        "output_digits": 3,
+        "min_digits_for_exponent": 3
+    },
 
     "materials": [
         {

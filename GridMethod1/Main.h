@@ -7,5 +7,6 @@
 
 #include "StripStructure.h"
 #include "StructureCreator.h"
+#include "Tool.h"
 
 #endif // !MAIN_H

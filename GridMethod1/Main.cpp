@@ -13,13 +13,26 @@ int main()
 		StripStructure stripStructure = StructureCreator::createStripStructureFromJson(stripStructureFile);
 
 		std::cout << "\n";
-		std::cout << "JSON parse succeeds\n";
-		std::cout << "All materials and shapes have been created: \n\n";
-		for (int i = 0; i < stripStructure.getShapes().getLength(); i++)
+		std::cout << "JSON parse succeeds";
+
+		if (Tool::printShapesInfo == true)
 		{
-			Shape2D* shape = stripStructure.getShapes()[i];
-			std::cout << *shape << "\n\n";
+			std::cout << "\n";
+			std::cout << "All materials and shapes have been created: \n\n";
+			for (int i = 0; i < stripStructure.getShapes().getLength(); i++)
+			{
+				Shape2D* shape = stripStructure.getShapes()[i];
+
+				std::cout << *shape;
+
+				if (i < stripStructure.getShapes().getLength() - 1)
+				{
+					std::cout << "\n\n";
+				}
+			}
 		}
+
+		std::cout << "\n\n";
 
 		stripStructure.computeElectroStaticAnalysis();
 	}
