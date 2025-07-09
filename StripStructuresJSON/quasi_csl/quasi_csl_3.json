@@ -10,7 +10,7 @@
         "min_digits_for_exponent": 3
     },
 
-    "materials":[
+    "materials": [
         {
             "type": "conductor",
             "name": "signal",
@@ -20,7 +20,7 @@
         },
         {
             "type": "conductor",
-            "name": "ground",
+            "name": "screen",
             "mode": false,
             "mu": 1.0,
             "ro": 0.0175
@@ -33,66 +33,67 @@
         },
         {
             "type": "dielectric",
-            "name": "d1",
-            "dk": 15,
+            "name": "dtop",
+            "dk": 3.48,
             "df": 0.003
         },
         {
             "type": "dielectric",
-            "name": "d2",
-            "dk": 1.0,
-            "df": 0.0
-        },
-        {
-            "type": "dielectric",
-            "name": "d3",
-            "dk": 3.55,
+            "name": "dbot",
+            "dk": 4.6,
             "df": 0.003
         }
     ],
 
-    "shapes":[
+    "shapes": [
         {
             "type": "rectangle",
             "point": [0.0, 0.0],
-            "size": [25.0, 40.0],
+            "size": [20.0, 7.0],
             "screen": true,
             "material": "air"
         },
         {
             "type": "rectangle",
             "point": [0.0, 0.0],
-            "size": [25.0, 0.9],
+            "size": [20.0, 1.5],
             "screen": false,
-            "material": "d1"
+            "material": "dbot"
         },
         {
             "type": "rectangle",
-            "point": [0.0, 0.9],
-            "size": [25.0, 0.1],
+            "point": [9.3, 1.5],
+            "size": [1.4, 0.25],
             "screen": false,
-            "material": "d2"
-        },
-        {
-            "type": "rectangle",
-            "point": [0.0, 1.0],
-            "size": [25.0, 1.52],
-            "screen": false,
-            "material": "d3"
+            "material": "dtop"
         },
         {
             "type": "line",
-            "p1": [10.7, 2.52],
-            "p2": [14.3, 2.52],
+            "p1": [9.3, 1.5],
+            "p2": [9.9, 1.5],
+            "align": "left",
+            "material": "signal"
+        },
+        {
+            "type": "line",
+            "p1": [10.1, 1.5],
+            "p2": [10.7, 1.5],
+            "align": "left",
+            "material": "signal"
+        },
+        {
+            "type": "line",
+            "p1": [9.3, 1.75],
+            "p2": [10.7, 1.75],
             "align": "left",
             "material": "signal"
         },
         {
             "type": "line",
             "p1": [0.0, 0.0],
-            "p2": [25.0, 0.0],
+            "p2": [20.0, 0.0],
             "align": "right",
-            "material": "ground"
+            "material": "screen"
         }
     ]
 }

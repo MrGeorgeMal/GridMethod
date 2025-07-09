@@ -1,11 +1,11 @@
 {
     "settings":
     {
-        "accuracy": 0.0,
+        "accuracy": 4.0,
         "lossless": false,
         "print_shape_info": true,
-        "draw_structure": false,
-        "draw_field": false,
+        "draw_structure": true,
+        "draw_field": true,
         "output_digits": 6,
         "min_digits_for_exponent": 3
     },

@@ -5,7 +5,7 @@
         "lossless": false,
         "print_shape_info": true,
         "draw_structure": true,
-        "draw_field": true,
+        "draw_field": false,
         "output_digits": 6,
         "min_digits_for_exponent": 3
     },
@@ -27,8 +27,8 @@
         },
         {
             "type": "dielectric",
-            "name": "d4.5",
-            "dk": 4.5,
+            "name": "d4.3",
+            "dk": 4.3,
             "df": 0.003
         }
     ],
@@ -37,22 +37,36 @@
         {
             "type": "rectangle",
             "point": [0.0, 0.0],
-            "size": [40.0, 1.5],
+            "size": [10.0, 0.7],
             "screen": false,
-            "material": "d4.5"
+            "material": "d4.3"
         },
         {
             "type": "line",
-            "p1": [19.0, 1.5],
-            "p2": [21.0, 1.5],
+            "p1": [3.5, 0.23],
+            "p2": [6.5, 0.23],
+            "align": "left",
+            "material": "signal"
+        },
+        {
+            "type": "line",
+            "p1": [3.5, 0.46],
+            "p2": [6.5, 0.46],
             "align": "left",
             "material": "signal"
         },
         {
             "type": "line",
             "p1": [0.0, 0.0],
-            "p2": [40.0, 0.0],
+            "p2": [10.0, 0.0],
             "align": "right",
+            "material": "ground"
+        },
+        {
+            "type": "line",
+            "p1": [0.0, 0.7],
+            "p2": [10.0, 0.7],
+            "align": "left",
             "material": "ground"
         }
     ]
